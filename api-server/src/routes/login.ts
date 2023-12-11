@@ -1,24 +1,13 @@
 import bcrypt from 'bcrypt'
 import express, { type RequestHandler } from 'express'
 import knex from '../knex'
-
-// TODO IMMEDIATELY factor out
-const SALT_ROUNDS = 10
+import { getUserByUid, getUserByUsername, createUser, type NewUser } from '../models/users'
+import { SALT_ROUNDS } from '../constants'
 
 const router = express.Router()
 
-// TODO IMMEDIATELY factor out
-interface UsersTableRow {
-  uid: number
-  username: string
-  passhash: string
-}
-
-// TODO IMMEDIATELY makes more sense to extend the other way
-interface NewUser extends Omit<UsersTableRow, 'uid'> {}
-
+// TODO IMMEDIATELY: use migration etc
 router.post('/debug-fixtures', (async (req, res, next) => {
-  // TODO IMMEDIATELY: use migration etc
   try {
     await knex.schema
       .dropTableIfExists('users')
@@ -43,15 +32,13 @@ router.post('/debug-fixtures', (async (req, res, next) => {
   }
 }) as RequestHandler)
 
+// TODO IMMEDIATELY remove. This is an example of an authenticated route
 router.get('/private-example', (async (req, res, next) => {
   const { uid } = req.session
+  console.log('session', req.session)
   if (uid !== undefined) {
-    // TODO use model
     try {
-      const user = await knex<UsersTableRow>('users')
-        .select('username')
-        .where('uid', uid)
-        .first()
+      const user = await getUserByUid(uid)
       if (user !== undefined) {
         res.send(`Hi ${user.username}. Your uid is ${uid}`)
       }
@@ -63,7 +50,8 @@ router.get('/private-example', (async (req, res, next) => {
   }
 }) as RequestHandler)
 
-router.post('/', (req, res, next) => {
+// Create new user
+router.post('/user', (async (req, res, next) => {
   // TODO IMMEDIATELY: validate against OpenAPI schema
   const password: string | undefined = req.body.password
   const username: string | undefined = req.body.username
@@ -73,44 +61,64 @@ router.post('/', (req, res, next) => {
     return res.status(401).json({ message: 'Invalid username or password' })
   }
 
-  knex<UsersTableRow>('users')
-    .select('*')
-    .where('username', username)
-    .first()
-    .then((user) => {
-      if (user === undefined) {
-        console.log('(no such user)')
-        // TODO: DRY this message
-        return res.status(401).json({ message: 'Invalid username or password' })
-      } else {
-        bcrypt.compare(password, user.passhash).then((result) => {
-          if (result === true) {
-            // password is a match. successful login, so we create session
+  try {
+    const uid = await createUser({ username, password })
+    if (uid != null) {
+      res.status(201).json({ message: 'User created' })
+    } else {
+      res.status(400).json({ message: 'Username already exists' })
+    }
+  } catch (err) {
+    next(err)
+  }
+}) as RequestHandler)
 
-            // regenerate the session, which is good practice to help
-            // guard against forms of session fixation
-            req.session.regenerate((err) => {
-              // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-              if (err) next(err)
+// Login existing user
+router.post('/login', (async (req, res, next) => {
+  // TODO IMMEDIATELY: validate against OpenAPI schema
+  const password: string | undefined = req.body.password
+  const username: string | undefined = req.body.username
 
-              // store user information in session, typically a user id
-              req.session.uid = user.uid
+  if (password === undefined || username === undefined) {
+    // TODO: DRY this message
+    return res.status(401).json({ message: 'Invalid username or password' })
+  }
 
-              return res.status(200).end()
-            })
-          } else {
-            // bad password
-            console.log('(bad password)')
-            return res
-              .status(401)
-              .json({ message: 'Invalid username or password' })
-          }
+  try {
+    const user = await getUserByUsername(username)
+    console.log('user', user)
+    if (user === undefined) {
+      console.log('(no such user)')
+      // TODO: DRY this message
+      return res.status(401).json({ message: 'Invalid username or password' })
+    } else {
+      const matchResult = await bcrypt.compare(password, user.passhash)
+      if (matchResult) {
+        // password is a match. successful login, so we create session
+
+        // regenerate the session, which is good practice to help
+        // guard against forms of session fixation
+        req.session.regenerate((err) => {
+          // TODO: what is the type of this error?
+          // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+          if (err) next(err)
+
+          // store user information in session, typically a user id
+          req.session.uid = user.uid
+
+          return res.status(200).end()
         })
+      } else {
+        // bad password
+        console.log('(bad password)')
+        return res
+          .status(401)
+          .json({ message: 'Invalid username or password' })
       }
-    })
-    .catch((err) => {
-      next(err)
-    })
-})
+    }
+  } catch (err) {
+    next(err)
+  }
+}) as RequestHandler)
 
 export default router
