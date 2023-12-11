@@ -4,6 +4,8 @@ Add a file `.env` to the root of this directory like:
 
 ```
 PORT=3000
+SESSION_SECRET=sessionSecretHere123
+PG_CONNECTION_STRING=postgres://user:secret@host:5432/mydatabasename
 ```
 
 # Scripts
