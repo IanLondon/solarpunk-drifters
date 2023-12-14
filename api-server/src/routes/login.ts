@@ -97,8 +97,6 @@ export const loginUserHandler: AsyncRequestHandler = async (req, res, next) => {
       if (err !== undefined && err !== null) next(err)
 
       // store user id in the session
-      console.log('uid', user.uid)
-      console.log('session', req.session)
       req.session.uid = user.uid
 
       return res.status(200).end()
