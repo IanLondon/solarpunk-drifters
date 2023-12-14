@@ -1,36 +1,12 @@
-import bcrypt from 'bcrypt'
 import express, { type RequestHandler, type Request, type Response, type NextFunction } from 'express'
-import knex from '../knex' // TODO IMMEDIATELY this shouldn't be here
-import { SALT_ROUNDS, i18n } from '../constants'
+import { i18n } from '../constants'
 import { createUser, getUserWithCredentials } from '../controllers/users'
-import { getUserByUid, type NewUser } from '../queries/users'
+import { getUserByUid } from '../queries/users'
 
 // TODO IMMEDIATELY factor out or find existing type??
 type AsyncRequestHandler = (req: Request, res: Response, next: NextFunction) => Promise<any>
 
 const router = express.Router()
-
-// TODO IMMEDIATELY: use migration etc
-router.post('/debug-fixtures', (async (_req, res, next) => {
-  await knex.schema
-    .dropTableIfExists('users')
-    .createTable('users', (table) => {
-      table.uuid('uid').primary().defaultTo(knex.fn.uuid())
-      table.string('username')
-      table.string('passhash')
-    })
-
-  // Alice's password is '123password'
-  const passhash = await bcrypt.hash('123password', SALT_ROUNDS)
-
-  const aliceUser: NewUser = {
-    username: 'Alice',
-    passhash
-  }
-  await knex('users').insert(aliceUser)
-
-  res.status(200).send('added fixtures')
-}) as RequestHandler)
 
 // TODO IMMEDIATELY remove. This is an example of an authenticated route
 router.get('/private-example', (async (req, res, next): Promise<void> => {
