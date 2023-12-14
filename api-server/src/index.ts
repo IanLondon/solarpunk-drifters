@@ -1,12 +1,13 @@
 import './dotenvConfig'
 import express, { type Express } from 'express'
+import 'express-async-errors'
 import session from 'express-session'
 import connectSessionKnex from 'connect-session-knex'
 import loginRouter from './routes/login'
 import rootRouter from './routes/root'
 import knex from './knex'
 
-const app: Express = express()
+export const app: Express = express()
 app.use(express.json())
 const port = process.env.PORT
 const SESSION_SECRET = process.env.SESSION_SECRET

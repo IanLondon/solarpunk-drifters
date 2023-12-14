@@ -1,77 +1,78 @@
 import bcrypt from 'bcrypt'
-import express, { type RequestHandler } from 'express'
-import knex from '../knex'
-import { getUserByUid, getUserByUsername, createUser, type NewUser } from '../models/users'
-import { SALT_ROUNDS } from '../constants'
+import express, { type RequestHandler, type Request, type Response, type NextFunction } from 'express'
+import knex from '../knex' // TODO IMMEDIATELY this shouldn't be here
+import { SALT_ROUNDS, i18n } from '../constants'
+import { createUser } from '../controllers/users'
+import { getUserByUid, getUserByUsername, type NewUser } from '../queries/users'
+
+// TODO IMMEDIATELY factor out or find existing type??
+type AsyncRequestHandler = (req: Request, res: Response, next: NextFunction) => Promise<any>
 
 const router = express.Router()
 
 // TODO IMMEDIATELY: use migration etc
-router.post('/debug-fixtures', (async (req, res, next) => {
-  try {
-    await knex.schema
-      .dropTableIfExists('users')
-      .createTable('users', (table) => {
-        table.uuid('uid').primary().defaultTo(knex.fn.uuid())
-        table.string('username')
-        table.string('passhash')
-      })
+router.post('/debug-fixtures', (async (_req, res, next) => {
+  await knex.schema
+    .dropTableIfExists('users')
+    .createTable('users', (table) => {
+      table.uuid('uid').primary().defaultTo(knex.fn.uuid())
+      table.string('username')
+      table.string('passhash')
+    })
 
-    // Alice's password is '123password'
-    const passhash = await bcrypt.hash('123password', SALT_ROUNDS)
+  // Alice's password is '123password'
+  const passhash = await bcrypt.hash('123password', SALT_ROUNDS)
 
-    const aliceUser: NewUser = {
-      username: 'Alice',
-      passhash
-    }
-    await knex('users').insert(aliceUser)
-
-    res.status(200).send('added fixtures')
-  } catch (err) {
-    next(err)
+  const aliceUser: NewUser = {
+    username: 'Alice',
+    passhash
   }
+  await knex('users').insert(aliceUser)
+
+  res.status(200).send('added fixtures')
 }) as RequestHandler)
 
 // TODO IMMEDIATELY remove. This is an example of an authenticated route
-router.get('/private-example', (async (req, res, next) => {
+router.get('/private-example', (async (req, res, next): Promise<void> => {
   const { uid } = req.session
-  console.log('session', req.session)
   if (uid !== undefined) {
-    try {
-      const user = await getUserByUid(uid)
-      if (user !== undefined) {
-        res.send(`Hi ${user.username}. Your uid is ${uid}`)
-      }
-    } catch (err) {
-      next(err)
+    const user = await getUserByUid(uid)
+    if (user !== undefined) {
+      res.send(`Hi ${user.username}. Your uid is ${uid}`)
     }
   } else {
     res.sendStatus(401)
   }
 }) as RequestHandler)
 
+// TODO IMMEDIATELY REMOVE
+export const footestHandler: RequestHandler = (req, res, next) => {
+  const echo: string | undefined = req.body.echo
+  res.status(201).json({ result: 'yeah boi', echo })
+}
+router.post('/footest', footestHandler)
+
 // Create new user
-router.post('/user', (async (req, res, next) => {
+export const createUserHandler: AsyncRequestHandler = async (req, res, next) => {
   // TODO IMMEDIATELY: validate against OpenAPI schema
   const password: string | undefined = req.body.password
   const username: string | undefined = req.body.username
 
   if (password === undefined || username === undefined) {
-    // TODO: DRY this message
-    return res.status(401).json({ message: 'Invalid username or password' })
+    res.status(401).json({ message: i18n.messages.INVALID_USERNAME_OR_PASSWORD })
+    return
   }
 
-  try {
-    const uid = await createUser({ username, password })
-    if (uid != null) {
-      res.status(201).json({ message: 'User created' })
-    } else {
-      res.status(400).json({ message: 'Username already exists' })
-    }
-  } catch (err) {
-    next(err)
+  const uid = await createUser({ username, password })
+
+  if (uid != null) {
+    res.status(201).json({ uid })
+  } else {
+    res.status(400).json({ message: i18n.messages.USERNAME_EXISTS })
   }
-}) as RequestHandler)
+}
+
+router.post('/user', createUserHandler as RequestHandler)
 
 // Login existing user
 router.post('/login', (async (req, res, next) => {
@@ -80,17 +81,14 @@ router.post('/login', (async (req, res, next) => {
   const username: string | undefined = req.body.username
 
   if (password === undefined || username === undefined) {
-    // TODO: DRY this message
-    return res.status(401).json({ message: 'Invalid username or password' })
+    return res.status(401).json({ message: i18n.messages.INVALID_USERNAME_OR_PASSWORD })
   }
 
   try {
     const user = await getUserByUsername(username)
-    console.log('user', user)
+
     if (user === undefined) {
-      console.log('(no such user)')
-      // TODO: DRY this message
-      return res.status(401).json({ message: 'Invalid username or password' })
+      return res.status(401).json({ message: i18n.messages.INVALID_USERNAME_OR_PASSWORD })
     } else {
       const matchResult = await bcrypt.compare(password, user.passhash)
       if (matchResult) {
@@ -110,10 +108,9 @@ router.post('/login', (async (req, res, next) => {
         })
       } else {
         // bad password
-        console.log('(bad password)')
         return res
           .status(401)
-          .json({ message: 'Invalid username or password' })
+          .json({ message: i18n.messages.INVALID_USERNAME_OR_PASSWORD })
       }
     }
   } catch (err) {

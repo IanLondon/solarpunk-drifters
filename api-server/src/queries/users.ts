@@ -1,6 +1,4 @@
-import bcrypt from 'bcrypt'
 import knex from '../knex'
-import { SALT_ROUNDS } from '../constants'
 
 export interface UsersTableRow {
   uid: number
@@ -10,16 +8,13 @@ export interface UsersTableRow {
 
 export interface NewUser extends Omit<UsersTableRow, 'uid'> {}
 
-export async function createUser ({ username, password }: { username: string, password: string }): Promise<number | null> {
-  const existingUser = await getUserByUsername(username)
-  if (existingUser != null) {
-    // user already exists, give up
-    return null
+export async function insertUser (username: string, passhash: string): Promise<number> {
+  const ret: Array<{ uid: number }> = await knex<UsersTableRow>('users').returning('uid').insert({ username, passhash })
+  if (ret.length === 1) {
+    return ret[0].uid
+  } else {
+    throw new Error('No UID returned from DB after inserting user')
   }
-  // create a user record, with hashed password
-  const passhash = await bcrypt.hash(password, SALT_ROUNDS)
-  const uid = await knex<UsersTableRow>('users').returning('uid').insert({ username, passhash })
-  return uid[0]
 }
 
 export async function getUserByUid (uid: number): Promise<UsersTableRow | undefined> {
