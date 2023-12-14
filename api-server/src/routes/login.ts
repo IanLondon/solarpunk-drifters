@@ -2,8 +2,8 @@ import bcrypt from 'bcrypt'
 import express, { type RequestHandler, type Request, type Response, type NextFunction } from 'express'
 import knex from '../knex' // TODO IMMEDIATELY this shouldn't be here
 import { SALT_ROUNDS, i18n } from '../constants'
-import { createUser } from '../controllers/users'
-import { getUserByUid, getUserByUsername, type NewUser } from '../queries/users'
+import { createUser, getUserWithCredentials } from '../controllers/users'
+import { getUserByUid, type NewUser } from '../queries/users'
 
 // TODO IMMEDIATELY factor out or find existing type??
 type AsyncRequestHandler = (req: Request, res: Response, next: NextFunction) => Promise<any>
@@ -37,7 +37,7 @@ router.get('/private-example', (async (req, res, next): Promise<void> => {
   const { uid } = req.session
   if (uid !== undefined) {
     const user = await getUserByUid(uid)
-    if (user !== undefined) {
+    if (user !== null) {
       res.send(`Hi ${user.username}. Your uid is ${uid}`)
     }
   } else {
@@ -75,8 +75,8 @@ export const createUserHandler: AsyncRequestHandler = async (req, res, next) => 
 router.post('/user', createUserHandler as RequestHandler)
 
 // Login existing user
-router.post('/login', (async (req, res, next) => {
-  // TODO IMMEDIATELY: validate against OpenAPI schema
+export const loginUserHandler: AsyncRequestHandler = async (req, res, next) => {
+// TODO IMMEDIATELY: validate against OpenAPI schema
   const password: string | undefined = req.body.password
   const username: string | undefined = req.body.username
 
@@ -84,38 +84,27 @@ router.post('/login', (async (req, res, next) => {
     return res.status(401).json({ message: i18n.messages.INVALID_USERNAME_OR_PASSWORD })
   }
 
-  try {
-    const user = await getUserByUsername(username)
+  const user = await getUserWithCredentials({ username, password })
 
-    if (user === undefined) {
-      return res.status(401).json({ message: i18n.messages.INVALID_USERNAME_OR_PASSWORD })
-    } else {
-      const matchResult = await bcrypt.compare(password, user.passhash)
-      if (matchResult) {
-        // password is a match. successful login, so we create session
+  if (user === null) {
+    return res.status(401).json({ message: i18n.messages.INVALID_USERNAME_OR_PASSWORD })
+  } else {
+    // user exists and credentials are correct, so we create session
 
-        // regenerate the session, which is good practice to help
-        // guard against forms of session fixation
-        req.session.regenerate((err) => {
-          // TODO: what is the type of this error?
-          // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-          if (err) next(err)
+    // regenerate the session, which is good practice to help
+    // guard against forms of session fixation
+    req.session.regenerate((err) => {
+      if (err !== undefined && err !== null) next(err)
 
-          // store user information in session, typically a user id
-          req.session.uid = user.uid
+      // store user id in the session
+      console.log('uid', user.uid)
+      console.log('session', req.session)
+      req.session.uid = user.uid
 
-          return res.status(200).end()
-        })
-      } else {
-        // bad password
-        return res
-          .status(401)
-          .json({ message: i18n.messages.INVALID_USERNAME_OR_PASSWORD })
-      }
-    }
-  } catch (err) {
-    next(err)
+      return res.status(200).end()
+    })
   }
-}) as RequestHandler)
+}
+router.post('/login', loginUserHandler as RequestHandler)
 
 export default router

@@ -17,16 +17,16 @@ export async function insertUser (username: string, passhash: string): Promise<n
   }
 }
 
-export async function getUserByUid (uid: number): Promise<UsersTableRow | undefined> {
+export async function getUserByUid (uid: number): Promise<UsersTableRow | null> {
   return await knex<UsersTableRow>('users')
     .select('*')
     .where('uid', uid)
-    .first()
+    .first() ?? null
 }
 
-export async function getUserByUsername (username: string): Promise<UsersTableRow | undefined> {
+export async function getUserByUsername (username: string): Promise<UsersTableRow | null> {
   return await knex<UsersTableRow>('users')
     .select('*')
     .where('username', username)
-    .first()
+    .first() ?? null
 }
