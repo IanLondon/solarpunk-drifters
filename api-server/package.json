@@ -4,7 +4,7 @@
   "description": "RESTful API for Solarpunk Drifters",
   "main": "dist/index.js",
   "scripts": {
-    "build": "npx tsc",
+    "build": "npx tsc --project tsconfig.build.json",
     "dev": "nodemon src/index.ts",
     "lint-fix": "eslint . --fix",
     "lint": "eslint .",
