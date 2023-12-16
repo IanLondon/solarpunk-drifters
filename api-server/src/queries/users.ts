@@ -1,4 +1,4 @@
-import knex from '../knex'
+import connectKnex from '../connectKnex'
 
 export interface UsersTableRow {
   uid: number
@@ -9,6 +9,8 @@ export interface UsersTableRow {
 export interface NewUser extends Omit<UsersTableRow, 'uid'> {}
 
 export async function insertUser (username: string, passhash: string): Promise<number> {
+  const knex = connectKnex()
+
   const ret: Array<{ uid: number }> = await knex<UsersTableRow>('users').returning('uid').insert({ username, passhash })
   if (ret.length === 1) {
     return ret[0].uid
@@ -18,6 +20,8 @@ export async function insertUser (username: string, passhash: string): Promise<n
 }
 
 export async function getUserByUid (uid: number): Promise<UsersTableRow | null> {
+  const knex = connectKnex()
+
   return await knex<UsersTableRow>('users')
     .select('*')
     .where('uid', uid)
@@ -25,6 +29,8 @@ export async function getUserByUid (uid: number): Promise<UsersTableRow | null> 
 }
 
 export async function getUserByUsername (username: string): Promise<UsersTableRow | null> {
+  const knex = connectKnex()
+
   return await knex<UsersTableRow>('users')
     .select('*')
     .where('username', username)

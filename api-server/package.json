@@ -9,7 +9,8 @@
     "lint-fix": "eslint . --fix",
     "lint": "eslint .",
     "start": "node dist/index.js",
-    "test": "jest"
+    "test": "cross-env ENSURE_NO_DB=1 jest --testPathIgnorePatterns src/db-integration-tests",
+    "test-db-integration": "cross-env RUN_DB_TESTS=1 jest"
   },
   "author": "Ian London",
   "license": "UNLICENSED",
@@ -32,6 +33,7 @@
     "@types/node": "^20.10.4",
     "@types/supertest": "^2.0.16",
     "@typescript-eslint/eslint-plugin": "^6.13.2",
+    "cross-env": "^7.0.3",
     "eslint": "^8.55.0",
     "eslint-config-standard-with-typescript": "^42.0.0",
     "eslint-plugin-import": "^2.29.0",

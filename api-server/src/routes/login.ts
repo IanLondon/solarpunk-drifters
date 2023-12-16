@@ -42,7 +42,7 @@ export const createUserHandler: AsyncRequestHandler = async (req, res, next) => 
   const uid = await createUser({ username, password })
 
   if (uid != null) {
-    res.status(201).json({ uid })
+    res.status(201).end()
   } else {
     res.status(400).json({ message: i18n.messages.USERNAME_EXISTS })
   }

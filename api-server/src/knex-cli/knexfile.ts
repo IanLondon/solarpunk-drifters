@@ -1,4 +1,3 @@
-import '../dotenvConfig'
 import type { Knex } from 'knex'
 
 const config: Record<string, Knex.Config> = {

@@ -9,7 +9,7 @@ services:
         npx knex seed:run --knexfile dist/knex-cli/knexfile.js
         node dist/index.js
     depends_on:
-        - db
+      - db
     env_file: compose.app.env
     init: true
     ports:

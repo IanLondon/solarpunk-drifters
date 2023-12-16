@@ -50,8 +50,7 @@ describe('/login', () => {
       expect(createUserMock).toHaveBeenCalledWith({ username: 'alice', password: 'alicePractice' })
 
       expect(res._isEndCalled()).toBe(true)
-      expect(res._isJSON()).toBe(true)
-      expect(res._getJSONData()).toEqual({ uid })
+      expect(res._getData()).toEqual('')
       expect(res.statusCode).toEqual(201)
     })
 
