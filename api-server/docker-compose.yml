@@ -1,6 +1,8 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      target: base
     command:
       - /bin/sh
       - -c
@@ -14,6 +16,8 @@ services:
     init: true
     ports:
       - "8080:8080"
+    tty: true
+    stdin_open: true
   db:
     env_file: compose.db.env
     image: postgres:16.1

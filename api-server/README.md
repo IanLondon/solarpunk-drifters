@@ -29,11 +29,28 @@ PG_CONNECTION_STRING=postgres://user:secret@host:5432/mydatabasename
 
 # Database connection
 
-The app can run:
+In development, the app can run:
 
-- Via `npm run dev`, on your own machine. Connected to the DB specified in `PG_CONNECTION_STRING` env var. That DB is up to you to manage, maybe it's a remote DB, maybe you're hosting it from your machine directly or in a Docker container. It's easy to set up a new DB with using the Knex CLI to set up migrations and seeds.
-- With no database. As long as `connectKnex()` is never called, no DB connection will be made. This is only suitable for running unit tests where anything that touches the DB is mocked. Use `ENSURE_NO_DB=1` to prevent connection to the DB and throw an error if `connectKnex()` is called. If set, `express-session` will use `MemoryStore` instead of persisting to a database.
-- In Docker Compose. Connected to the DB created alongside it. This database intentionally has no volume attached to it, its contents are ephemeral. When started up in Docker Compose, all Knex migrations are seeds are applied to the DB as soon as the `app` container starts, and the Express server starts immediately after that process.
+## Connected to a local dev db
+
+Via `npm run dev`, on your own machine. Connected to the DB specified in `PG_CONNECTION_STRING` env var. That DB is up to you to manage, maybe it's a remote DB, maybe you're hosting it from your machine directly or in a Docker container. It's easy to set up a new DB with using the Knex CLI to set up migrations and seeds.
+
+See `docker-compose.yml` for the recommended postgres image and the `knex` commands to set up a new database.
+
+## With no database (unit tests)
+
+With no database. As long as `connectKnex()` is never called, no DB connection will be made. This is only suitable for running unit tests where anything that touches the DB is mocked. Use `ENSURE_NO_DB=1` to prevent connection to the DB and throw an error if `connectKnex()` is called. If set, `express-session` will use `MemoryStore` instead of persisting to a database.
+
+## Inside Docker Compose, with an included ephemeral DB
+
+In Docker Compose. Connected to the DB created alongside it. This database intentionally has no volume attached to it, its contents are ephemeral. When started up in Docker Compose, all Knex migrations are seeds are applied to the DB as soon as the `app` container starts, and the Express server starts immediately after that process.
+
+Docker compose example: running database integration tests
+
+```bash
+docker compose up --build -d
+docker compose exec app npm run test-db-integration
+```
 
 # Other scripts
 
