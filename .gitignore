@@ -131,8 +131,6 @@ dist
 
 # =================== ABOVE IS https://github.com/github/gitignore/blob/main/Node.gitignore =====
 
-.vscode
-
 # dotenv
 .env
 

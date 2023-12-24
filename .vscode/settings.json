@@ -1,0 +1,13 @@
+{
+    "[typescript][typescriptreact]": {
+        "editor.codeActionsOnSave": {
+            "source.fixAll.eslint": true
+        },
+    },
+    "eslint.workingDirectories": [
+        {
+            // Allow VSCode to understand project-scoped eslint configs in monorepo
+            "mode": "auto"
+        }
+    ]
+}
