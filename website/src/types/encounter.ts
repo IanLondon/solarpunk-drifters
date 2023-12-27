@@ -1,4 +1,8 @@
+import { type ImageInfo } from '.'
+
 export type Skill = 'agility' | 'harmony' | 'diy' | 'luck'
+
+export const SKILLS_LIST: Skill[] = ['agility', 'harmony', 'diy', 'luck']
 
 export interface EncounterRisk {
   loseItem?: string
@@ -20,4 +24,12 @@ export interface EncounterChoice {
   description: string
   check: EncounterCheck
   risk: EncounterRisk
+}
+
+export interface EncounterCardData {
+  id: string
+  title: string
+  description: string
+  image: ImageInfo
+  choices: EncounterChoice[]
 }

@@ -1,6 +1,6 @@
-/* Instruments */
-import { exampleSlice } from './slices'
+import { encounterCardSlice, gameStateSlice } from './slices'
 
 export const reducer = {
-  example: exampleSlice.reducer
+  gameState: gameStateSlice.reducer,
+  [encounterCardSlice.reducerPath]: encounterCardSlice.reducer
 }

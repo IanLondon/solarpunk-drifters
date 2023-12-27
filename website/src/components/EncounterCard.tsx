@@ -1,30 +1,13 @@
 import Image from 'next/image'
 import React, { type MouseEventHandler, useState } from 'react'
-import exampleImage from '@/../public/buffalo.jpg'
+// import exampleImage from '@/../public/buffalo.jpg'
 import {
   type EncounterRisk,
   type EncounterChoice,
-  type Skill
+  type EncounterCardData
 } from '@/types/encounter'
-
-interface EncounterCardProps {
-  title: string
-  description: string
-  choices: EncounterChoice[]
-}
-
-export function SkillIcon(props: { skill: Skill }): string {
-  switch (props.skill) {
-    case 'agility':
-      return '🐇'
-    case 'diy':
-      return '🔧'
-    case 'harmony':
-      return '🕊'
-    case 'luck':
-      return '🃏'
-  }
-}
+import SkillIcon from '@/components/SkillIcon'
+import Card from './Card'
 
 export function EncounterRiskTile(props: {
   risk: EncounterRisk
@@ -97,33 +80,29 @@ export function EncounterCardChoice(
   )
 }
 
-export function Card(props: React.PropsWithChildren): React.ReactNode {
-  return (
-    <article className='rounded-lg border-2 border-amber-400 p-2'>
-      {props.children}
-    </article>
-  )
-}
-
-export default function EncounterCard(
-  props: EncounterCardProps
-): React.ReactNode {
+export default function EncounterCard(props: {
+  data: EncounterCardData
+  onChooseOption: (optionIndex: number) => void
+}): React.ReactNode {
+  const { onChooseOption } = props
+  const { title, description, choices, image } = props.data
   return (
     <Card>
-      <p className='text-xl'>{props.title}</p>
+      <p className='text-xl'>{title}</p>
       <Image
-        src={exampleImage}
+        alt={image.alt}
         className='w-full'
-        alt='Alt text here TODO'
+        height={image.height}
+        width={image.width}
+        src={image.src}
         priority
       />
-      <p>{props.description}</p>
-      {props.choices.map((choice, i) => (
+      <p>{description}</p>
+      {choices.map((choice, i) => (
         <EncounterCardChoice
           key={i}
           onClick={() => {
-            // TODO IMMEDIATELY
-            console.log(`clicked ${i}`)
+            onChooseOption(i)
           }}
           {...choice}
         />
