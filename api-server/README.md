@@ -4,7 +4,7 @@ Add a file `.env` to the root of this directory like:
 
 ```bash
 # the port the server listens on
-PORT=3000
+PORT=8080
 
 # a secret for generating sessions
 SESSION_SECRET=sessionSecretHere123

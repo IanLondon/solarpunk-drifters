@@ -1,0 +1,254 @@
+openapi: 3.0.3
+info:
+  version: v1
+  title: Solarpunk Drifters API
+servers:
+  - url: http://localhost:3000/api
+    description: Local dev server (with local reverse proxy)
+  - url: https://solarpunkdrifters.bond/api
+    description: Production server (uses live data)
+paths:
+  /game-state:
+    get:
+      description: Get the current game state for a player
+      responses:
+        "200":
+          description: The game state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameState"
+  /encounter-cards/{cardId}:
+    get:
+      description: Get a single Encounter Card
+      parameters:
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+            description: The Encounter Card's ID
+            example: 3b5b1707-b82c-4b1d-9078-157053902525
+      responses:
+        "200":
+          description: A single Encounter Card
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: some-id-123-blah
+                  title:
+                    type: string
+                    example: Buffalo Migration
+                  description:
+                    type: string
+                    example: You come across a migrating herd of buffalo. Their ranks stretch back to the horizon.
+                  image:
+                    $ref: "#/components/schemas/ImageInfo"
+                  choices:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/EncounterChoice"
+  /play-action/begin-expedition:
+    post:
+      description: Begin an expedition
+      responses:
+        "200":
+          description: Successfully began expedition. Response contains GameState update.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameState"
+  /play-action/next-encounter:
+    post:
+      description: Begin next encounter (draw a new encounter card)
+      responses:
+        "200":
+          description: Successfully began new encounter. Response contains GameState update.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameState"
+  /play-action/turn-back:
+    post:
+      description: Turn back, ending the expedition.
+      responses:
+        "200":
+          description: Successfully ended the expedition. Response contains GameState update.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameState"
+  /play-action/encounter-card-choice:
+    post:
+      description: Make a choice on the active encounter card
+      requestBody:
+        description: A player choice for the active encounter card
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                choice:
+                  type: integer
+                  minimum: 0
+      responses:
+        "200":
+          description: Successfully executed a choice. Response contains GameState update.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameState"
+  /play-action/play-card:
+    post:
+      description: Play a card in the player's hand (between encounters)
+      requestBody:
+        description: A request to play a card from a player's hand
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cardId:
+                  type: string
+      responses:
+        "200":
+          description: Successfully played a card. Response contains GameState update.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameState"
+  /login/user:
+    post:
+      description: Create a new user
+      requestBody:
+        description: A username and password
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserLogin"
+      responses:
+        "201":
+          description: Successfully created a new user.
+        "400":
+          description: Error. User already exists
+        "401":
+          description: Error. Incorrect parameters.
+  /login/login:
+    post:
+      description: Log in an existing user account
+      requestBody:
+        $ref: "#/paths/~1login~1user/post/requestBody"
+      responses:
+        "200":
+          description: Successful login
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: connect.sid=abcde12345; HttpOnly
+        "401":
+          description: Invalid username or password
+
+components:
+  securitySchemes:
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: connect.sid
+  schemas:
+    CharacterStats:
+      type: object
+      properties:
+        agility:
+          $ref: "#/components/schemas/StatNumber"
+        diy:
+          $ref: "#/components/schemas/StatNumber"
+        harmony:
+          $ref: "#/components/schemas/StatNumber"
+        luck:
+          $ref: "#/components/schemas/StatNumber"
+    EncounterChoice:
+      type: object
+      properties:
+        description:
+          type: string
+        check:
+          $ref: "#/components/schemas/EncounterCheck"
+        risk:
+          $ref: "#/components/schemas/EncounterRisk"
+    EncounterCheck:
+      type: object
+      properties:
+        skill:
+          type: string
+          enum: [agility, diy, harmony, luck]
+        item:
+          type: object
+          additionalProperties:
+            type: integer
+    EncounterRisk:
+      type: object
+      properties:
+        loseItem:
+          type: string
+          nullable: true
+        loseResource:
+          type: string
+          nullable: true
+        loomingDangerIncrease:
+          type: number
+          nullable: true
+    ExpeditionProgress:
+      type: object
+      properties:
+        current:
+          type: number
+        total:
+          type: number
+    GameMode:
+      type: string
+      enum: [ACTIVE_ENCOUNTER, BETWEEN_ENCOUNTERS, LOADOUT]
+    GameState:
+      type: object
+      properties:
+        characterStats:
+          $ref: "#/components/schemas/CharacterStats"
+        gameMode:
+          $ref: "#/components/schemas/GameMode"
+        inventory:
+          type: object
+          additionalProperties:
+            type: integer
+        resources:
+          type: object
+          additionalProperties:
+            type: integer
+        activeEncounterCardId:
+          type: string
+          nullable: true
+        expeditionProgress:
+          $ref: "#/components/schemas/ExpeditionProgress"
+    ImageInfo:
+      type: object
+      properties:
+        alt:
+          type: string
+        height:
+          type: integer
+        width:
+          type: integer
+        src:
+          type: string
+    StatNumber:
+      type: integer
+    UserLogin:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
