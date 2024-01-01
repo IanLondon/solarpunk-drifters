@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "npx tsc --project tsconfig.build.json",
+    "check": "tsc",
     "dev": "nodemon src/index.ts",
     "lint-fix": "eslint . --fix",
     "lint": "eslint .",

@@ -10,7 +10,7 @@ import {
   TURN_BACK,
   ENCOUNTER_CARD_CHOICE,
   PLAY_CARD,
-  type PlayActionUpdate
+  type ServerExpeditionUpdate
 } from './lib/redux'
 import { DEMO_BUFFALO_ENCOUNTER_CARD } from './dummyData/encounterCards'
 
@@ -28,7 +28,6 @@ const betweenEncountersGameState: ServerGameState = {
     caravanIntegrity: 20
   },
   gameMode: 'BETWEEN_ENCOUNTERS',
-  activeEncounterCardId: null,
   expeditionProgress: {
     current: 50,
     total: 1500
@@ -58,14 +57,15 @@ export function makeMirageServer({ environment = 'test' }): Server {
         })
       })
 
-      this.post('/play-action/:action', (schema, request) => {
-        // Fake responses to play actions, similar to what server would send.
+      this.post('/expeditions/:action', (schema, request) => {
+        // Fake responses to encounter moves, similar to what server would send.
         //
-        // Mirage server is a simple fake. It assumes the play action is always valid
+        // Mirage server is a simple fake. It assumes the move is always valid
         // (even if it wouldn't make sense given the previous game state)
-        // and it doesn't respond to most play-actions.
+        // and it doesn't respond to most encounter moves.
         const action = request.params.action
-        let responseUpdate: PlayActionUpdate = {}
+        let responseUpdate: ServerExpeditionUpdate['update']
+        let rollResult: ServerExpeditionUpdate['rollResult']
 
         if (action === BEGIN_EXPEDITION) {
           responseUpdate = {
@@ -80,15 +80,30 @@ export function makeMirageServer({ environment = 'test' }): Server {
         } else if (action === TURN_BACK) {
           responseUpdate = { gameMode: LOADOUT }
         } else if (action === ENCOUNTER_CARD_CHOICE) {
-          console.log('Got an encounter card choice:', request.requestBody)
+          // fake dice roll, assume it's a dice choice
+          rollResult = { rolls: [2, 3, 4] }
         } else if (action === PLAY_CARD) {
           console.log('Got a play card choice:', request.requestBody)
         } else {
-          console.error('Mirage got unexpected play-action/:action', action)
+          console.error('Mirage got unexpected expeditions/:action', action)
           return new Response(404)
         }
-        return new Response(200, undefined, responseUpdate)
+        const res: ServerExpeditionUpdate = {
+          update: responseUpdate,
+          rollResult
+        }
+        return new Response(200, undefined, res)
       })
+
+      // TODO: this doesn't fix the problem with Webpack HMR via Next
+      // See https://github.com/miragejs/miragejs/issues/651
+      // (but those suggestions ^^^ don't work :/ )
+      //
+      // this.namespace = ''
+      // this.passthrough((request) => {
+      //   console.log('request.url', request.url)
+      //   return !request.url.startsWith('/api/')
+      // })
     }
   })
 }

@@ -1,6 +1,6 @@
 import { type Dispatch } from '@reduxjs/toolkit'
-import { GAME_STATE_URL, PLAY_ACTION_URL } from '@/app/serverRoutes'
-import { playActionResponse, setGameState } from '.'
+import { EXPEDITIONS_URL, GAME_STATE_URL } from '@/app/serverRoutes'
+import { encounterUpdate, setGameState } from '.'
 import { type ServerGameState } from '@/types/gameState'
 
 export function fetchInitialGameState() {
@@ -33,7 +33,9 @@ export const NEXT_ENCOUNTER = 'next-encounter'
 export const TURN_BACK = 'turn-back'
 export const ENCOUNTER_CARD_CHOICE = 'encounter-card-choice'
 export const PLAY_CARD = 'play-card'
-export type PlayAction =
+
+// Moves a player can make related to an expedition
+export type ExpeditionMove =
   | {
       action: typeof BEGIN_EXPEDITION
     }
@@ -43,24 +45,31 @@ export type PlayAction =
   | {
       action: typeof TURN_BACK
     }
-  | { action: typeof ENCOUNTER_CARD_CHOICE; payload: { choice: number } }
-  | { action: typeof PLAY_CARD; payload: { cardId: string } }
+  | { action: typeof ENCOUNTER_CARD_CHOICE; body: { choice: number } }
+  | { action: typeof PLAY_CARD; body: { cardId: string } }
 
-export type PlayActionUpdate = Partial<ServerGameState>
+export interface RollResult {
+  rolls: number[]
+}
 
-export function postPlayAction(action: PlayAction) {
-  return async function postPlayActionThunk(dispatch: Dispatch) {
+export interface ServerExpeditionUpdate {
+  rollResult?: RollResult
+  update?: Partial<ServerGameState>
+}
+
+export function postExpeditionAction(action: ExpeditionMove) {
+  return async function postExpeditionActionThunk(dispatch: Dispatch) {
     // TODO: DRY vs above
     try {
-      const response = await fetch(`${PLAY_ACTION_URL}/${action.action}`, {
+      const response = await fetch(`${EXPEDITIONS_URL}/${action.action}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: 'payload' in action ? JSON.stringify(action.payload) : undefined
+        body: 'body' in action ? JSON.stringify(action.body) : undefined
       })
       const text = await response.text()
 
       // TODO: validate input with JSON Schema
-      const json: PlayActionUpdate | null =
+      const json: ServerExpeditionUpdate | null =
         text === '' ? null : JSON.parse(text)
       if (response.status !== 200) {
         console.error(
@@ -69,7 +78,7 @@ export function postPlayAction(action: PlayAction) {
       } else if (json === null) {
         console.error('No JSON response from server')
       } else {
-        dispatch(playActionResponse(json))
+        dispatch(encounterUpdate(json))
       }
     } catch (err) {
       console.error('Error posting action', err)

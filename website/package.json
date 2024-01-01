@@ -7,8 +7,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 8081",
+    "mirage": "cross-env NEXT_PUBLIC_USE_MIRAGE_SERVER=1 next dev -p 8081",
     "build": "next build",
     "start": "next start -p 8081",
+    "check": "tsc",
     "lint": "next lint",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
@@ -18,7 +20,8 @@
     "next": "14.0.4",
     "react": "^18",
     "react-dom": "^18",
-    "react-redux": "^9.0.4"
+    "react-redux": "^9.0.4",
+    "react-use": "^17.4.2"
   },
   "devDependencies": {
     "@storybook/addon-essentials": "^7.6.6",
@@ -34,6 +37,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.0.1",
+    "cross-env": "^7.0.3",
     "eslint": "^8.55.0",
     "eslint-config-next": "14.0.4",
     "eslint-config-prettier": "^9.1.0",

@@ -3,7 +3,7 @@ import React, { useCallback, useEffect } from 'react'
 import CharacterStatsBar from '@/components/CharacterStatsBar'
 import {
   fetchInitialGameState,
-  postPlayAction,
+  postExpeditionAction,
   selectActiveEncounterCardId,
   selectCharacterStats,
   selectExpeditionProgress,
@@ -26,8 +26,10 @@ import GameLoadout from './GameLoadout'
 
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`)
 
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NEXT_PUBLIC_USE_MIRAGE_SERVER === '1') {
   makeMirageServer({ environment: 'development' })
+} else {
+  console.log('NO MIRAGE')
 }
 
 export default function PlayPage(): React.ReactNode {
@@ -52,19 +54,19 @@ export default function PlayPage(): React.ReactNode {
   const beginExpedition = useCallback(() => {
     // TODO: use action creator to hide the play `action` string
     // TODO: error handling, delete 'void' here
-    void dispatch(postPlayAction({ action: 'begin-expedition' }))
+    void dispatch(postExpeditionAction({ action: 'begin-expedition' }))
   }, [dispatch])
 
   const nextEncounter = useCallback(() => {
     // TODO: use action creator to hide the play `action` string
     // TODO: error handling, delete 'void' here
-    void dispatch(postPlayAction({ action: 'next-encounter' }))
+    void dispatch(postExpeditionAction({ action: 'next-encounter' }))
   }, [dispatch])
 
   const turnBack = useCallback(() => {
     // TODO: use action creator to hide the play `action` string
     // TODO: error handling, delete 'void' here
-    void dispatch(postPlayAction({ action: 'turn-back' }))
+    void dispatch(postExpeditionAction({ action: 'turn-back' }))
   }, [dispatch])
 
   const playCardFromHand = useCallback(
@@ -72,7 +74,7 @@ export default function PlayPage(): React.ReactNode {
       // TODO: use action creator to hide the play `action` string
       // TODO: error handling, delete 'void' here
       void dispatch(
-        postPlayAction({ action: 'play-card', payload: { cardId } })
+        postExpeditionAction({ action: 'play-card', body: { cardId } })
       )
     },
     [dispatch]

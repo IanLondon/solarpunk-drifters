@@ -1,6 +1,11 @@
 import { createAction, createSlice } from '@reduxjs/toolkit'
-import { type ServerGameState } from '@/types/gameState'
-import { type PlayActionUpdate } from '..'
+import {
+  ACTIVE_ENCOUNTER,
+  BETWEEN_ENCOUNTERS,
+  type ExpeditionProgress,
+  type ServerGameState
+} from '@/types/gameState'
+import { type ServerExpeditionUpdate } from '..'
 
 type GameState = ServerGameState | null
 
@@ -10,10 +15,10 @@ export const setGameState = createAction<ServerGameState, 'SET_GAME_STATE'>(
   'SET_GAME_STATE'
 )
 
-export const playActionResponse = createAction<
-  PlayActionUpdate,
-  'PLAY_ACTION_RESPONSE'
->('PLAY_ACTION_RESPONSE')
+export const encounterUpdate = createAction<
+  ServerExpeditionUpdate,
+  'ENCOUNTER_UPDATE'
+>('ENCOUNTER_UPDATE')
 
 export const gameStateSlice = createSlice({
   name: 'gameState',
@@ -24,25 +29,32 @@ export const gameStateSlice = createSlice({
       return action.payload
     })
 
-    builder.addCase(playActionResponse, (state, action) => {
+    builder.addCase(encounterUpdate, (state, action) => {
       if (state === null) {
         console.error(
           'tried to partially update the game state before initial state was set'
         )
       } else {
-        // Simply spread the update into the state
-        Object.assign(state, action.payload)
+        if (action.payload.update !== undefined) {
+          // Simply spread the update into the state. Assume that it's been validated upstream
+          Object.assign(state, action.payload.update)
+        }
       }
     })
   },
   selectors: {
-    selectActiveEncounterCardId: (state) =>
-      state?.activeEncounterCardId ?? null,
+    selectActiveEncounterCardId: (state): string | null =>
+      state?.gameMode === ACTIVE_ENCOUNTER ? state.activeEncounterCardId : null,
     selectCharacterStats: (state) => state?.characterStats ?? null,
-    selectGameMode: (state) => state?.gameMode ?? null,
+    selectGameMode: (state): ServerGameState['gameMode'] | null =>
+      state?.gameMode ?? null,
     selectInventory: (state) => state?.inventory ?? null,
     selectResources: (state) => state?.resources ?? null,
-    selectExpeditionProgress: (state) => state?.expeditionProgress ?? null
+    selectExpeditionProgress: (state): ExpeditionProgress | null =>
+      state?.gameMode === ACTIVE_ENCOUNTER ||
+      state?.gameMode === BETWEEN_ENCOUNTERS
+        ? state.expeditionProgress
+        : null
   }
 })
 

@@ -38,3 +38,9 @@ To **avoid CORS issues in local development** in a way that resembles production
 - `website` is at `localhost:3000/`
 
 The `local-dev-reverse-proxy` has a Dockerfile for the Nginx reverse proxy (and a script that builds and runs it)
+
+## Other ports
+
+Webpack HMR uses a websocket at `ws://localhost:8081`, Nginx passes it through.
+
+Storybook runs by default on `localhost:6006`. It doesn't need to be proxied.

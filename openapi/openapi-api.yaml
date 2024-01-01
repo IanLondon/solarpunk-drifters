@@ -52,37 +52,37 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/EncounterChoice"
-  /play-action/begin-expedition:
+  /expeditions/begin-expedition:
     post:
       description: Begin an expedition
       responses:
         "200":
-          description: Successfully began expedition. Response contains GameState update.
+          description: Successfully began expedition. Response contains ExpeditionUpdate
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GameState"
-  /play-action/next-encounter:
+                $ref: "#/components/schemas/ExpeditionUpdate"
+  /expeditions/next-encounter:
     post:
       description: Begin next encounter (draw a new encounter card)
       responses:
         "200":
-          description: Successfully began new encounter. Response contains GameState update.
+          description: Successfully began new encounter. Response contains ExpeditionUpdate
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GameState"
-  /play-action/turn-back:
+                $ref: "#/components/schemas/ExpeditionUpdate"
+  /expeditions/turn-back:
     post:
       description: Turn back, ending the expedition.
       responses:
         "200":
-          description: Successfully ended the expedition. Response contains GameState update.
+          description: Successfully ended the expedition. Response contains ExpeditionUpdate
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GameState"
-  /play-action/encounter-card-choice:
+                $ref: "#/components/schemas/ExpeditionUpdate"
+  /expeditions/encounter-card-choice:
     post:
       description: Make a choice on the active encounter card
       requestBody:
@@ -97,12 +97,12 @@ paths:
                   minimum: 0
       responses:
         "200":
-          description: Successfully executed a choice. Response contains GameState update.
+          description: Successfully executed a choice. Response contains ExpeditionUpdate
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GameState"
-  /play-action/play-card:
+                $ref: "#/components/schemas/ExpeditionUpdate"
+  /expeditions/play-card:
     post:
       description: Play a card in the player's hand (between encounters)
       requestBody:
@@ -116,14 +116,15 @@ paths:
                   type: string
       responses:
         "200":
-          description: Successfully played a card. Response contains GameState update.
+          description: Successfully played a card. Response contains ExpeditionUpdate
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GameState"
+                $ref: "#/components/schemas/ExpeditionUpdate"
   /login/user:
     post:
       description: Create a new user
+      security: []
       requestBody:
         description: A username and password
         content:
@@ -140,22 +141,26 @@ paths:
   /login/login:
     post:
       description: Log in an existing user account
+      security: []
       requestBody:
         $ref: "#/paths/~1login~1user/post/requestBody"
       responses:
         "200":
-          description: Successful login
+          description: Successful login, obtain a session cookie to be used in subsequent requests
           headers:
             Set-Cookie:
               schema:
                 type: string
-                example: connect.sid=abcde12345; HttpOnly
+                example: connect.sid=abcde12345; Path=/; HttpOnly; SameSite=Lax
         "401":
           description: Invalid username or password
 
+security:
+  - sessionCookieAuth: []
+
 components:
   securitySchemes:
-    SessionCookie:
+    sessionCookieAuth:
       type: apiKey
       in: cookie
       name: connect.sid
@@ -171,6 +176,7 @@ components:
           $ref: "#/components/schemas/StatNumber"
         luck:
           $ref: "#/components/schemas/StatNumber"
+
     EncounterChoice:
       type: object
       properties:
@@ -180,6 +186,7 @@ components:
           $ref: "#/components/schemas/EncounterCheck"
         risk:
           $ref: "#/components/schemas/EncounterRisk"
+
     EncounterCheck:
       type: object
       properties:
@@ -190,6 +197,7 @@ components:
           type: object
           additionalProperties:
             type: integer
+
     EncounterRisk:
       type: object
       properties:
@@ -202,6 +210,7 @@ components:
         loomingDangerIncrease:
           type: number
           nullable: true
+
     ExpeditionProgress:
       type: object
       properties:
@@ -209,16 +218,23 @@ components:
           type: number
         total:
           type: number
-    GameMode:
-      type: string
-      enum: [ACTIVE_ENCOUNTER, BETWEEN_ENCOUNTERS, LOADOUT]
-    GameState:
+
+    ExpeditionUpdate:
+      type: object
+      properties:
+        rollResult:
+          $ref: "#/components/schemas/RollResult"
+        update:
+          $ref: "#/components/schemas/GameState"
+
+    # GameMode:
+    #   type: string
+    #   enum: [ACTIVE_ENCOUNTER, BETWEEN_ENCOUNTERS, LOADOUT]
+    CoreGameState:
       type: object
       properties:
         characterStats:
           $ref: "#/components/schemas/CharacterStats"
-        gameMode:
-          $ref: "#/components/schemas/GameMode"
         inventory:
           type: object
           additionalProperties:
@@ -227,11 +243,40 @@ components:
           type: object
           additionalProperties:
             type: integer
+    ActiveEncounterGameState:
+      type: object
+      properties:
+        gameMode:
+          type: string
+          enum: ["ACTIVE_ENCOUNTER"]
         activeEncounterCardId:
           type: string
-          nullable: true
         expeditionProgress:
           $ref: "#/components/schemas/ExpeditionProgress"
+    BetweenEncountersGameState:
+      type: object
+      properties:
+        gameMode:
+          type: string
+          enum: ["BETWEEN_ENCOUNTERS"]
+        expeditionProgress:
+          $ref: "#/components/schemas/ExpeditionProgress"
+    LoadoutGameState:
+      type: object
+      properties:
+        gameMode:
+          type: string
+          enum: ["LOADOUT"]
+    GameState:
+      allOf:
+        - $ref: "#/components/schemas/CoreGameState"
+        - oneOf:
+            - $ref: "#/components/schemas/ActiveEncounterGameState"
+            - $ref: "#/components/schemas/BetweenEncountersGameState"
+            - $ref: "#/components/schemas/LoadoutGameState"
+          discriminator:
+            propertyName: gameMode
+
     ImageInfo:
       type: object
       properties:
@@ -243,8 +288,18 @@ components:
           type: integer
         src:
           type: string
+
+    RollResult:
+      type: object
+      properties:
+        rolls:
+          type: array
+          items:
+            type: integer
+
     StatNumber:
       type: integer
+
     UserLogin:
       type: object
       properties:

@@ -1,6 +1,7 @@
-import { encounterCardSlice, gameStateSlice } from './slices'
+import { diceRollSlice, encounterCardSlice, gameStateSlice } from './slices'
 
 export const reducer = {
-  gameState: gameStateSlice.reducer,
-  [encounterCardSlice.reducerPath]: encounterCardSlice.reducer
+  [diceRollSlice.reducerPath]: diceRollSlice.reducer,
+  [encounterCardSlice.reducerPath]: encounterCardSlice.reducer,
+  [gameStateSlice.reducerPath]: gameStateSlice.reducer
 }

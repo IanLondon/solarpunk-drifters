@@ -16,11 +16,28 @@ export interface ExpeditionProgress {
   total: number
 }
 
-export interface ServerGameState {
+export interface CoreServerGameState {
   characterStats: CharacterStats
-  gameMode: GameMode
   inventory: Record<string, number>
   resources: Record<string, number>
-  activeEncounterCardId: string | null
-  expeditionProgress: ExpeditionProgress | null
 }
+
+export interface ActiveEncounterServerGameState extends CoreServerGameState {
+  gameMode: typeof ACTIVE_ENCOUNTER
+  activeEncounterCardId: string
+  expeditionProgress: ExpeditionProgress
+}
+
+export interface BetweenEncountersServerGameState extends CoreServerGameState {
+  gameMode: typeof BETWEEN_ENCOUNTERS
+  expeditionProgress: ExpeditionProgress
+}
+
+export interface LoadoutServerGameState extends CoreServerGameState {
+  gameMode: typeof LOADOUT
+}
+
+export type ServerGameState =
+  | ActiveEncounterServerGameState
+  | BetweenEncountersServerGameState
+  | LoadoutServerGameState
