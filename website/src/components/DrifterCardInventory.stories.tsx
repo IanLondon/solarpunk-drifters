@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import CardInHandInventory from '@/components/CardInHandInventory'
-import { DEMO_MAKE_PROGRESS } from '@/dummyData/cardsInHand'
+import DrifterCardInventory from '@/components/DrifterCardInventory'
+import { DEMO_MAKE_PROGRESS } from '@/dummyData/drifterCards'
 
 const meta = {
-  title: 'Cards/CardInHandInventory',
-  component: CardInHandInventory,
+  title: 'Cards/DrifterCardInventory',
+  component: DrifterCardInventory,
   argTypes: {
     onCardSelect: { action: 'Select card' }
   },
@@ -12,7 +12,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen'
   }
-} satisfies Meta<typeof CardInHandInventory>
+} satisfies Meta<typeof DrifterCardInventory>
 
 export default meta
 type Story = StoryObj<typeof meta>

@@ -16,7 +16,7 @@ import {
   BETWEEN_ENCOUNTERS,
   LOADOUT
 } from '@/types/gameState'
-import { DEMO_MAKE_PROGRESS } from '@/dummyData/cardsInHand'
+import { DEMO_MAKE_PROGRESS } from '@/dummyData/drifterCards'
 import { makeMirageServer } from '@/mirage'
 import LoadingSection from '@/components/LoadingSection'
 import ProgressMeter from '@/components/ProgressMeter'
@@ -104,7 +104,7 @@ export default function PlayPage(): React.ReactNode {
         <GameBetweenEncounters
           nextEncounter={nextEncounter}
           turnBack={turnBack}
-          cardsInHand={[DEMO_MAKE_PROGRESS]} // TODO use actual card inventory
+          drifterCards={[DEMO_MAKE_PROGRESS]} // TODO use actual card inventory
           onCardSelect={playCardFromHand}
         />
       )

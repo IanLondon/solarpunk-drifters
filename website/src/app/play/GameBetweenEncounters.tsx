@@ -1,18 +1,18 @@
 import React from 'react'
-import CardInHandInventory from '@/components/CardInHandInventory'
-import { type CardInHand } from '@/types'
+import DrifterCardInventory from '@/components/DrifterCardInventory'
+import { type DrifterCard } from '@/types'
 
 export interface GameBetweenEncountersProps {
   nextEncounter: () => void
   turnBack: () => void
   onCardSelect: (cardId: string) => void
-  cardsInHand: CardInHand[]
+  drifterCards: DrifterCard[]
 }
 
 export default function GameBetweenEncounters(
   props: GameBetweenEncountersProps
 ): React.ReactNode {
-  const { nextEncounter, turnBack, onCardSelect, cardsInHand } = props
+  const { nextEncounter, turnBack, onCardSelect, drifterCards } = props
   return (
     <article className='flex flex-col'>
       <button onClick={nextEncounter}>Draw the next Encounter card</button>
@@ -20,7 +20,10 @@ export default function GameBetweenEncounters(
       <div className='text-center'>
         <p>Play a card from your hand...</p>
 
-        <CardInHandInventory onCardSelect={onCardSelect} cards={cardsInHand} />
+        <DrifterCardInventory
+          onCardSelect={onCardSelect}
+          cards={drifterCards}
+        />
       </div>
 
       <button onClick={turnBack}>Turn Back</button>

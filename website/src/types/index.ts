@@ -1,4 +1,4 @@
-export * from './cardInHand'
+export * from './drifterCard'
 export * from './encounter'
 export * from './gameState'
 

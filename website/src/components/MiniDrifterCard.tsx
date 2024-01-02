@@ -1,19 +1,17 @@
 import Image from 'next/image'
 import React, { useCallback } from 'react'
 import Card from './Card'
-import { type CardInHand } from '@/types'
+import { type DrifterCard } from '@/types'
 
 // TODO HACK
 const THUMBNAIL_IMAGE_SCALE = 1 / 8
 
-export interface CardInHandMiniCardProps {
-  card: CardInHand
+export interface MiniDrifterCardProps {
+  card: DrifterCard
   onCardSelect: (cardId: string) => void
 }
 
-export function CardInHandMiniCard(
-  props: CardInHandMiniCardProps
-): React.ReactNode {
+export function MiniDrifterCard(props: MiniDrifterCardProps): React.ReactNode {
   const { card, onCardSelect } = props
   const onCardClick = useCallback(() => {
     onCardSelect(card.id)
