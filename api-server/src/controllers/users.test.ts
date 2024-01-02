@@ -17,7 +17,7 @@ const existingUser = {
   username: 'ursulaLeGuin',
   password: 'Disp0ssessed',
   passhash: 'fakePASShash',
-  uid: 1233321
+  uid: '1233321'
 } as const
 
 // this user doesn't yet exist before each test
@@ -25,7 +25,7 @@ const newUser = {
   username: 'nkJemisin',
   password: 'br0kenEarth',
   passhash: 'anotherFakeHash',
-  uid: 909090
+  uid: '909090'
 } as const
 
 insertUserMock.mockImplementation(async (username, passhash) => {

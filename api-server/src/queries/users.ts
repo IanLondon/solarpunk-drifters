@@ -1,25 +1,28 @@
 import connectKnex from '../connectKnex'
+import { createUserGameData } from './gameState'
 
 export interface UsersTableRow {
-  uid: number
+  uid: string
   username: string
   passhash: string
 }
 
 export interface NewUser extends Omit<UsersTableRow, 'uid'> {}
 
-export async function insertUser (username: string, passhash: string): Promise<number> {
+export async function insertUser (username: string, passhash: string): Promise<string> {
   const knex = connectKnex()
 
-  const ret: Array<{ uid: number }> = await knex<UsersTableRow>('users').returning('uid').insert({ username, passhash })
+  const ret: Array<{ uid: string }> = await knex<UsersTableRow>('users').returning('uid').insert({ username, passhash })
   if (ret.length === 1) {
-    return ret[0].uid
+    const uid = ret[0].uid
+    await createUserGameData(uid)
+    return uid
   } else {
     throw new Error('No UID returned from DB after inserting user')
   }
 }
 
-export async function getUserByUid (uid: number): Promise<UsersTableRow | null> {
+export async function getUserByUid (uid: string): Promise<UsersTableRow | null> {
   const knex = connectKnex()
 
   return await knex<UsersTableRow>('users')

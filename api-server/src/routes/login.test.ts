@@ -43,7 +43,7 @@ describe('/login', () => {
       const res = httpMocks.createResponse()
       const next = jest.fn()
 
-      const uid = 12345
+      const uid = '12345'
       createUserMock.mockReturnValue(Promise.resolve(uid))
 
       await createUserHandler(req, res, next)
@@ -163,7 +163,7 @@ describe('/login', () => {
       const res = httpMocks.createResponse()
       const next = jest.fn()
 
-      const uid = 123456
+      const uid = '123456'
       const passhash = 'fakeHash123'
       const user: UsersTableRow = { username: 'alice', uid, passhash }
       getUserWithCredentialsMock.mockReturnValue(Promise.resolve(user))

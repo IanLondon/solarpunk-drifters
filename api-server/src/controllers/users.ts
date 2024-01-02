@@ -8,7 +8,7 @@ export interface UsernamePassword {
 }
 
 // Attempt to create a user. Return the user id if created, or null if user already exists.
-export async function createUser ({ username, password }: UsernamePassword): Promise<number | null> {
+export async function createUser ({ username, password }: UsernamePassword): Promise<string | null> {
   const existingUser = await getUserByUsername(username)
   if (existingUser != null) {
     // user already exists, give up
