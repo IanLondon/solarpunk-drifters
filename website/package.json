@@ -10,7 +10,7 @@
     "mirage": "cross-env NEXT_PUBLIC_USE_MIRAGE_SERVER=1 next dev -p 8081",
     "build": "next build",
     "start": "next start -p 8081",
-    "check": "tsc",
+    "check": "tsc --noEmit",
     "lint": "next lint",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
@@ -18,12 +18,14 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.0.1",
     "next": "14.0.4",
+    "openapi-fetch": "^0.8.2",
     "react": "^18",
     "react-dom": "^18",
     "react-redux": "^9.0.4",
     "react-use": "^17.4.2"
   },
   "devDependencies": {
+    "@solarpunk-drifters/openapi": "file:../openapi",
     "@storybook/addon-essentials": "^7.6.6",
     "@storybook/addon-interactions": "^7.6.6",
     "@storybook/addon-links": "^7.6.6",

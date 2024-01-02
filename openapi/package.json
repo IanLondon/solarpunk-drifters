@@ -1,0 +1,15 @@
+{
+    "name": "@solarpunk-drifters/openapi",
+    "version": "1.0.0",
+    "description": "OpenAPI definition and types",
+    "author": "Ian London",
+    "license": "UNLICENSED",
+    "private": true,
+    "scripts": {
+        "build": "openapi-typescript openapi-api.yaml -o src/openapi-api.d.ts"
+    },
+    "types": "src/index.d.ts",
+    "devDependencies": {
+        "openapi-typescript": "^6.7.3"
+    }
+}

@@ -18,11 +18,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GameState"
-  /encounter-cards/{cardId}:
+  /encounter-cards/{card_id}:
     get:
       description: Get a single Encounter Card
       parameters:
-        - name: cardId
+        - name: card_id
           in: path
           required: true
           schema:
@@ -52,6 +52,7 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/EncounterChoice"
+                required: [id, title, description, image, choices]
   /expeditions/begin-expedition:
     post:
       description: Begin an expedition
@@ -176,6 +177,7 @@ components:
           $ref: "#/components/schemas/StatNumber"
         luck:
           $ref: "#/components/schemas/StatNumber"
+      required: [agility, diy, harmony, luck]
 
     EncounterChoice:
       type: object
@@ -186,6 +188,7 @@ components:
           $ref: "#/components/schemas/EncounterCheck"
         risk:
           $ref: "#/components/schemas/EncounterRisk"
+      required: [description]
 
     EncounterCheck:
       type: object
@@ -218,6 +221,7 @@ components:
           type: number
         total:
           type: number
+      required: [current, total]
 
     ExpeditionUpdate:
       type: object
@@ -288,6 +292,7 @@ components:
           type: integer
         src:
           type: string
+      required: [alt, height, width, src]
 
     RollResult:
       type: object
@@ -296,6 +301,7 @@ components:
           type: array
           items:
             type: integer
+      required: [rolls]
 
     StatNumber:
       type: integer
@@ -307,3 +313,4 @@ components:
           type: string
         password:
           type: string
+      required: [username, password]
