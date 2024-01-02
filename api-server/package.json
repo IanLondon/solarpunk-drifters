@@ -10,7 +10,7 @@
     "lint-fix": "eslint . --fix",
     "lint": "eslint .",
     "start": "node dist/index.js",
-    "test": "cross-env ENSURE_NO_DB=1 jest --testPathIgnorePatterns src/db-integration-tests",
+    "test": "cross-env ENSURE_NO_DB=1 jest --testPathIgnorePatterns src/db-integration-tests dist/",
     "test-db-integration": "cross-env RUN_DB_TESTS=1 jest"
   },
   "author": "Ian London",

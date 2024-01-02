@@ -9,7 +9,9 @@ import { type UsersTableRow } from '../queries/users'
 
 jest.mock('../controllers/users')
 const createUserMock = createUser as jest.Mock<typeof createUser>
-const getUserWithCredentialsMock = getUserWithCredentials as jest.Mock<typeof getUserWithCredentials>
+const getUserWithCredentialsMock = getUserWithCredentials as jest.Mock<
+  typeof getUserWithCredentials
+>
 
 describe('/login', () => {
   // TODO IMMEDIATELY REMOVE
@@ -25,7 +27,10 @@ describe('/login', () => {
       footestHandler(req, res, next)
 
       expect(res.statusCode).toEqual(201)
-      expect(res._getJSONData()).toEqual({ echo: 'echoThis123', result: 'yeah boi' })
+      expect(res._getJSONData()).toEqual({
+        echo: 'echoThis123',
+        result: 'yeah boi'
+      })
     })
   })
 
@@ -47,7 +52,10 @@ describe('/login', () => {
       expect(next).not.toHaveBeenCalled()
 
       expect(createUserMock).toBeCalledTimes(1)
-      expect(createUserMock).toHaveBeenCalledWith({ username: 'alice', password: 'alicePractice' })
+      expect(createUserMock).toHaveBeenCalledWith({
+        username: 'alice',
+        password: 'alicePractice'
+      })
 
       expect(res._isEndCalled()).toBe(true)
       expect(res._getData()).toEqual('')
@@ -71,7 +79,9 @@ describe('/login', () => {
 
       expect(res._isEndCalled()).toBe(true)
       expect(res._isJSON()).toBe(true)
-      expect(res._getJSONData()).toEqual({ message: i18n.messages.USERNAME_EXISTS })
+      expect(res._getJSONData()).toEqual({
+        message: i18n.messages.USERNAME_EXISTS
+      })
       expect(res.statusCode).toEqual(400)
     })
 
@@ -89,7 +99,9 @@ describe('/login', () => {
 
       expect(res._isEndCalled()).toBe(true)
       expect(res._isJSON()).toBe(true)
-      expect(res._getJSONData()).toEqual({ message: i18n.messages.INVALID_USERNAME_OR_PASSWORD })
+      expect(res._getJSONData()).toEqual({
+        message: i18n.messages.INVALID_USERNAME_OR_PASSWORD
+      })
       expect(res.statusCode).toEqual(401)
     })
   })
@@ -109,7 +121,9 @@ describe('/login', () => {
 
       expect(res._isEndCalled()).toBe(true)
       expect(res._isJSON()).toBe(true)
-      expect(res._getJSONData()).toEqual({ message: i18n.messages.INVALID_USERNAME_OR_PASSWORD })
+      expect(res._getJSONData()).toEqual({
+        message: i18n.messages.INVALID_USERNAME_OR_PASSWORD
+      })
       expect(res.statusCode).toEqual(401)
     })
 
@@ -129,13 +143,17 @@ describe('/login', () => {
 
       expect(res._isEndCalled()).toBe(true)
       expect(res._isJSON()).toBe(true)
-      expect(res._getJSONData()).toEqual({ message: i18n.messages.INVALID_USERNAME_OR_PASSWORD })
+      expect(res._getJSONData()).toEqual({
+        message: i18n.messages.INVALID_USERNAME_OR_PASSWORD
+      })
       expect(res.statusCode).toEqual(401)
     })
 
     it('should set req.session.uid if username and password are correct', async () => {
       // NOTE: this simple fake ignores error handling of the session.regenerate fn
-      const regenerate = (cb: (x?: any) => void): void => { cb() }
+      const regenerate = (cb: (x?: any) => void): void => {
+        cb()
+      }
 
       const req = httpMocks.createRequest({
         method: 'POST',

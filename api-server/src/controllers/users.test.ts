@@ -8,7 +8,9 @@ jest.mock('bcrypt')
 jest.mock('../queries/users')
 const bcryptMock = bcrypt as jest.Mocked<typeof bcrypt>
 const insertUserMock = insertUser as jest.Mock<typeof insertUser>
-const getUserByUsernameMock = getUserByUsername as jest.Mock<typeof getUserByUsername>
+const getUserByUsernameMock = getUserByUsername as jest.Mock<
+  typeof getUserByUsername
+>
 
 // this user exists before each test
 const existingUser = {
@@ -45,17 +47,21 @@ getUserByUsernameMock.mockImplementation(async (username) => {
   return null
 })
 
-bcryptMock.hash.mockImplementation(async (password: string | Buffer, rounds) => {
-  if (password === existingUser.password) {
-    return existingUser.passhash
-  } else if (password === newUser.password) {
-    return newUser.passhash
+bcryptMock.hash.mockImplementation(
+  async (password: string | Buffer, rounds) => {
+    if (password === existingUser.password) {
+      return existingUser.passhash
+    } else if (password === newUser.password) {
+      return newUser.passhash
+    }
+    throw new Error(`Unhandled mock case: password "${password.toString()}"`)
   }
-  throw new Error(`Unhandled mock case: password "${password.toString()}"`)
-})
+)
 
 bcryptMock.compare.mockImplementation(async (password, passhash) => {
-  return password === existingUser.password && passhash === existingUser.passhash
+  return (
+    password === existingUser.password && passhash === existingUser.passhash
+  )
 })
 
 describe('createUser', () => {
