@@ -2,18 +2,23 @@ import { getUserGameState } from '../queries/gameState'
 
 // TODO IMMEDIATELY these are duplicated in website/src/types/gameState.ts
 
-const ACTIVE_ENCOUNTER = 'ACTIVE_ENCOUNTER'
-const BETWEEN_ENCOUNTERS = 'BETWEEN_ENCOUNTERS'
-const LOADOUT = 'LOADOUT'
+export const ACTIVE_ENCOUNTER = 'ACTIVE_ENCOUNTER'
+export const BETWEEN_ENCOUNTERS = 'BETWEEN_ENCOUNTERS'
+export const LOADOUT = 'LOADOUT'
 
-type GameMode =
+export interface ExpeditionProgress {
+  current: number
+  total: number
+}
+
+export type GameMode =
   | typeof LOADOUT
   | typeof BETWEEN_ENCOUNTERS
   | typeof ACTIVE_ENCOUNTER
 
-type Skill = string // TODO IMMEDIATELY HACK
+export type Skill = string // TODO IMMEDIATELY HACK
 
-type CharacterStats = Record<Skill, number>
+export type CharacterStats = Record<Skill, number>
 
 export interface GameState {
   characterStats: CharacterStats
@@ -23,8 +28,6 @@ export interface GameState {
 }
 
 // Just a wrapper for the query, bc currently this is a single query with no logic.
-export async function getGameStateForUser (
-  uid: string
-): Promise<GameState | null> {
+export async function getGameStateForUser(uid: string): Promise<GameState> {
   return await getUserGameState(uid)
 }

@@ -61,3 +61,36 @@ docker compose exec app npm run test-db-integration
 # Linting & formatting
 
 Uses `standard-with-typescript` and Prettier.
+
+# Game Core Domain Logic
+
+Software Design Goals for Core Domain Logic:
+
+- Isolate the domain logic (behaviors specific to the game mechanics) so that is it free of any dependencies. It should not have any awareness of how data is stored or of any client or transport layer.
+- Decouple it from data persistence
+- Decouple it from transport/communication concerns by driving it through a small, simple interface that speaks in domain language, eg "the player has made the move 'draw an encounter card'".
+
+I've chosen two implementation tactics to organize how the core domain is implemented:
+
+- **Functional core, imperative shell**.
+  - I prefer functional approaches to OOP, especially in a funky language like TypeScript. Functional code is easy to reason about and test. I like to think about data transformations rather than building layers of abstract APIs which can make it hard to understand what the inputs and outputs are.
+- **Event sourcing / Command pattern**. I'm using these terms quite generally to describe "using events plus a previous state to derive a new state." This pattern decouples the complex domain logic concerned with producing game events from the downstream effects of those events, allowing the domain logic to be written in a pure manner and tested in isolation without complex mocks.
+
+The "game domain" is partitioned into layers:
+
+- `gameLogicLayer`: this is given read-only access to data and is also given a "player move". It outputs `GameEvent`s describing the changes that should happen in response to the move and the current state, or it outputs a `GameErrorEvent` (usually the error is something like "this move is not allowed").
+- `gamePersistenceLayer`: given the output of `gameLogicLayer`, the persistence layer actually effects the changes to the state. It may fail if if the `gameLogicLayer` produced an invalid `GameEvent`, due to an implementation bug or because the data changed since the `gameLogicLayer` read it. It interacts with a `GameStore`, which abstracts away the details of how data is written.
+  - The persistence layer operates on an abstract interface, the `GameStore`. This is in line with the "ports and adapters model" -- ports provide this abstract interface, adapters are the implementation(s) of the interface.
+- `gameTransportLayer`: The transport layer handles sending the changes to the client(s) via HTTP responses to requests or WebSocket messages. If there was an error in either the `gameLogicLayer` or the `gamePersistenceLayer`, that error will be relayed to the client (eg, "you can't use that item because it's already gone"). Otherwise if there are no upstream errors, the transport layer informs the client(s) of what happened in the `GameEvent`s. This includes game state updates, and also transient relevant events like the outcome of a dice roll or the reason an expedition ended.
+
+`GameEvents` describe changes that happen within the game, as a result of a "player move". Many of these events are used by the persistence and transport layers to update backend and client-side state, but some events are purely informational (eg, transiently displayed to players in the UI).
+
+**DESIGN**: `GameEvent`s should be designed to be descriptive, "what happened". They should be modeled as events, not setters. They should be designed in a way that is decoupled from any implementation details of the game state -- though events like "add item to inventory" presume there is an inventory of items with quantities, the event should not depend on assumptions about the data type or persistence mechanism of that inventory. It's up to downstream effector layers to actually do things with `GameEvent`s. A single `GameEvent` might change multiple parts of the game state, or just one, or might not affect the state at all.
+
+- They should also contain sufficient information to describe what happened in the game. For example, if we had an event like "the player rolled 3 dice" but didn't include the results of the rolls, it would be difficult for downstream effectors to arrive at matching outcomes. They'd need to awkwardly share random number generation state.
+
+`GameEvent`s can become stale. For example:
+
+- The `gameLogicLayer` reads character stats and generates events based on those stats
+- Something changes the character stats, after the `gameLogicLayer` has read them but before the downstream effectors have read them. (Maybe the client send two requests simultaneously, to the same or different server instances.)
+- The events are now stale and no longer valid.

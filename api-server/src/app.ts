@@ -2,9 +2,10 @@ import 'dotenv/config'
 import express, { type Express } from 'express'
 import 'express-async-errors'
 import addSessionMiddleware from './addSessionMiddleware'
+import expeditionsRouter from './routes/expeditions'
+import gameStateRouter from './routes/game-state'
 import loginRouter from './routes/login'
 import rootRouter from './routes/root'
-import gameStateRouter from './routes/game-state'
 
 export const app: Express = express()
 
@@ -25,5 +26,6 @@ addSessionMiddleware(app)
 // Routes
 
 app.use('/', rootRouter)
-app.use('/login', loginRouter)
+app.use('/expeditions', expeditionsRouter)
 app.use('/game-state', gameStateRouter)
+app.use('/login', loginRouter)
