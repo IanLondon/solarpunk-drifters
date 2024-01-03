@@ -3,7 +3,7 @@ import { type DiffableGameStore } from '../gamePersistenceLayer/types'
 import {
   type InMemoryDb,
   createInMemoryGameStoreForUser
-} from '../gamePersistenceLayer/utils/gameStateDiff'
+} from '../gamePersistenceLayer/inMemoryStore'
 
 // HACK to iterate quicker without DB schema design.
 // Just a temporary "database" keyed by uuid

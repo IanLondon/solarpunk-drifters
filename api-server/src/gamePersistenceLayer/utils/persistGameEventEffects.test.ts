@@ -1,3 +1,4 @@
+// NOTE: disable this rule so we can any-type the fake `store`
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { describe, expect, it, jest } from '@jest/globals'
 import persistGameEventEffects from './persistGameEventEffects'
