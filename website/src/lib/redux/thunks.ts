@@ -2,6 +2,7 @@ import { type Dispatch } from '@reduxjs/toolkit'
 import { EXPEDITIONS_URL, GAME_STATE_URL } from '@/app/serverRoutes'
 import { encounterUpdate, setGameState } from '.'
 import { type ServerGameState } from '@/types/gameState'
+import { type ExpeditionUpdate } from '@solarpunk-drifters/common'
 
 export function fetchInitialGameState() {
   return async function fetchInitialGameStateThunk(dispatch: Dispatch) {
@@ -27,7 +28,8 @@ export function fetchInitialGameState() {
   }
 }
 
-// TODO: factor out to types/
+// TODO: these constants and types should be imported from OpenAPI spec common/ module
+// (or at least derived from imports)
 export const BEGIN_EXPEDITION = 'begin-expedition'
 export const NEXT_ENCOUNTER = 'next-encounter'
 export const TURN_BACK = 'turn-back'
@@ -48,15 +50,6 @@ export type ExpeditionMove =
   | { action: typeof ENCOUNTER_CARD_CHOICE; body: { choice: number } }
   | { action: typeof PLAY_CARD; body: { cardId: string } }
 
-export interface RollResult {
-  rolls: number[]
-}
-
-export interface ServerExpeditionUpdate {
-  rollResult?: RollResult
-  update?: Partial<ServerGameState>
-}
-
 export function postExpeditionAction(action: ExpeditionMove) {
   return async function postExpeditionActionThunk(dispatch: Dispatch) {
     // TODO: DRY vs above
@@ -69,7 +62,7 @@ export function postExpeditionAction(action: ExpeditionMove) {
       const text = await response.text()
 
       // TODO: validate input with JSON Schema
-      const json: ServerExpeditionUpdate | null =
+      const json: ExpeditionUpdate | null =
         text === '' ? null : JSON.parse(text)
       if (response.status !== 200) {
         console.error(

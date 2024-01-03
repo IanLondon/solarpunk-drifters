@@ -1,6 +1,9 @@
-import { type ExpeditionProgress } from '@solarpunk-drifters/common'
+import {
+  type RollResultOutcome,
+  type ExpeditionProgress
+} from '@solarpunk-drifters/common'
 
-// TODO: factor out new types!
+// TODO: factor out new types! This should become a ClientEvent in the OpenAPI def
 export const REACHED_DESTINATION = 'REACHED_DESTINATION'
 export const OUT_OF_RATIONS = 'OUT_OF_RATIONS'
 export const TURNED_BACK = 'TURNED_BACK'
@@ -8,18 +11,6 @@ export type ExpeditionOutcome =
   | typeof REACHED_DESTINATION
   | typeof OUT_OF_RATIONS
   | typeof TURNED_BACK
-
-export const ROLL_OUTCOME_FAILURE = 'ROLL_OUTCOME_FAILURE'
-export const ROLL_OUTCOME_MIXED_SUCCESS = 'ROLL_OUTCOME_MIXED_SUCCESS'
-export const ROLL_OUTCOME_STRONG_SUCCESS = 'ROLL_OUTCOME_STRONG_SUCCESS'
-export type DiceRollOutcome =
-  | typeof ROLL_OUTCOME_FAILURE
-  | typeof ROLL_OUTCOME_MIXED_SUCCESS
-  | typeof ROLL_OUTCOME_STRONG_SUCCESS
-export interface DiceRoll {
-  outcome: DiceRollOutcome
-  rolls: number[]
-}
 
 // OUTCOMES
 
@@ -98,11 +89,12 @@ export const DICE_ROLL_OUTCOME = 'DICE_ROLL_OUTCOME'
 export interface DiceRollOutcomeEvent {
   type: typeof DICE_ROLL_OUTCOME
   rolls: number[]
-  outcome: DiceRollOutcome
+  outcome: RollResultOutcome
 }
+
 export const diceRollOutcome = (
   rolls: number[],
-  outcome: DiceRollOutcome
+  outcome: RollResultOutcome
 ): DiceRollOutcomeEvent => ({
   type: DICE_ROLL_OUTCOME,
   rolls,

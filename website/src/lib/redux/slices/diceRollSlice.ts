@@ -1,6 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { encounterUpdate } from '.'
-import { type RollResult } from '..'
+import {
+  type RollResult,
+  filterClientEventRollResult
+} from '@solarpunk-drifters/common'
 
 export type DiceRollState = RollResult | null
 
@@ -12,8 +15,22 @@ export const diceRollSlice = createSlice({
   reducers: {},
   extraReducers(builder) {
     builder.addCase(encounterUpdate, (state, action) => {
-      if (action.payload.rollResult !== undefined) {
-        return action.payload.rollResult
+      if (action.payload.clientEvents !== undefined) {
+        const rollResultEvents = filterClientEventRollResult(
+          action.payload.clientEvents
+        )
+        if (rollResultEvents.length === 0) {
+          // no client events of interest
+          return state
+        }
+        if (rollResultEvents.length > 1) {
+          console.error(
+            `NOT IMPLEMENTED: got multiple roll events, expected just one. Roll events: ${JSON.stringify(
+              rollResultEvents
+            )}`
+          )
+        }
+        return rollResultEvents[0].payload
       }
     })
   },

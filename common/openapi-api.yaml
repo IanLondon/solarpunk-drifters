@@ -163,9 +163,18 @@ components:
       required: [agility, diy, harmony, luck]
 
     ClientEvent:
-      type: object
       description: Describes an event that happened in the game, relevant to the client
-      # NOT IMPLEMENTED. TODO.
+      oneOf:
+        - $ref: '#/components/schemas/ClientEventRollResult'
+    ClientEventRollResult:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ['CLIENT_EVENT_ROLL_RESULT']
+        payload:
+          $ref: '#/components/schemas/RollResult'
+      required: [type, payload]
 
     EncounterCard:
       type: object
@@ -202,8 +211,7 @@ components:
       type: object
       properties:
         skill:
-          type: string
-          enum: [agility, diy, harmony, luck]
+          $ref: '#/components/schemas/Skill'
         items:
           type: object
           additionalProperties:
@@ -232,18 +240,17 @@ components:
       required: [current, total]
 
     ExpeditionUpdate:
+      description: >-
+        A list of client events, and a game "update" in JSON Patch (RFC 6902) format,
+        representing a sequence of operations to apply to the GameState
       type: object
       properties:
         clientEvents:
           description: A list of game events relevant to the client
-          schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/ClientEvent'
+          type: array
+          items:
+            $ref: '#/components/schemas/ClientEvent'
         update:
-          description: >-
-            A JSON Patch (RFC 6902) representing a sequence of
-            operations to apply to the GameState
           $ref: '#/components/schemas/PatchRequest'
 
     # GameMode:
@@ -316,7 +323,19 @@ components:
           type: array
           items:
             type: integer
-      required: [rolls]
+        outcome:
+          $ref: '#/components/schemas/RollOutcome'
+      required: [rolls, outcome]
+    RollOutcome:
+      type: string
+      enum:
+        - 'ROLL_OUTCOME_FAILURE'
+        - 'ROLL_OUTCOME_MIXED_SUCCESS'
+        - 'ROLL_OUTCOME_STRONG_SUCCESS'
+
+    Skill:
+      type: string
+      enum: [agility, diy, harmony, luck]
 
     StatNumber:
       type: integer

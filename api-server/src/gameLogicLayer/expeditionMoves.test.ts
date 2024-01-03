@@ -1,7 +1,5 @@
 import { describe, expect, it } from '@jest/globals'
 import {
-  // type DiceRoll,
-  // type DiceRollOutcome,
   moveNotAllowedError,
   drawEncounterCard,
   newExpedition,

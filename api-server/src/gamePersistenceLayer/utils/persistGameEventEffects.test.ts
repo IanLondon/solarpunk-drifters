@@ -8,7 +8,10 @@ import {
   BETWEEN_ENCOUNTERS,
   LOADOUT
 } from '../../controllers/gameState'
-import { type ExpeditionProgress } from '@solarpunk-drifters/common'
+import {
+  ROLL_OUTCOME_MIXED_SUCCESS,
+  type ExpeditionProgress
+} from '@solarpunk-drifters/common'
 import { type StoreError } from '../types'
 
 // In these tests, we construct a fake store containing only the methods we
@@ -144,7 +147,7 @@ describe('persistGameEventEffects', () => {
     it('should do nothing (dice rolls are not persisted)', () => {
       const store = {}
       const rolls = [3]
-      const outcome = events.ROLL_OUTCOME_MIXED_SUCCESS
+      const outcome = ROLL_OUTCOME_MIXED_SUCCESS
       const e = events.diceRollOutcome(rolls, outcome)
       const out = persistGameEventEffects(store as any, e)
       expect(out).toEqual([])

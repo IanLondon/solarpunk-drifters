@@ -7,11 +7,7 @@ import { EXPEDITION_DISTANCE, INITIAL_EXPEDITION_PROGRESS } from './constants'
 import * as events from './events'
 import type { GameMoveOutcome } from './events'
 
-// TODO: factor out these types
-
-// TODO: remove this? Unused?
-// export type DiceFn = (n: number, modifier: number) => DiceRoll
-
+// TODO: factor out this type
 export type EncounterCardDeckFn = () => string
 
 // =========

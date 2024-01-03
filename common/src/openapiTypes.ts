@@ -13,6 +13,11 @@ export type CharacterStats = components['schemas']['CharacterStats']
 
 export type ClientEvent = components['schemas']['ClientEvent']
 
+export type ClientEventRollResult =
+  components['schemas']['ClientEventRollResult']
+export const CLIENT_EVENT_ROLL_RESULT: ClientEventRollResult['type'] =
+  'CLIENT_EVENT_ROLL_RESULT'
+
 export type CoreGameState = components['schemas']['CoreGameState']
 
 export type EncounterCard = components['schemas']['EncounterCard']
@@ -39,6 +44,14 @@ export type LoadoutGameState = Required<
 export type PatchRequest = components['schemas']['PatchRequest']
 
 export type RollResult = components['schemas']['RollResult']
+export type RollResultOutcome = RollResult['outcome']
+export const ROLL_OUTCOME_FAILURE: RollResultOutcome = 'ROLL_OUTCOME_FAILURE'
+export const ROLL_OUTCOME_MIXED_SUCCESS: RollResultOutcome =
+  'ROLL_OUTCOME_MIXED_SUCCESS'
+export const ROLL_OUTCOME_STRONG_SUCCESS: RollResultOutcome =
+  'ROLL_OUTCOME_STRONG_SUCCESS'
+
+export type Skill = components['schemas']['Skill']
 
 export type StatNumber = components['schemas']['StatNumber']
 

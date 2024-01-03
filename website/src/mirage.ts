@@ -1,8 +1,11 @@
 import { type Server, createServer, Response } from 'miragejs'
 import {
   ACTIVE_ENCOUNTER,
+  CLIENT_EVENT_ROLL_RESULT,
   DEMO_BUFFALO_ENCOUNTER_CARD,
-  LOADOUT
+  type ExpeditionUpdate,
+  LOADOUT,
+  ROLL_OUTCOME_MIXED_SUCCESS
 } from '@solarpunk-drifters/common'
 import { type ServerGameState } from './types/gameState'
 import {
@@ -10,8 +13,7 @@ import {
   NEXT_ENCOUNTER,
   TURN_BACK,
   ENCOUNTER_CARD_CHOICE,
-  PLAY_CARD,
-  type ServerExpeditionUpdate
+  PLAY_CARD
 } from './lib/redux'
 
 const betweenEncountersGameState: ServerGameState = {
@@ -64,33 +66,68 @@ export function makeMirageServer({ environment = 'test' }): Server {
         // (even if it wouldn't make sense given the previous game state)
         // and it doesn't respond to most encounter moves.
         const action = request.params.action
-        let responseUpdate: ServerExpeditionUpdate['update']
-        let rollResult: ServerExpeditionUpdate['rollResult']
+        let responseUpdate: ExpeditionUpdate['update']
+        let clientEvents: ExpeditionUpdate['clientEvents']
 
         if (action === BEGIN_EXPEDITION) {
-          responseUpdate = {
-            gameMode: ACTIVE_ENCOUNTER,
-            activeEncounterCardId: DEMO_BUFFALO_ENCOUNTER_CARD.id
-          }
+          responseUpdate = [
+            {
+              op: 'add',
+              path: '/activeEncounterCardId',
+              value: DEMO_BUFFALO_ENCOUNTER_CARD.id
+            },
+            {
+              op: 'add',
+              path: '/expeditionProgress',
+              value: {
+                current: 100,
+                total: 1500
+              }
+            },
+            {
+              op: 'replace',
+              path: '/gameMode',
+              value: ACTIVE_ENCOUNTER
+            }
+          ]
         } else if (action === NEXT_ENCOUNTER) {
-          responseUpdate = {
-            gameMode: ACTIVE_ENCOUNTER,
-            activeEncounterCardId: DEMO_BUFFALO_ENCOUNTER_CARD.id
-          }
+          responseUpdate = [
+            {
+              op: 'add',
+              path: '/activeEncounterCardId',
+              value: DEMO_BUFFALO_ENCOUNTER_CARD.id
+            },
+            {
+              op: 'replace',
+              path: '/gameMode',
+              value: ACTIVE_ENCOUNTER
+            }
+          ]
         } else if (action === TURN_BACK) {
-          responseUpdate = { gameMode: LOADOUT }
+          responseUpdate = [
+            {
+              op: 'replace',
+              path: '/gameMode',
+              value: LOADOUT
+            }
+          ]
         } else if (action === ENCOUNTER_CARD_CHOICE) {
           // fake dice roll, assume it's a dice choice
-          rollResult = { rolls: [2, 3, 4] }
+          clientEvents = [
+            {
+              type: CLIENT_EVENT_ROLL_RESULT,
+              payload: { rolls: [2, 3, 4], outcome: ROLL_OUTCOME_MIXED_SUCCESS }
+            }
+          ]
         } else if (action === PLAY_CARD) {
           console.log('Got a play card choice:', request.requestBody)
         } else {
           console.error('Mirage got unexpected expeditions/:action', action)
           return new Response(404)
         }
-        const res: ServerExpeditionUpdate = {
+        const res: ExpeditionUpdate = {
           update: responseUpdate,
-          rollResult
+          clientEvents
         }
         return new Response(200, undefined, res)
       })

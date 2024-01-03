@@ -3,9 +3,10 @@ import { type ServerGameState } from '@/types/gameState'
 import {
   ACTIVE_ENCOUNTER,
   BETWEEN_ENCOUNTERS,
-  type ExpeditionProgress
+  type ExpeditionProgress,
+  type ExpeditionUpdate
 } from '@solarpunk-drifters/common'
-import { type ServerExpeditionUpdate } from '..'
+import { applyPatch } from 'rfc6902'
 
 type GameState = ServerGameState | null
 
@@ -16,7 +17,7 @@ export const setGameState = createAction<ServerGameState, 'SET_GAME_STATE'>(
 )
 
 export const encounterUpdate = createAction<
-  ServerExpeditionUpdate,
+  ExpeditionUpdate,
   'ENCOUNTER_UPDATE'
 >('ENCOUNTER_UPDATE')
 
@@ -36,8 +37,8 @@ export const gameStateSlice = createSlice({
         )
       } else {
         if (action.payload.update !== undefined) {
-          // Simply spread the update into the state. Assume that it's been validated upstream
-          Object.assign(state, action.payload.update)
+          // Apply the JSON Patch to the state. Assume that it's been validated upstream.
+          applyPatch(state, action.payload.update)
         }
       }
     })

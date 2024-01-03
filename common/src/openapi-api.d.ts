@@ -174,7 +174,12 @@ export interface components {
       luck: components["schemas"]["StatNumber"];
     };
     /** @description Describes an event that happened in the game, relevant to the client */
-    ClientEvent: Record<string, never>;
+    ClientEvent: components["schemas"]["ClientEventRollResult"];
+    ClientEventRollResult: {
+      /** @enum {string} */
+      type: "CLIENT_EVENT_ROLL_RESULT";
+      payload: components["schemas"]["RollResult"];
+    };
     EncounterCard: {
       /** @example some-id-123-blah */
       id: string;
@@ -191,8 +196,7 @@ export interface components {
       risk?: components["schemas"]["EncounterRisk"];
     };
     EncounterCheck: {
-      /** @enum {string} */
-      skill?: "agility" | "diy" | "harmony" | "luck";
+      skill?: components["schemas"]["Skill"];
       items?: {
         [key: string]: number;
       };
@@ -206,10 +210,10 @@ export interface components {
       current: number;
       total: number;
     };
+    /** @description A list of client events, and a game "update" in JSON Patch (RFC 6902) format, representing a sequence of operations to apply to the GameState */
     ExpeditionUpdate: {
       /** @description A list of game events relevant to the client */
-      clientEvents?: unknown;
-      /** @description A JSON Patch (RFC 6902) representing a sequence of operations to apply to the GameState */
+      clientEvents?: components["schemas"]["ClientEvent"][];
       update?: components["schemas"]["PatchRequest"];
     };
     CoreGameState: {
@@ -245,7 +249,12 @@ export interface components {
     };
     RollResult: {
       rolls: number[];
+      outcome: components["schemas"]["RollOutcome"];
     };
+    /** @enum {string} */
+    RollOutcome: "ROLL_OUTCOME_FAILURE" | "ROLL_OUTCOME_MIXED_SUCCESS" | "ROLL_OUTCOME_STRONG_SUCCESS";
+    /** @enum {string} */
+    Skill: "agility" | "diy" | "harmony" | "luck";
     StatNumber: number;
     UserLogin: {
       username: string;
