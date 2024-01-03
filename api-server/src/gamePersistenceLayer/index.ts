@@ -1,12 +1,13 @@
 import persistGameEventEffects from './utils/persistGameEventEffects'
 import type { GameEvent } from '../gameLogicLayer/events'
-import type { GameStore, GameStateDiff, PersistenceError } from './types'
+import type { GameStore, PersistenceError } from './types'
 import { createPatch } from 'rfc6902'
+import type { PatchRequest } from '@solarpunk-drifters/common'
 
 export default function runPersistence(
   store: GameStore,
   gameEvents: GameEvent[]
-): GameStateDiff | PersistenceError {
+): PatchRequest | PersistenceError {
   // TODO: use deep copy instead of JSON ser/deser
   const initialGameState = JSON.parse(JSON.stringify(store.getGameState()))
 

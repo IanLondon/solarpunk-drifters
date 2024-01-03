@@ -2,19 +2,14 @@ import { getUserGameStore } from '../queries/gameState'
 import * as expeditionMoves from '../gameLogicLayer/expeditionMoves'
 import runPersistence from '../gamePersistenceLayer'
 import type { GameMoveOutcome } from '../gameLogicLayer/events'
-import type {
-  GameStateDiff,
-  GameStore,
-  PersistenceError
-} from '../gamePersistenceLayer/types'
+import type { GameStore, PersistenceError } from '../gamePersistenceLayer/types'
 import { ACTIVE_ENCOUNTER } from './gameState'
 import { getEncounterCard } from '../queries/encounterCards'
 import { getDrifterCard } from '../queries/drifterCards'
-
-type ClientEvent = never // NOT IMPLEMENTED. TODO
+import type { ClientEvent, PatchRequest } from '@solarpunk-drifters/common'
 
 interface ExpeditionResponse {
-  update: GameStateDiff
+  update: PatchRequest
   clientEvents: ClientEvent[]
 }
 
@@ -50,7 +45,7 @@ export async function processOutcome(
 }
 
 export async function processPersistenceResult(
-  persistenceResult: GameStateDiff | PersistenceError
+  persistenceResult: PatchRequest | PersistenceError
 ): Promise<ExpeditionResponse> {
   if (Array.isArray(persistenceResult)) {
     const gameStateDiff = persistenceResult

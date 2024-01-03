@@ -173,6 +173,8 @@ export interface components {
       harmony: components["schemas"]["StatNumber"];
       luck: components["schemas"]["StatNumber"];
     };
+    /** @description Describes an event that happened in the game, relevant to the client */
+    ClientEvent: Record<string, never>;
     EncounterCard: {
       /** @example some-id-123-blah */
       id: string;
@@ -205,8 +207,10 @@ export interface components {
       total: number;
     };
     ExpeditionUpdate: {
-      rollResult?: components["schemas"]["RollResult"];
-      update?: components["schemas"]["GameState"];
+      /** @description A list of game events relevant to the client */
+      clientEvents?: unknown;
+      /** @description A JSON Patch (RFC 6902) representing a sequence of operations to apply to the GameState */
+      update?: components["schemas"]["PatchRequest"];
     };
     CoreGameState: {
       characterStats?: components["schemas"]["CharacterStats"];
@@ -246,6 +250,38 @@ export interface components {
     UserLogin: {
       username: string;
       password: string;
+    };
+    PatchRequest: (components["schemas"]["JSONPatchRequestAddReplaceTest"] | components["schemas"]["JSONPatchRequestRemove"] | components["schemas"]["JSONPatchRequestMoveCopy"])[];
+    JSONPatchRequestAddReplaceTest: {
+      /** @description A JSON Pointer path. */
+      path: string;
+      /** @description The value to add, replace or test. */
+      value: unknown;
+      /**
+       * @description The operation to perform.
+       * @enum {string}
+       */
+      op: "add" | "replace" | "test";
+    };
+    JSONPatchRequestRemove: {
+      /** @description A JSON Pointer path. */
+      path: string;
+      /**
+       * @description The operation to perform.
+       * @enum {string}
+       */
+      op: "remove";
+    };
+    JSONPatchRequestMoveCopy: {
+      /** @description A JSON Pointer path. */
+      path: string;
+      /**
+       * @description The operation to perform.
+       * @enum {string}
+       */
+      op: "move" | "copy";
+      /** @description A JSON Pointer path. */
+      from: string;
     };
   };
   responses: never;

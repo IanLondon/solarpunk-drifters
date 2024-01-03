@@ -11,6 +11,8 @@ export type BetweenEncountersGameState =
 
 export type CharacterStats = components['schemas']['CharacterStats']
 
+export type ClientEvent = components['schemas']['ClientEvent']
+
 export type CoreGameState = components['schemas']['CoreGameState']
 
 export type EncounterCard = components['schemas']['EncounterCard']
@@ -32,6 +34,9 @@ export type ImageInfo = components['schemas']['ImageInfo']
 export type LoadoutGameState = Required<
   components['schemas']['LoadoutGameState']
 >
+
+/** A JSON Patch (RFC 6902) for some JSON object. */
+export type PatchRequest = components['schemas']['PatchRequest']
 
 export type RollResult = components['schemas']['RollResult']
 

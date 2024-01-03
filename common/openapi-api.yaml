@@ -162,6 +162,11 @@ components:
           $ref: '#/components/schemas/StatNumber'
       required: [agility, diy, harmony, luck]
 
+    ClientEvent:
+      type: object
+      description: Describes an event that happened in the game, relevant to the client
+      # NOT IMPLEMENTED. TODO.
+
     EncounterCard:
       type: object
       properties:
@@ -229,10 +234,17 @@ components:
     ExpeditionUpdate:
       type: object
       properties:
-        rollResult:
-          $ref: '#/components/schemas/RollResult'
+        clientEvents:
+          description: A list of game events relevant to the client
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/ClientEvent'
         update:
-          $ref: '#/components/schemas/GameState'
+          description: >-
+            A JSON Patch (RFC 6902) representing a sequence of
+            operations to apply to the GameState
+          $ref: '#/components/schemas/PatchRequest'
 
     # GameMode:
     #   type: string
@@ -317,3 +329,69 @@ components:
         password:
           type: string
       required: [username, password]
+
+    # JSON Patch (RFC 6902)
+    # Thanks to Jamie Tanna for the OpenAPI schema
+    # https://www.jvt.me/posts/2022/05/29/openapi-json-patch/
+    PatchRequest:
+      type: array
+      items:
+        oneOf:
+          - $ref: '#/components/schemas/JSONPatchRequestAddReplaceTest'
+          - $ref: '#/components/schemas/JSONPatchRequestRemove'
+          - $ref: '#/components/schemas/JSONPatchRequestMoveCopy'
+    JSONPatchRequestAddReplaceTest:
+      type: object
+      additionalProperties: false
+      required:
+        - value
+        - op
+        - path
+      properties:
+        path:
+          description: A JSON Pointer path.
+          type: string
+        value:
+          description: The value to add, replace or test.
+        op:
+          description: The operation to perform.
+          type: string
+          enum:
+            - add
+            - replace
+            - test
+    JSONPatchRequestRemove:
+      type: object
+      additionalProperties: false
+      required:
+        - op
+        - path
+      properties:
+        path:
+          description: A JSON Pointer path.
+          type: string
+        op:
+          description: The operation to perform.
+          type: string
+          enum:
+            - remove
+    JSONPatchRequestMoveCopy:
+      type: object
+      additionalProperties: false
+      required:
+        - from
+        - op
+        - path
+      properties:
+        path:
+          description: A JSON Pointer path.
+          type: string
+        op:
+          description: The operation to perform.
+          type: string
+          enum:
+            - move
+            - copy
+        from:
+          description: A JSON Pointer path.
+          type: string
