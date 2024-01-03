@@ -1,9 +1,10 @@
 import { type Server, createServer, Response } from 'miragejs'
 import {
   ACTIVE_ENCOUNTER,
-  LOADOUT,
-  type ServerGameState
-} from './types/gameState'
+  DEMO_BUFFALO_ENCOUNTER_CARD,
+  LOADOUT
+} from '@solarpunk-drifters/common'
+import { type ServerGameState } from './types/gameState'
 import {
   BEGIN_EXPEDITION,
   NEXT_ENCOUNTER,
@@ -12,7 +13,6 @@ import {
   PLAY_CARD,
   type ServerExpeditionUpdate
 } from './lib/redux'
-import { DEMO_BUFFALO_ENCOUNTER_CARD } from './dummyData/encounterCards'
 
 const betweenEncountersGameState: ServerGameState = {
   characterStats: {

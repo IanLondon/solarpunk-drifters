@@ -1,5 +1,11 @@
 'use client'
 import React, { useCallback, useEffect } from 'react'
+import {
+  ACTIVE_ENCOUNTER,
+  BETWEEN_ENCOUNTERS,
+  LOADOUT,
+  DEMO_MAKE_PROGRESS_DRIFTER_CARD
+} from '@solarpunk-drifters/common'
 import CharacterStatsBar from '@/components/CharacterStatsBar'
 import {
   fetchInitialGameState,
@@ -11,12 +17,6 @@ import {
   useDispatch,
   useSelector
 } from '@/lib/redux'
-import {
-  ACTIVE_ENCOUNTER,
-  BETWEEN_ENCOUNTERS,
-  LOADOUT
-} from '@/types/gameState'
-import { DEMO_MAKE_PROGRESS } from '@/dummyData/drifterCards'
 import { makeMirageServer } from '@/mirage'
 import LoadingSection from '@/components/LoadingSection'
 import ProgressMeter from '@/components/ProgressMeter'
@@ -104,7 +104,7 @@ export default function PlayPage(): React.ReactNode {
         <GameBetweenEncounters
           nextEncounter={nextEncounter}
           turnBack={turnBack}
-          drifterCards={[DEMO_MAKE_PROGRESS]} // TODO use actual card inventory
+          drifterCards={[DEMO_MAKE_PROGRESS_DRIFTER_CARD]} // TODO use actual card inventory
           onCardSelect={playCardFromHand}
         />
       )

@@ -30,16 +30,7 @@ export interface paths {
         /** @description A single Encounter Card */
         200: {
           content: {
-            "application/json": {
-              /** @example some-id-123-blah */
-              id: string;
-              /** @example Buffalo Migration */
-              title: string;
-              /** @example You come across a migrating herd of buffalo. Their ranks stretch back to the horizon. */
-              description: string;
-              image: components["schemas"]["ImageInfo"];
-              choices: components["schemas"]["EncounterChoice"][];
-            };
+            "application/json": components["schemas"]["EncounterCard"];
           };
         };
       };
@@ -182,6 +173,16 @@ export interface components {
       harmony: components["schemas"]["StatNumber"];
       luck: components["schemas"]["StatNumber"];
     };
+    EncounterCard: {
+      /** @example some-id-123-blah */
+      id: string;
+      /** @example Buffalo Migration */
+      title: string;
+      /** @example You come across a migrating herd of buffalo. Their ranks stretch back to the horizon. */
+      description: string;
+      image: components["schemas"]["ImageInfo"];
+      choices: components["schemas"]["EncounterChoice"][];
+    };
     EncounterChoice: {
       description: string;
       check?: components["schemas"]["EncounterCheck"];
@@ -190,7 +191,7 @@ export interface components {
     EncounterCheck: {
       /** @enum {string} */
       skill?: "agility" | "diy" | "harmony" | "luck";
-      item?: {
+      items?: {
         [key: string]: number;
       };
     };

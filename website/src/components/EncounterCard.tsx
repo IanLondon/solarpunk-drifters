@@ -1,11 +1,10 @@
 import Image from 'next/image'
 import React, { type MouseEventHandler, useState } from 'react'
-// import exampleImage from '@/../public/buffalo.jpg'
-import {
-  type EncounterRisk,
-  type EncounterChoice,
-  type EncounterCardData
-} from '@/types/encounter'
+import type {
+  EncounterRisk,
+  EncounterChoice,
+  EncounterCard as EncounterCardData
+} from '@solarpunk-drifters/common'
 import SkillIcon from '@/components/SkillIcon'
 import Card from './Card'
 
@@ -61,12 +60,14 @@ export function EncounterCardChoice(
       </p>
 
       <span className='text-2xl'>
-        {'skill' in props.check && <SkillIcon skill={props.check.skill} />}
+        {props?.check?.skill !== undefined && (
+          <SkillIcon skill={props.check.skill} />
+        )}
       </span>
 
       {/* Check */}
       <span>
-        {'items' in props.check &&
+        {props.check?.items !== undefined &&
           Object.entries(props.check.items).map(([itemName, quantity]) => (
             <span key={itemName}>
               {itemName}: {quantity}
@@ -75,7 +76,7 @@ export function EncounterCardChoice(
       </span>
 
       {/* Risks */}
-      <EncounterRiskTile risk={props.risk} />
+      {props.risk !== undefined && <EncounterRiskTile risk={props.risk} />}
     </button>
   )
 }

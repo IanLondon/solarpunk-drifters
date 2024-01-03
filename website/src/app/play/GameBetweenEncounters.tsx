@@ -1,6 +1,6 @@
 import React from 'react'
 import DrifterCardInventory from '@/components/DrifterCardInventory'
-import { type DrifterCard } from '@/types'
+import type { DrifterCard } from '@solarpunk-drifters/common'
 
 export interface GameBetweenEncountersProps {
   nextEncounter: () => void

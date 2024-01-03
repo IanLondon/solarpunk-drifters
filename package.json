@@ -1,0 +1,19 @@
+    {
+        "name": "solarpunk-drifters",
+        "version": "1.0.0",
+        "description": "Solarpunk Drifters TS Monorepo",
+        "author": "Ian London",
+        "private": true,
+        "scripts": {
+            "build": "npm run build --workspaces",
+            "check": "npm run check --workspaces",
+            "lint": "npm run lint --workspaces --if-present",
+            "test": "npm run test --workspaces --if-present"
+        },
+        "license": "UNLICENSED",
+        "workspaces": [
+            "api-server",
+            "common",
+            "website"
+        ]
+    }

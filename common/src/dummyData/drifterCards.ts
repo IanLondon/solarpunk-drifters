@@ -1,6 +1,6 @@
-import { type DrifterCard } from '@/types'
+import type { DrifterCard } from '..'
 
-export const DEMO_MAKE_PROGRESS: DrifterCard = {
+export const DEMO_MAKE_PROGRESS_DRIFTER_CARD: DrifterCard = {
   id: 'make-progress-123',
   title: 'Make Progress',
   description: 'Progress 200 km toward your destination. Costs 1 ration.',

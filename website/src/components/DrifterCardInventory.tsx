@@ -1,6 +1,6 @@
 import React from 'react'
 import { MiniDrifterCard } from './MiniDrifterCard'
-import type { DrifterCard } from '../types'
+import type { DrifterCard } from '@solarpunk-drifters/common'
 
 // Shows all the cards in your hand
 export default function DrifterCardInventory(props: {

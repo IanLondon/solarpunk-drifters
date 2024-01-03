@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import React, { useCallback } from 'react'
 import Card from './Card'
-import { type DrifterCard } from '@/types'
+import { type DrifterCard } from '@solarpunk-drifters/common'
 
 // TODO HACK
 const THUMBNAIL_IMAGE_SCALE = 1 / 8

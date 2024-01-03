@@ -1,15 +1,14 @@
-import type { Skill, ExpeditionProgress } from '@solarpunk-drifters/common'
+import type {
+  CharacterStats,
+  ExpeditionProgress,
+  ACTIVE_ENCOUNTER,
+  BETWEEN_ENCOUNTERS,
+  LOADOUT
+} from '@solarpunk-drifters/common'
 
-export const ACTIVE_ENCOUNTER = 'ACTIVE_ENCOUNTER'
-export const BETWEEN_ENCOUNTERS = 'BETWEEN_ENCOUNTERS'
-export const LOADOUT = 'LOADOUT'
-
-export type GameMode =
-  | typeof LOADOUT
-  | typeof BETWEEN_ENCOUNTERS
-  | typeof ACTIVE_ENCOUNTER
-
-export type CharacterStats = Record<Skill, number>
+// NOTE: these types are similar to those in common, which are generated from
+// the OpenAPI definition. However, the generated types are much looser than we
+// want in the website application, so we define stricter ones here
 
 export interface CoreServerGameState {
   characterStats: CharacterStats

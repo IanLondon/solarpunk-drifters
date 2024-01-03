@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { SKILLS_LIST } from '@solarpunk-drifters/common'
 import SkillIcon from '@/components/SkillIcon'
-import { SKILLS_LIST } from '../types/encounter'
 
 const meta = {
   title: 'Icons/SkillIcon',

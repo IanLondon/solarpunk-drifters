@@ -1,6 +1,5 @@
 import React from 'react'
-import { type CharacterStats } from '@/types/gameState'
-import { SKILLS_LIST } from '../types/encounter'
+import { SKILLS_LIST, type CharacterStats } from '@solarpunk-drifters/common'
 import SkillIcon from './SkillIcon'
 
 export default function CharacterStatsBar(props: {

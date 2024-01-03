@@ -1,10 +1,10 @@
 import { createAction, createSlice } from '@reduxjs/toolkit'
+import { type ServerGameState } from '@/types/gameState'
 import {
   ACTIVE_ENCOUNTER,
   BETWEEN_ENCOUNTERS,
-  type ServerGameState
-} from '@/types/gameState'
-import type { ExpeditionProgress } from '@solarpunk-drifters/common'
+  type ExpeditionProgress
+} from '@solarpunk-drifters/common'
 import { type ServerExpeditionUpdate } from '..'
 
 type GameState = ServerGameState | null

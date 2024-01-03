@@ -1,6 +1,6 @@
-import { type EncounterCardData } from '@/types/encounter'
+import type { EncounterCard } from '..'
 
-export const DEMO_BUFFALO_ENCOUNTER_CARD: EncounterCardData = {
+export const DEMO_BUFFALO_ENCOUNTER_CARD: EncounterCard = {
   id: 'buffalo-demo-123456',
   title: 'Buffalo Migration',
   description:

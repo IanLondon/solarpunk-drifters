@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import EncounterCard from '@/components/EncounterCard'
-import { DEMO_BUFFALO_ENCOUNTER_CARD } from '../dummyData/encounterCards'
+import { DEMO_BUFFALO_ENCOUNTER_CARD } from '@solarpunk-drifters/common'
 
 const meta = {
   title: 'Cards/EncounterCard',

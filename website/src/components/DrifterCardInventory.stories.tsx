@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import DrifterCardInventory from '@/components/DrifterCardInventory'
-import { DEMO_MAKE_PROGRESS } from '@/dummyData/drifterCards'
+import { DEMO_MAKE_PROGRESS_DRIFTER_CARD } from '@solarpunk-drifters/common'
 
 const meta = {
   title: 'Cards/DrifterCardInventory',
@@ -25,12 +25,16 @@ export const EmptyHand: Story = {
 
 export const MakeProgressOne: Story = {
   args: {
-    cards: [DEMO_MAKE_PROGRESS]
+    cards: [DEMO_MAKE_PROGRESS_DRIFTER_CARD]
   }
 }
 
 export const MakeProgressThree: Story = {
   args: {
-    cards: [DEMO_MAKE_PROGRESS, DEMO_MAKE_PROGRESS, DEMO_MAKE_PROGRESS]
+    cards: [
+      DEMO_MAKE_PROGRESS_DRIFTER_CARD,
+      DEMO_MAKE_PROGRESS_DRIFTER_CARD,
+      DEMO_MAKE_PROGRESS_DRIFTER_CARD
+    ]
   }
 }

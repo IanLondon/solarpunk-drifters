@@ -12,12 +12,12 @@ paths:
     get:
       description: Get the current game state for a player
       responses:
-        "200":
+        '200':
           description: The game state
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GameState"
+                $ref: '#/components/schemas/GameState'
   /encounter-cards/{card_id}:
     get:
       description: Get a single Encounter Card
@@ -30,59 +30,42 @@ paths:
             description: The Encounter Card's ID
             example: 3b5b1707-b82c-4b1d-9078-157053902525
       responses:
-        "200":
+        '200':
           description: A single Encounter Card
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    example: some-id-123-blah
-                  title:
-                    type: string
-                    example: Buffalo Migration
-                  description:
-                    type: string
-                    example: You come across a migrating herd of buffalo. Their ranks stretch back to the horizon.
-                  image:
-                    $ref: "#/components/schemas/ImageInfo"
-                  choices:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/EncounterChoice"
-                required: [id, title, description, image, choices]
+                $ref: '#/components/schemas/EncounterCard'
   /expeditions/begin-expedition:
     post:
       description: Begin an expedition
       responses:
-        "200":
+        '200':
           description: Successfully began expedition. Response contains ExpeditionUpdate
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ExpeditionUpdate"
+                $ref: '#/components/schemas/ExpeditionUpdate'
   /expeditions/next-encounter:
     post:
       description: Begin next encounter (draw a new encounter card)
       responses:
-        "200":
+        '200':
           description: Successfully began new encounter. Response contains ExpeditionUpdate
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ExpeditionUpdate"
+                $ref: '#/components/schemas/ExpeditionUpdate'
   /expeditions/turn-back:
     post:
       description: Turn back, ending the expedition.
       responses:
-        "200":
+        '200':
           description: Successfully ended the expedition. Response contains ExpeditionUpdate
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ExpeditionUpdate"
+                $ref: '#/components/schemas/ExpeditionUpdate'
   /expeditions/encounter-card-choice:
     post:
       description: Make a choice on the active encounter card
@@ -97,12 +80,12 @@ paths:
                   type: integer
                   minimum: 0
       responses:
-        "200":
+        '200':
           description: Successfully executed a choice. Response contains ExpeditionUpdate
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ExpeditionUpdate"
+                $ref: '#/components/schemas/ExpeditionUpdate'
   /expeditions/play-card:
     post:
       description: Play a Drifter Card in the player's hand (between encounters)
@@ -116,12 +99,12 @@ paths:
                 cardId:
                   type: string
       responses:
-        "200":
+        '200':
           description: Successfully played a Drifter Card. Response contains ExpeditionUpdate
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ExpeditionUpdate"
+                $ref: '#/components/schemas/ExpeditionUpdate'
   /login/user:
     post:
       description: Create a new user
@@ -131,29 +114,29 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UserLogin"
+              $ref: '#/components/schemas/UserLogin'
       responses:
-        "201":
+        '201':
           description: Successfully created a new user.
-        "400":
+        '400':
           description: Error. User already exists
-        "401":
+        '401':
           description: Error. Incorrect parameters.
   /login/login:
     post:
       description: Log in an existing user account
       security: []
       requestBody:
-        $ref: "#/paths/~1login~1user/post/requestBody"
+        $ref: '#/paths/~1login~1user/post/requestBody'
       responses:
-        "200":
+        '200':
           description: Successful login, obtain a session cookie to be used in subsequent requests
           headers:
             Set-Cookie:
               schema:
                 type: string
                 example: connect.sid=abcde12345; Path=/; HttpOnly; SameSite=Lax
-        "401":
+        '401':
           description: Invalid username or password
 
 security:
@@ -170,14 +153,34 @@ components:
       type: object
       properties:
         agility:
-          $ref: "#/components/schemas/StatNumber"
+          $ref: '#/components/schemas/StatNumber'
         diy:
-          $ref: "#/components/schemas/StatNumber"
+          $ref: '#/components/schemas/StatNumber'
         harmony:
-          $ref: "#/components/schemas/StatNumber"
+          $ref: '#/components/schemas/StatNumber'
         luck:
-          $ref: "#/components/schemas/StatNumber"
+          $ref: '#/components/schemas/StatNumber'
       required: [agility, diy, harmony, luck]
+
+    EncounterCard:
+      type: object
+      properties:
+        id:
+          type: string
+          example: some-id-123-blah
+        title:
+          type: string
+          example: Buffalo Migration
+        description:
+          type: string
+          example: You come across a migrating herd of buffalo. Their ranks stretch back to the horizon.
+        image:
+          $ref: '#/components/schemas/ImageInfo'
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/EncounterChoice'
+      required: [id, title, description, image, choices]
 
     EncounterChoice:
       type: object
@@ -185,9 +188,9 @@ components:
         description:
           type: string
         check:
-          $ref: "#/components/schemas/EncounterCheck"
+          $ref: '#/components/schemas/EncounterCheck'
         risk:
-          $ref: "#/components/schemas/EncounterRisk"
+          $ref: '#/components/schemas/EncounterRisk'
       required: [description]
 
     EncounterCheck:
@@ -196,7 +199,7 @@ components:
         skill:
           type: string
           enum: [agility, diy, harmony, luck]
-        item:
+        items:
           type: object
           additionalProperties:
             type: integer
@@ -227,9 +230,9 @@ components:
       type: object
       properties:
         rollResult:
-          $ref: "#/components/schemas/RollResult"
+          $ref: '#/components/schemas/RollResult'
         update:
-          $ref: "#/components/schemas/GameState"
+          $ref: '#/components/schemas/GameState'
 
     # GameMode:
     #   type: string
@@ -238,7 +241,7 @@ components:
       type: object
       properties:
         characterStats:
-          $ref: "#/components/schemas/CharacterStats"
+          $ref: '#/components/schemas/CharacterStats'
         inventory:
           type: object
           additionalProperties:
@@ -252,32 +255,32 @@ components:
       properties:
         gameMode:
           type: string
-          enum: ["ACTIVE_ENCOUNTER"]
+          enum: ['ACTIVE_ENCOUNTER']
         activeEncounterCardId:
           type: string
         expeditionProgress:
-          $ref: "#/components/schemas/ExpeditionProgress"
+          $ref: '#/components/schemas/ExpeditionProgress'
     BetweenEncountersGameState:
       type: object
       properties:
         gameMode:
           type: string
-          enum: ["BETWEEN_ENCOUNTERS"]
+          enum: ['BETWEEN_ENCOUNTERS']
         expeditionProgress:
-          $ref: "#/components/schemas/ExpeditionProgress"
+          $ref: '#/components/schemas/ExpeditionProgress'
     LoadoutGameState:
       type: object
       properties:
         gameMode:
           type: string
-          enum: ["LOADOUT"]
+          enum: ['LOADOUT']
     GameState:
       allOf:
-        - $ref: "#/components/schemas/CoreGameState"
+        - $ref: '#/components/schemas/CoreGameState'
         - oneOf:
-            - $ref: "#/components/schemas/ActiveEncounterGameState"
-            - $ref: "#/components/schemas/BetweenEncountersGameState"
-            - $ref: "#/components/schemas/LoadoutGameState"
+            - $ref: '#/components/schemas/ActiveEncounterGameState'
+            - $ref: '#/components/schemas/BetweenEncountersGameState'
+            - $ref: '#/components/schemas/LoadoutGameState'
           discriminator:
             propertyName: gameMode
 
