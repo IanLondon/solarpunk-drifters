@@ -1,4 +1,4 @@
-import { type ExpeditionProgress } from '@solarpunk-drifters/openapi'
+import { type ExpeditionProgress } from '@solarpunk-drifters/common'
 
 // TODO: factor out new types!
 export const REACHED_DESTINATION = 'REACHED_DESTINATION'

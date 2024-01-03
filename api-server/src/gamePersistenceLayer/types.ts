@@ -1,6 +1,6 @@
 import type { Operation } from 'rfc6902'
 import type { GameMode } from '../controllers/gameState'
-import type { ExpeditionProgress, GameState } from '@solarpunk-drifters/openapi'
+import type { ExpeditionProgress, GameState } from '@solarpunk-drifters/common'
 import { type DeepReadonly } from 'ts-essentials'
 
 export interface StoreError {

@@ -16,6 +16,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
+    "@solarpunk-drifters/common": "file:../common",
     "@reduxjs/toolkit": "^2.0.1",
     "next": "14.0.4",
     "openapi-fetch": "^0.8.2",
@@ -25,7 +26,6 @@
     "react-use": "^17.4.2"
   },
   "devDependencies": {
-    "@solarpunk-drifters/openapi": "file:../openapi",
     "@storybook/addon-essentials": "^7.6.6",
     "@storybook/addon-interactions": "^7.6.6",
     "@storybook/addon-links": "^7.6.6",

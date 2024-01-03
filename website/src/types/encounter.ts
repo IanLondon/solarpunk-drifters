@@ -1,4 +1,4 @@
-import type { Skill, ImageInfo } from '@solarpunk-drifters/openapi'
+import type { Skill, ImageInfo } from '@solarpunk-drifters/common'
 
 // TODO: factor these out into openapi, maybe rename it from "openapi" to "common"
 

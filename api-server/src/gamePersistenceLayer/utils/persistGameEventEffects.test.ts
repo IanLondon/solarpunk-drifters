@@ -8,7 +8,7 @@ import {
   BETWEEN_ENCOUNTERS,
   LOADOUT
 } from '../../controllers/gameState'
-import { type ExpeditionProgress } from '@solarpunk-drifters/openapi'
+import { type ExpeditionProgress } from '@solarpunk-drifters/common'
 import { type StoreError } from '../types'
 
 // In these tests, we construct a fake store containing only the methods we

@@ -1,5 +1,5 @@
 import createClient from 'openapi-fetch'
-import { type paths } from '@solarpunk-drifters/openapi'
+import { type paths } from '@solarpunk-drifters/common'
 
 const BASE_API_URL = '/api/'
 

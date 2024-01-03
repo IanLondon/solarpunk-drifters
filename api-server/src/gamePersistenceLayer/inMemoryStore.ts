@@ -10,7 +10,7 @@ import type {
   CharacterStats,
   ExpeditionProgress,
   GameState
-} from '@solarpunk-drifters/openapi'
+} from '@solarpunk-drifters/common'
 
 export type InMemoryDb = Record<string, InMemoryGameStoreForUser>
 

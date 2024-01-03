@@ -1,4 +1,4 @@
-import type { Skill, ExpeditionProgress } from '@solarpunk-drifters/openapi'
+import type { Skill, ExpeditionProgress } from '@solarpunk-drifters/common'
 
 export const ACTIVE_ENCOUNTER = 'ACTIVE_ENCOUNTER'
 export const BETWEEN_ENCOUNTERS = 'BETWEEN_ENCOUNTERS'

@@ -2,7 +2,7 @@ import {
   type InMemoryDb,
   createInMemoryGameStoreForUser
 } from '../gamePersistenceLayer/inMemoryStore'
-import type { GameState } from '@solarpunk-drifters/openapi'
+import type { GameState } from '@solarpunk-drifters/common'
 import type { GameStore } from '../gamePersistenceLayer/types'
 
 // HACK to iterate quicker without DB schema design.
