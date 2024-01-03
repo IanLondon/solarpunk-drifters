@@ -3,10 +3,13 @@ import * as expeditionMoves from '../gameLogicLayer/expeditionMoves'
 import runPersistence from '../gamePersistenceLayer'
 import type { GameMoveOutcome } from '../gameLogicLayer/events'
 import type {
-  DiffableGameStore,
   GameStateDiff,
+  GameStore,
   PersistenceError
 } from '../gamePersistenceLayer/types'
+import { ACTIVE_ENCOUNTER } from './gameState'
+import { getEncounterCard } from '../queries/encounterCards'
+import { getDrifterCard } from '../queries/drifterCards'
 
 type ClientEvent = never // NOT IMPLEMENTED. TODO
 
@@ -27,7 +30,7 @@ function fakeEncounterCardDeck(): string {
 //     processOutcome shouldn't do both.
 // - Transform the GameEvents to ClientEvents via a new gameTransportLayer fn
 export async function processOutcome(
-  store: DiffableGameStore,
+  store: GameStore,
   gameOutcome: GameMoveOutcome
 ): Promise<ExpeditionResponse> {
   if (Array.isArray(gameOutcome)) {
@@ -76,6 +79,73 @@ export async function beginExpeditionController(
     gameMode,
     fakeEncounterCardDeck
   )
+
+  return await processOutcome(store, gameOutcome)
+}
+
+export async function nextEncounterController(
+  uid: string
+): Promise<ExpeditionResponse> {
+  const store = await getUserGameStore(uid)
+
+  const gameMode = store.getGameState().gameMode
+  const gameOutcome = expeditionMoves.nextEncounter(
+    gameMode,
+    fakeEncounterCardDeck
+  )
+
+  return await processOutcome(store, gameOutcome)
+}
+
+export async function turnBackController(
+  uid: string
+): Promise<ExpeditionResponse> {
+  const store = await getUserGameStore(uid)
+
+  const gameMode = store.getGameState().gameMode
+  const gameOutcome = expeditionMoves.turnBack(gameMode)
+
+  return await processOutcome(store, gameOutcome)
+}
+
+export async function encounterCardChoiceController(args: {
+  uid: string
+  choiceIndex: number
+}): Promise<ExpeditionResponse> {
+  const { uid, choiceIndex } = args
+  const store = await getUserGameStore(uid)
+
+  const gameState = store.getGameState()
+  if (gameState.gameMode === ACTIVE_ENCOUNTER) {
+    const encounterCardId = gameState.activeEncounterCardId
+
+    const encounterCard = await getEncounterCard(encounterCardId)
+
+    const gameOutcome = expeditionMoves.encounterCardChoice({
+      gameMode: gameState.gameMode,
+      choiceIndex,
+      encounterCard
+    })
+
+    return await processOutcome(store, gameOutcome)
+  } else {
+    throw new Error(
+      `NOT IMPLEMENTED: cannot get activeEncounterCardId when gameMode is ${gameState.gameMode}`
+    )
+  }
+}
+
+export async function playDrifterCardController(args: {
+  uid: string
+  drifterCardId: string
+}): Promise<ExpeditionResponse> {
+  const { uid, drifterCardId } = args
+  const store = await getUserGameStore(uid)
+
+  const gameMode = store.getGameState().gameMode
+  const drifterCard = await getDrifterCard(drifterCardId)
+
+  const gameOutcome = expeditionMoves.playDrifterCard({ gameMode, drifterCard })
 
   return await processOutcome(store, gameOutcome)
 }

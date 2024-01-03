@@ -1,59 +1,67 @@
-import { BETWEEN_ENCOUNTERS, LOADOUT } from '../../controllers/gameState'
+import {
+  ACTIVE_ENCOUNTER,
+  BETWEEN_ENCOUNTERS,
+  LOADOUT
+} from '../../controllers/gameState'
 import * as events from '../../gameLogicLayer/events'
 import type { GameEvent } from '../../gameLogicLayer/events'
-import type { GameStore } from '../types'
+import type { GameStore, StoreError, StoreOut } from '../types'
+
+function filterOutput(...so: StoreOut[]): StoreError[] {
+  return so.filter((item): item is StoreError => item !== null)
+}
 
 // TODO: implement error handling, allow transaction
 export default function persistGameEventEffects(
   store: GameStore,
   e: GameEvent
-): void {
+): StoreError[] {
   switch (e.type) {
     case events.ADD_ITEM_TO_INVENTORY: {
       const { item, quantity } = e
-      store.addInventoryItem(item, quantity)
-      break
+      const out = store.addInventoryItem(item, quantity)
+      return filterOutput(out)
     }
 
     case events.NEW_EXPEDITION: {
       const { current, total } = e
-      store.createExpeditionState({ current, total })
-      break
+      const out = store.createExpeditionState({ current, total })
+      return filterOutput(out)
     }
 
     case events.DRAW_ENCOUNTER_CARD: {
       const { cardId } = e
-      store.setActiveEncounterCard(cardId)
-      break
+      const out1 = store.setActiveEncounterCard(cardId)
+      const out2 = store.setGameMode(ACTIVE_ENCOUNTER)
+      return filterOutput(out1, out2)
     }
 
     case events.ADVANCE_EXPEDITION_PROGRESS: {
       const { increment } = e
-      store.incrementExpeditionProgress(increment)
-      break
+      const out = store.incrementExpeditionProgress(increment)
+      return filterOutput(out)
     }
 
     case events.COMPLETE_ACTIVE_ENCOUNTER: {
-      store.clearActiveEncounterCard()
-      store.setGameMode(BETWEEN_ENCOUNTERS)
-      break
+      const out1 = store.clearActiveEncounterCard()
+      const out2 = store.setGameMode(BETWEEN_ENCOUNTERS)
+      return filterOutput(out1, out2)
     }
 
     case events.END_EXPEDITION: {
-      store.setGameMode(LOADOUT)
-      store.clearExpeditionState()
-      break
+      const out1 = store.setGameMode(LOADOUT)
+      const out2 = store.clearExpeditionState()
+      return filterOutput(out1, out2)
     }
 
     case events.DICE_ROLL_OUTCOME: {
       // do nothing
-      break
+      return []
     }
 
     default:
-      console.error(
+      throw new Error(
         `persistGameEventEffects got unexpected GameEvent: ${JSON.stringify(e)}`
       )
-      break
   }
 }

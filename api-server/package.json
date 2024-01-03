@@ -28,6 +28,7 @@
     "rfc6902": "^5.1.1"
   },
   "devDependencies": {
+    "@solarpunk-drifters/openapi": "file:../openapi",
     "@types/bcrypt": "^5.0.2",
     "@types/express": "^4.17.21",
     "@types/express-session": "^1.17.10",

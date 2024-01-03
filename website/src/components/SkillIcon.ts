@@ -1,5 +1,5 @@
 import type React from 'react'
-import { type Skill } from '@/types/encounter'
+import type { Skill } from '@solarpunk-drifters/openapi'
 
 export default function SkillIcon(props: { skill: Skill }): React.ReactNode {
   switch (props.skill) {

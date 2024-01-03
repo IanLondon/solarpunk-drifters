@@ -1,6 +1,6 @@
-import { type ImageInfo } from '.'
+import type { Skill, ImageInfo } from '@solarpunk-drifters/openapi'
 
-export type Skill = 'agility' | 'harmony' | 'diy' | 'luck'
+// TODO: factor these out into openapi, maybe rename it from "openapi" to "common"
 
 export const SKILLS_LIST: Skill[] = ['agility', 'harmony', 'diy', 'luck']
 

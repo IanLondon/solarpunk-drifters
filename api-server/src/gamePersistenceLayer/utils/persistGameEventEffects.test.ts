@@ -4,10 +4,12 @@ import { describe, expect, it, jest } from '@jest/globals'
 import persistGameEventEffects from './persistGameEventEffects'
 import * as events from '../../gameLogicLayer/events'
 import {
+  ACTIVE_ENCOUNTER,
   BETWEEN_ENCOUNTERS,
-  type ExpeditionProgress,
   LOADOUT
 } from '../../controllers/gameState'
+import { type ExpeditionProgress } from '@solarpunk-drifters/openapi'
+import { type StoreError } from '../types'
 
 // In these tests, we construct a fake store containing only the methods we
 // expect to be called.
@@ -18,20 +20,44 @@ import {
 describe('persistGameEventEffects', () => {
   describe('AddItemToInventoryEvent', () => {
     it('should add item to inventory', () => {
-      const store = { addInventoryItem: jest.fn() }
+      const store = { addInventoryItem: jest.fn(() => null) }
 
       const item = 'rations'
       const quantity = 3
       const e = events.addItemToInventory(item, quantity)
 
-      persistGameEventEffects(store as any, e)
+      const out = persistGameEventEffects(store as any, e)
 
       expect(store.addInventoryItem.mock.calls).toEqual([[item, quantity]])
+      expect(out).toEqual([])
     })
   })
+
+  describe('error handling', () => {
+    it('should return StoreError[] if there are errors (only testing addItemToInventory)', () => {
+      const testStoreError: StoreError = {
+        method: 'addInventoryItem',
+        error: 'some mock error'
+      }
+      const store = {
+        addInventoryItem: jest.fn(() => testStoreError)
+      }
+
+      const item = 'rations'
+      const quantity = 3
+      const e = events.addItemToInventory(item, quantity)
+
+      const out = persistGameEventEffects(store as any, e)
+
+      expect(out).toEqual([testStoreError])
+    })
+  })
+
   describe('NewExpeditionEvent', () => {
     it('should create a new expedition state', () => {
-      const store = { createExpeditionState: jest.fn() }
+      const store = {
+        createExpeditionState: jest.fn(() => null)
+      }
 
       const expeditionDistances: ExpeditionProgress = {
         current: 11,
@@ -39,48 +65,56 @@ describe('persistGameEventEffects', () => {
       }
 
       const e = events.newExpedition(expeditionDistances)
-      persistGameEventEffects(store as any, e)
+      const out = persistGameEventEffects(store as any, e)
 
       expect(store.createExpeditionState.mock.calls).toEqual([
         [expeditionDistances]
       ])
+      expect(out).toEqual([])
     })
   })
   describe('DrawEncounterCardEvent', () => {
-    it('should set the active encounter card', () => {
-      const store = { setActiveEncounterCard: jest.fn() }
+    it('should set the active encounter card and set game mode to ACTIVE_ENCOUNTER', () => {
+      const store = {
+        setActiveEncounterCard: jest.fn(() => null),
+        setGameMode: jest.fn(() => null)
+      }
       const cardId = '123-fake-card-id'
       const e = events.drawEncounterCard(cardId)
-      persistGameEventEffects(store as any, e)
+      const out = persistGameEventEffects(store as any, e)
 
       expect(store.setActiveEncounterCard.mock.calls).toEqual([[cardId]])
+      expect(store.setGameMode.mock.calls).toEqual([[ACTIVE_ENCOUNTER]])
+      expect(out).toEqual([])
     })
   })
   describe('AdvanceExpeditionProgressEvent', () => {
     it('should increment the given expedition progress distance', () => {
       const store = {
-        incrementExpeditionProgress: jest.fn()
+        incrementExpeditionProgress: jest.fn(() => null)
       }
       const increment = 5
       const e = events.advanceExpeditionProgress(increment)
-      persistGameEventEffects(store as any, e)
+      const out = persistGameEventEffects(store as any, e)
 
       expect(store.incrementExpeditionProgress.mock.calls).toEqual([
         [increment]
       ])
+      expect(out).toEqual([])
     })
   })
   describe('CompleteActiveEncounterEvent', () => {
     it('should clear the active encounter card and set game mode to BETWEEN_ENCOUNTERS', () => {
       const store = {
-        setGameMode: jest.fn(),
-        clearActiveEncounterCard: jest.fn()
+        setGameMode: jest.fn(() => null),
+        clearActiveEncounterCard: jest.fn(() => null)
       }
       const e = events.completeActiveEncounter()
-      persistGameEventEffects(store as any, e)
+      const out = persistGameEventEffects(store as any, e)
 
       expect(store.clearActiveEncounterCard).toBeCalledTimes(1)
       expect(store.setGameMode.mock.calls).toEqual([[BETWEEN_ENCOUNTERS]])
+      expect(out).toEqual([])
     })
   })
   describe('EndExpeditionEvent', () => {
@@ -93,14 +127,15 @@ describe('persistGameEventEffects', () => {
       describe(`Outcome: ${outcome}`, () => {
         it('should clear the expedition state and set the game mode to LOADOUT', () => {
           const store = {
-            setGameMode: jest.fn(),
-            clearExpeditionState: jest.fn()
+            setGameMode: jest.fn(() => null),
+            clearExpeditionState: jest.fn(() => null)
           }
           const e = events.endExpedition(outcome)
-          persistGameEventEffects(store as any, e)
+          const out = persistGameEventEffects(store as any, e)
 
           expect(store.setGameMode.mock.calls).toEqual([[LOADOUT]])
           expect(store.clearExpeditionState).toBeCalledTimes(1)
+          expect(out).toEqual([])
         })
       })
     })
@@ -111,7 +146,8 @@ describe('persistGameEventEffects', () => {
       const rolls = [3]
       const outcome = events.ROLL_OUTCOME_MIXED_SUCCESS
       const e = events.diceRollOutcome(rolls, outcome)
-      persistGameEventEffects(store as any, e)
+      const out = persistGameEventEffects(store as any, e)
+      expect(out).toEqual([])
     })
   })
 })

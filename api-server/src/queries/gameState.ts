@@ -1,9 +1,9 @@
-import type { GameState } from '../controllers/gameState'
-import { type DiffableGameStore } from '../gamePersistenceLayer/types'
 import {
   type InMemoryDb,
   createInMemoryGameStoreForUser
 } from '../gamePersistenceLayer/inMemoryStore'
+import type { GameState } from '@solarpunk-drifters/openapi'
+import type { GameStore } from '../gamePersistenceLayer/types'
 
 // HACK to iterate quicker without DB schema design.
 // Just a temporary "database" keyed by uuid
@@ -26,8 +26,6 @@ export async function getUserGameState(uid: string): Promise<GameState> {
   return store.getGameState()
 }
 
-export async function getUserGameStore(
-  uid: string
-): Promise<DiffableGameStore> {
+export async function getUserGameStore(uid: string): Promise<GameStore> {
   return createInMemoryGameStoreForUser(uid, inMemoryDbSingleton)
 }

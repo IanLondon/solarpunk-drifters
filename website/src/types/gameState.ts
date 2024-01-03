@@ -1,4 +1,4 @@
-import type { Skill } from './encounter'
+import type { Skill, ExpeditionProgress } from '@solarpunk-drifters/openapi'
 
 export const ACTIVE_ENCOUNTER = 'ACTIVE_ENCOUNTER'
 export const BETWEEN_ENCOUNTERS = 'BETWEEN_ENCOUNTERS'
@@ -10,11 +10,6 @@ export type GameMode =
   | typeof ACTIVE_ENCOUNTER
 
 export type CharacterStats = Record<Skill, number>
-
-export interface ExpeditionProgress {
-  current: number
-  total: number
-}
 
 export interface CoreServerGameState {
   characterStats: CharacterStats

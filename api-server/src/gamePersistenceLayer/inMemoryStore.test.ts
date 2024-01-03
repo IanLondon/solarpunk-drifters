@@ -5,13 +5,17 @@ import {
   createInMemoryGameStoreForUser,
   createInitialStoreState
 } from './inMemoryStore'
-import { type DiffableGameStore } from './types'
-import { ACTIVE_ENCOUNTER, LOADOUT } from '../controllers/gameState'
+import {
+  ACTIVE_ENCOUNTER,
+  BETWEEN_ENCOUNTERS,
+  LOADOUT
+} from '../controllers/gameState'
+import type { GameStore } from './types'
 
 const uid = 'some-user-id-123' as const
 
 /**
- * Test helper to construct the in memory DiffableGameStore
+ * Test helper to construct the in-memory GameStore
  * @param storeState Partial state that is shallowly spread over the default
  *   `createInitialStoreState()` output
  */
@@ -19,7 +23,7 @@ function createMemoryGameStoreHelper(
   storeState?: Partial<InMemoryGameStoreForUser>
 ): {
   inMemoryDb: InMemoryDb
-  store: DiffableGameStore
+  store: GameStore
 } {
   const inMemoryDb = {
     [uid]: { ...createInitialStoreState(), ...storeState }
@@ -38,7 +42,7 @@ describe('createInMemoryGameStoreForUser', () => {
   })
 
   it('should retrieve game state if uid does exist', () => {
-    const userStore: any = 'foo'
+    const userStore = createInitialStoreState()
     const inMemoryDb: InMemoryDb = { [uid]: userStore }
     createInMemoryGameStoreForUser(uid, inMemoryDb)
 
@@ -105,9 +109,12 @@ describe('createInMemoryGameStoreForUser', () => {
 
   describe('setGameMode', () => {
     it('should set the gameMode', () => {
-      const { store } = createMemoryGameStoreHelper()
-      // just ensure the initial isn't the same as our expected
-      expect(store.getGameState().gameMode).toEqual(LOADOUT)
+      const { store } = createMemoryGameStoreHelper({
+        gameMode: LOADOUT,
+        // These fields can't be null if we're going to ACTIVE_ENCOUNTER:
+        activeEncounterCardId: 'some-card-id',
+        expeditionProgress: { current: 123, total: 1234 }
+      })
 
       const output = store.setGameMode(ACTIVE_ENCOUNTER)
 
@@ -119,78 +126,90 @@ describe('createInMemoryGameStoreForUser', () => {
   describe('setActiveEncounterCard', () => {
     it('should set the active encounter card to the given cardId', () => {
       const cardId = 'some-test-card-id-8293'
-      // set game mode just for data consistency
+      // set game mode for GameState type consistency
       const { store } = createMemoryGameStoreHelper({
-        gameMode: ACTIVE_ENCOUNTER
+        gameMode: ACTIVE_ENCOUNTER,
+        expeditionProgress: { current: 123, total: 1234 }
       })
 
       const output = store.setActiveEncounterCard(cardId)
 
-      expect(store.getGameState()).toHaveProperty('activeEncounterCard', cardId)
+      expect(store.getGameState()).toHaveProperty(
+        'activeEncounterCardId',
+        cardId
+      )
       expect(output).toEqual(null)
     })
   })
 
   describe('clearActiveEncounterCard', () => {
-    it('should set the active encounter card to null', () => {
+    it('should unset the active encounter card key', () => {
       const cardId = 'some-card-id-987'
       const { store } = createMemoryGameStoreHelper({
-        activeEncounterCard: cardId
+        gameMode: LOADOUT,
+        activeEncounterCardId: cardId
       })
-      expect(store.getGameState()).toHaveProperty('activeEncounterCard', cardId)
 
       const output = store.clearActiveEncounterCard()
 
-      expect(store.getGameState()).toHaveProperty('activeEncounterCard', null)
+      expect(store.getGameState()).not.toHaveProperty('activeEncounterCardId')
       expect(output).toEqual(null)
     })
   })
 
   describe('clearExpeditionState', () => {
-    it('should set the expedition progress to null', () => {
+    it('should unset the expeditionProgress ', () => {
       const initialProgress = { current: 123, total: 1234 }
       const { store } = createMemoryGameStoreHelper({
-        progress: initialProgress
+        expeditionProgress: initialProgress
       })
-      expect(store.getGameState()).toHaveProperty('progress', initialProgress)
 
       const output = store.clearExpeditionState()
 
-      expect(store.getGameState()).toHaveProperty('progress', null)
+      expect(store.getGameState()).not.toHaveProperty('expeditionProgress')
       expect(output).toEqual(null)
     })
   })
 
   describe('createExpeditionState', () => {
     it('should set the expedition progress to given data', () => {
-      const { store } = createMemoryGameStoreHelper()
+      const { store } = createMemoryGameStoreHelper({
+        gameMode: BETWEEN_ENCOUNTERS
+      })
       const newProgress = { current: 123, total: 1234 }
 
       const output = store.createExpeditionState(newProgress)
 
-      expect(store.getGameState()).toHaveProperty('progress', newProgress)
+      expect(store.getGameState()).toHaveProperty(
+        'expeditionProgress',
+        newProgress
+      )
       expect(output).toEqual(null)
     })
   })
 
   describe('incrementExpeditionProgress', () => {
-    it('should increment the current expedition progress by given distance', () => {
+    it('should increment the current expedition progress by the given distance', () => {
       const initialProgress = { current: 123, total: 1234 }
       const { store } = createMemoryGameStoreHelper({
-        progress: initialProgress
+        gameMode: BETWEEN_ENCOUNTERS,
+        expeditionProgress: initialProgress
       })
-      expect(store.getGameState()).toHaveProperty('progress', initialProgress)
+      expect(store.getGameState()).toHaveProperty(
+        'expeditionProgress',
+        initialProgress
+      )
 
       const output = store.incrementExpeditionProgress(500)
 
-      expect(store.getGameState()).toHaveProperty('progress', {
+      expect(store.getGameState()).toHaveProperty('expeditionProgress', {
         current: 123 + 500,
         total: 1234
       })
       expect(output).toEqual(null)
     })
 
-    it('should return an error if the expedition progress isn\t instantiated', () => {
+    it("should return an error if the expedition progress isn't instantiated", () => {
       const { store } = createMemoryGameStoreHelper()
 
       const output = store.incrementExpeditionProgress(500)
@@ -199,47 +218,6 @@ describe('createInMemoryGameStoreForUser', () => {
         method: 'incrementExpeditionProgress',
         error: 'noProgress'
       })
-    })
-  })
-
-  describe('getGameStateDiff', () => {
-    it('should return the diff after changes have been made', () => {
-      const { store } = createMemoryGameStoreHelper()
-      const cardId = 'some-card-id-387'
-
-      store.addInventoryItem('fooItem', 3)
-      store.setActiveEncounterCard(cardId)
-
-      const diff = store.getGameStateDiff()
-
-      expect(diff).toEqual(
-        expect.arrayContaining([
-          { op: 'replace', path: '/activeEncounterCard', value: cardId },
-          { op: 'add', path: '/inventory/fooItem', value: 3 }
-        ])
-      )
-      expect(diff).toHaveLength(2)
-    })
-  })
-
-  describe('clearGameStateDiff', () => {
-    it('should clear the diff after changes have been made', () => {
-      const { store } = createMemoryGameStoreHelper()
-      const cardId = 'some-card-id-387'
-
-      // same setup as getGameStateDiff test above
-      store.addInventoryItem('fooItem', 3)
-      store.setActiveEncounterCard(cardId)
-
-      expect(store.getGameStateDiff()).toHaveLength(2)
-
-      // test for repeated querying, should be the same
-      expect(store.getGameStateDiff()).toHaveLength(2)
-
-      // now reset it
-      store.clearGameStateDiff()
-
-      expect(store.getGameStateDiff()).toHaveLength(0)
     })
   })
 })

@@ -3,23 +3,18 @@ import {
   BETWEEN_ENCOUNTERS,
   LOADOUT
 } from '../controllers/gameState'
+import { EXPEDITION_DISTANCE, INITIAL_EXPEDITION_PROGRESS } from './constants'
 import * as events from './events'
-import type { DiceRoll, GameMoveOutcome } from './events'
+import type { GameMoveOutcome } from './events'
 
 // TODO: factor out these types
 
-export type DiceFn = (n: number, modifier: number) => DiceRoll
+// TODO: remove this? Unused?
+// export type DiceFn = (n: number, modifier: number) => DiceRoll
 
 export type EncounterCardDeckFn = () => string
 
 // =========
-
-// TODO: factor out these game constants
-
-export const INITIAL_EXPEDITION_PROGRESS = 100
-export const EXPEDITION_DISTANCE = 1500
-
-// ^^^^^^^^^
 
 export function beginExpedition(
   gameMode: GameMode,
@@ -57,4 +52,20 @@ export function turnBack(gameMode: GameMode): GameMoveOutcome {
   }
 
   return [events.endExpedition(events.TURNED_BACK)]
+}
+
+export function encounterCardChoice(args: {
+  choiceIndex: number
+  encounterCard: unknown // EncounterCard -- TODO import type
+  gameMode: GameMode
+}): GameMoveOutcome {
+  // const { gameMode, encounterCard, choiceIndex } = args
+  throw new Error('NOT IMPLEMENTED: encounterCardChoice')
+}
+
+export function playDrifterCard(args: {
+  gameMode: GameMode
+  drifterCard: unknown // TODO: define DrifterCard type
+}): GameMoveOutcome {
+  throw new Error('NOT IMPLEMENTED: playDrifterCard')
 }

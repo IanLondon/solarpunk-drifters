@@ -1,21 +1,30 @@
 import persistGameEventEffects from './utils/persistGameEventEffects'
 import type { GameEvent } from '../gameLogicLayer/events'
-import type {
-  DiffableGameStore,
-  GameStateDiff,
-  PersistenceError
-} from './types'
+import type { GameStore, GameStateDiff, PersistenceError } from './types'
+import { createPatch } from 'rfc6902'
 
 export default function runPersistence(
-  store: DiffableGameStore,
+  store: GameStore,
   gameEvents: GameEvent[]
 ): GameStateDiff | PersistenceError {
+  // TODO: use deep copy instead of JSON ser/deser
+  const initialGameState = JSON.parse(JSON.stringify(store.getGameState()))
+
   // Run persistence layer effects
-  for (const e of gameEvents) {
+  for (const evt of gameEvents) {
     // TODO: implement error handling, early abort
     // TODO: allow transaction
-    persistGameEventEffects(store, e)
+    const persistOut = persistGameEventEffects(store, evt)
+    if (persistOut.length > 0) {
+      throw new Error(
+        `Not implemented: got errors from persistGameEventEffects. ${JSON.stringify(
+          persistOut
+        )}`
+      )
+    }
   }
 
-  return store.getGameStateDiff()
+  const finalGameState = store.getGameState()
+
+  return createPatch(initialGameState, finalGameState)
 }

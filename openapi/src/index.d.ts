@@ -2,6 +2,8 @@ import type { components, paths } from "./openapi-api";
 
 export { paths };
 
+export * from "./common";
+
 // Turn messy auto-generated types into nicer named types
 export type ActiveEncounterGameState =
   components["schemas"]["ActiveEncounterGameState"];
@@ -23,7 +25,7 @@ export type ExpeditionProgress = components["schemas"]["ExpeditionProgress"];
 
 export type ExpeditionUpdate = components["schemas"]["ExpeditionUpdate"];
 
-export type GameState = components["schemas"]["GameState"];
+export type GameState = Required<components["schemas"]["GameState"]>;
 
 export type ImageInfo = components["schemas"]["ImageInfo"];
 

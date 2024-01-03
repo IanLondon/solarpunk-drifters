@@ -1,4 +1,4 @@
-import type { ExpeditionProgress } from '../controllers/gameState'
+import { type ExpeditionProgress } from '@solarpunk-drifters/openapi'
 
 // TODO: factor out new types!
 export const REACHED_DESTINATION = 'REACHED_DESTINATION'
@@ -37,17 +37,6 @@ export const addItemToInventory = (
   item,
   quantity
 })
-
-// export interface TransitionGameModeEvent {
-//   type: 'TRANSITION_GAME_MODE'
-//   gameMode: GameMode
-// }
-// export const transitionGameMode = (
-//   gameMode: GameMode
-// ): TransitionGameModeEvent => ({
-//   type: 'TRANSITION_GAME_MODE',
-//   gameMode
-// })
 
 export const NEW_EXPEDITION = 'NEW_EXPEDITION'
 export interface NewExpeditionEvent extends ExpeditionProgress {
@@ -143,7 +132,6 @@ export type GameErrorEvent = MoveNotAllowedErrorEvent
 export type GameEvent =
   | AddItemToInventoryEvent
   | NewExpeditionEvent
-  //   | TransitionGameModeEvent
   | DrawEncounterCardEvent
   | AdvanceExpeditionProgressEvent
   | CompleteActiveEncounterEvent

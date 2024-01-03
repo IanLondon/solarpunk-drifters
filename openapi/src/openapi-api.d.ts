@@ -106,9 +106,9 @@ export interface paths {
     };
   };
   "/expeditions/play-card": {
-    /** @description Play a card in the player's hand (between encounters) */
+    /** @description Play a Drifter Card in the player's hand (between encounters) */
     post: {
-      /** @description A request to play a card from a player's hand */
+      /** @description A request to play a Drifter Card */
       requestBody?: {
         content: {
           "application/json": {
@@ -117,7 +117,7 @@ export interface paths {
         };
       };
       responses: {
-        /** @description Successfully played a card. Response contains ExpeditionUpdate */
+        /** @description Successfully played a Drifter Card. Response contains ExpeditionUpdate */
         200: {
           content: {
             "application/json": components["schemas"]["ExpeditionUpdate"];

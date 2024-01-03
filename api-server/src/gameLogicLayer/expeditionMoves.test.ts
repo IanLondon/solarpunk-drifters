@@ -8,13 +8,8 @@ import {
   endExpedition,
   TURNED_BACK
 } from './events'
-import {
-  EXPEDITION_DISTANCE,
-  INITIAL_EXPEDITION_PROGRESS,
-  beginExpedition,
-  nextEncounter,
-  turnBack
-} from './expeditionMoves'
+import { beginExpedition, nextEncounter, turnBack } from './expeditionMoves'
+import { EXPEDITION_DISTANCE, INITIAL_EXPEDITION_PROGRESS } from './constants'
 
 // TODO IMMEDIATELY import these
 const LOADOUT = 'LOADOUT' as const
@@ -22,9 +17,9 @@ const BETWEEN_ENCOUNTERS = 'BETWEEN_ENCOUNTERS' as const
 const ACTIVE_ENCOUNTER = 'ACTIVE_ENCOUNTER' as const
 
 // TODO LATER import these too
-const NOT_LOADOUT = [BETWEEN_ENCOUNTERS, ACTIVE_ENCOUNTER]
-const NOT_BETWEEN_ENCOUNTERS = [LOADOUT, ACTIVE_ENCOUNTER]
-// const NOT_ACTIVE_ENCOUNTER = [LOADOUT, BETWEEN_ENCOUNTERS]
+export const NOT_LOADOUT = [BETWEEN_ENCOUNTERS, ACTIVE_ENCOUNTER]
+export const NOT_BETWEEN_ENCOUNTERS = [LOADOUT, ACTIVE_ENCOUNTER]
+export const NOT_ACTIVE_ENCOUNTER = [LOADOUT, BETWEEN_ENCOUNTERS]
 
 // TODO hook up to mocks
 const MOCK_ENCOUNTER_CARD_ID = 'mock-encounter-card-id'

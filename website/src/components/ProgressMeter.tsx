@@ -1,5 +1,5 @@
 import React from 'react'
-import { type ExpeditionProgress } from '@/types'
+import type { ExpeditionProgress } from '@solarpunk-drifters/openapi'
 
 type ProgressMeterProps = ExpeditionProgress
 

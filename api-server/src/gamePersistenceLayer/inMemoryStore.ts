@@ -1,26 +1,32 @@
-import {
-  type CharacterStats,
-  type ExpeditionProgress,
-  type GameMode,
-  type GameState
-} from '../controllers/gameState'
-import { createPatch } from 'rfc6902'
-import type { DiffableGameStore } from './types'
+import type { GameStore } from './types'
 import type { DeepReadonly } from 'ts-essentials'
+import {
+  ACTIVE_ENCOUNTER,
+  BETWEEN_ENCOUNTERS,
+  LOADOUT,
+  type GameMode
+} from '../controllers/gameState'
+import type {
+  CharacterStats,
+  ExpeditionProgress,
+  GameState
+} from '@solarpunk-drifters/openapi'
 
 export type InMemoryDb = Record<string, InMemoryGameStoreForUser>
 
+// NOTE: this is similar to GameState, but doesn't use union type
+// to exclude invalid states.
 export interface InMemoryGameStoreForUser {
-  activeEncounterCard: string | null
   characterStats: CharacterStats
   gameMode: GameMode
   inventory: Record<string, number>
-  progress: ExpeditionProgress | null
+  resources: Record<string, never> // NOT IMPLEMENTED
+  activeEncounterCardId: string | null
+  expeditionProgress: ExpeditionProgress | null
 }
 
 export function createInitialStoreState(): InMemoryGameStoreForUser {
   return {
-    activeEncounterCard: null,
     characterStats: {
       agility: 0,
       harmony: 1,
@@ -29,14 +35,75 @@ export function createInitialStoreState(): InMemoryGameStoreForUser {
     },
     gameMode: 'LOADOUT',
     inventory: { rations: 10 },
-    progress: null
+    resources: {},
+    activeEncounterCardId: null,
+    expeditionProgress: null
   }
 }
 
-export const createInMemoryGameStoreForUser = (
+// NOTE: consumers must not use this as a hack to mutate the store,
+// so DeepReadonly is necessary.
+// (Could deep copy here to be extra safe, but it's less performant.)
+export function rawStoreStateToGameState(
+  store: InMemoryGameStoreForUser
+): DeepReadonly<GameState> {
+  const {
+    characterStats,
+    gameMode,
+    inventory,
+    resources,
+    activeEncounterCardId,
+    expeditionProgress
+  } = store
+  if (gameMode === ACTIVE_ENCOUNTER) {
+    if (activeEncounterCardId === null) {
+      throw new Error(
+        'Invalid gameState: activeEncounterCardId is null while gameMode is ACTIVE_ENCOUNTER'
+      )
+    } else if (expeditionProgress === null) {
+      throw new Error(
+        'Invalid gameState: expeditionProgress is null while gameMode is ACTIVE_ENCOUNTER'
+      )
+    } else {
+      return {
+        gameMode,
+        characterStats,
+        inventory,
+        resources,
+        activeEncounterCardId,
+        expeditionProgress
+      }
+    }
+  } else if (gameMode === BETWEEN_ENCOUNTERS) {
+    if (expeditionProgress === null) {
+      throw new Error(
+        'Invalid gameState: expeditionProgress is null while gameMode is BETWEEN_ENCOUNTERS'
+      )
+    } else {
+      return {
+        gameMode,
+        characterStats,
+        inventory,
+        resources,
+        expeditionProgress
+      }
+    }
+  } else if (gameMode === LOADOUT) {
+    return {
+      gameMode,
+      characterStats,
+      inventory,
+      resources
+    }
+  } else {
+    throw new Error(`Invalid gameState: unexpected gameMode ${gameMode as any}`)
+  }
+}
+
+export function createInMemoryGameStoreForUser(
   uid: string,
   inMemoryDb: InMemoryDb
-): DiffableGameStore => {
+): GameStore {
   if (uid in inMemoryDb) {
     console.log(`UID ${uid} has existing state.`)
   } else {
@@ -46,18 +113,6 @@ export const createInMemoryGameStoreForUser = (
   }
 
   const store = inMemoryDb[uid]
-
-  // NOTE: consumers must not use this as a hack to mutate the store,
-  // so DeepReadonly is necessary.
-  // (Could deep copy here, but trying to be performant.)
-  const getGameState = (): DeepReadonly<GameState> => ({
-    ...store,
-    resources: {} // Not implemented, fake it out
-  })
-
-  // NOTE: since we're caching this to derive the patch, it must be a deep copy.
-  // TODO: use a deepCopy util fn instead of JSON ser/deser
-  let prevGameState = JSON.parse(JSON.stringify(getGameState()))
 
   return {
     addInventoryItem: (item, quantity) => {
@@ -81,36 +136,28 @@ export const createInMemoryGameStoreForUser = (
       return null
     },
     setActiveEncounterCard: (cardId) => {
-      store.activeEncounterCard = cardId
+      store.activeEncounterCardId = cardId
       return null
     },
     clearActiveEncounterCard: () => {
-      store.activeEncounterCard = null
+      store.activeEncounterCardId = null
       return null
     },
     clearExpeditionState: () => {
-      store.progress = null
+      store.expeditionProgress = null
       return null
     },
     createExpeditionState: (progress) => {
-      store.progress = progress
+      store.expeditionProgress = progress
       return null
     },
     incrementExpeditionProgress: (distance) => {
-      if (store.progress === null) {
+      if (store.expeditionProgress === null) {
         return { method: 'incrementExpeditionProgress', error: 'noProgress' }
       }
-      store.progress.current += distance
+      store.expeditionProgress.current += distance
       return null
     },
-    getGameState,
-    getGameStateDiff: () => {
-      const patch = createPatch(prevGameState, getGameState())
-      return patch
-    },
-    clearGameStateDiff: () => {
-      prevGameState = getGameState()
-      return null
-    }
+    getGameState: () => rawStoreStateToGameState(store)
   }
 }

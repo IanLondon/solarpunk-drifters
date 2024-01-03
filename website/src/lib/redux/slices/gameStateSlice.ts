@@ -2,9 +2,9 @@ import { createAction, createSlice } from '@reduxjs/toolkit'
 import {
   ACTIVE_ENCOUNTER,
   BETWEEN_ENCOUNTERS,
-  type ExpeditionProgress,
   type ServerGameState
 } from '@/types/gameState'
+import type { ExpeditionProgress } from '@solarpunk-drifters/openapi'
 import { type ServerExpeditionUpdate } from '..'
 
 type GameState = ServerGameState | null
