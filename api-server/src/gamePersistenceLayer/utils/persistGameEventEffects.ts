@@ -1,10 +1,4 @@
-import {
-  BETWEEN_ENCOUNTERS,
-  ExpeditionProgress,
-  GameMode,
-  GameState,
-  LOADOUT
-} from '../../controllers/gameState'
+import { BETWEEN_ENCOUNTERS, LOADOUT } from '../../controllers/gameState'
 import * as events from '../../gameLogicLayer/events'
 import type { GameEvent } from '../../gameLogicLayer/events'
 import type { GameStore } from '../types'
@@ -57,7 +51,9 @@ export default function persistGameEventEffects(
     }
 
     default:
-      console.error(`persistGameEventEffects got unexpected GameEvent: ${e}`)
+      console.error(
+        `persistGameEventEffects got unexpected GameEvent: ${JSON.stringify(e)}`
+      )
       break
   }
 }

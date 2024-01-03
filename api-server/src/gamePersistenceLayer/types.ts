@@ -5,7 +5,10 @@ import type {
   GameState
 } from '../controllers/gameState'
 
-export type StoreError = { method: keyof GameStore; error: string }
+export interface StoreError {
+  method: keyof GameStore
+  error: string
+}
 export type StoreOut = null | StoreError
 
 export interface GameStore {
@@ -29,4 +32,7 @@ export interface DiffableGameStore extends GameStore {
   clearGameStateDiff: () => StoreOut
 }
 
-export type PersistenceError = { error: true; payload: string } // TODO. NOT IMPLEMENTED
+export interface PersistenceError {
+  error: true
+  payload: string
+} // TODO. NOT IMPLEMENTED

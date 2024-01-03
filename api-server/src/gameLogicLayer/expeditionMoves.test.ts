@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@jest/globals'
 import {
-  type DiceRoll,
-  type DiceRollOutcome,
+  // type DiceRoll,
+  // type DiceRollOutcome,
   moveNotAllowedError,
   drawEncounterCard,
   newExpedition,
@@ -29,31 +29,31 @@ const NOT_BETWEEN_ENCOUNTERS = [LOADOUT, ACTIVE_ENCOUNTER]
 // TODO hook up to mocks
 const MOCK_ENCOUNTER_CARD_ID = 'mock-encounter-card-id'
 
-const diceMockerFactory =
-  (
-    outcome: DiceRollOutcome,
-    rolls: number[],
-    expectedN: number,
-    expectedModifier: number
-  ) =>
-  (n: number, modifier: number): DiceRoll => {
-    if (n !== expectedN) {
-      throw new Error(`diceMocker expected n=${expectedN}, called with ${n}`)
-    }
-    if (modifier !== expectedModifier) {
-      throw new Error(
-        `diceMocker expected modifier=${expectedModifier}, called with ${modifier}`
-      )
-    }
-    return {
-      outcome,
-      rolls
-    }
-  }
+// const diceMockerFactory =
+//   (
+//     outcome: DiceRollOutcome,
+//     rolls: number[],
+//     expectedN: number,
+//     expectedModifier: number
+//   ) =>
+//   (n: number, modifier: number): DiceRoll => {
+//     if (n !== expectedN) {
+//       throw new Error(`diceMocker expected n=${expectedN}, called with ${n}`)
+//     }
+//     if (modifier !== expectedModifier) {
+//       throw new Error(
+//         `diceMocker expected modifier=${expectedModifier}, called with ${modifier}`
+//       )
+//     }
+//     return {
+//       outcome,
+//       rolls
+//     }
+//   }
 
-const noDice = (n: number, modifier: number): DiceRoll => {
-  throw new Error('noDice fake was called')
-}
+// const noDice = (n: number, modifier: number): DiceRoll => {
+//   throw new Error('noDice fake was called')
+// }
 
 const encounterCardDeckMocker = (): string => MOCK_ENCOUNTER_CARD_ID
 

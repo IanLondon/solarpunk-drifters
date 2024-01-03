@@ -1,10 +1,19 @@
-import express, { type RequestHandler, type Request, type Response, type NextFunction } from 'express'
+import express, {
+  type RequestHandler,
+  type Request,
+  type Response,
+  type NextFunction
+} from 'express'
 import { i18n } from '../constants'
 import { createUser, getUserWithCredentials } from '../controllers/users'
 import { getUserByUid } from '../queries/users'
 
 // TODO IMMEDIATELY factor out or find existing type??
-type AsyncRequestHandler = (req: Request, res: Response, next: NextFunction) => Promise<any>
+type AsyncRequestHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => Promise<any>
 
 const router = express.Router()
 
@@ -29,13 +38,19 @@ export const footestHandler: RequestHandler = (req, res, next) => {
 router.post('/footest', footestHandler)
 
 // Create new user
-export const createUserHandler: AsyncRequestHandler = async (req, res, next) => {
+export const createUserHandler: AsyncRequestHandler = async (
+  req,
+  res,
+  next
+) => {
   // TODO IMMEDIATELY: validate against OpenAPI schema
   const password: string | undefined = req.body.password
   const username: string | undefined = req.body.username
 
   if (password === undefined || username === undefined) {
-    res.status(401).json({ message: i18n.messages.INVALID_USERNAME_OR_PASSWORD })
+    res
+      .status(401)
+      .json({ message: i18n.messages.INVALID_USERNAME_OR_PASSWORD })
     return
   }
 
@@ -52,18 +67,22 @@ router.post('/user', createUserHandler as RequestHandler)
 
 // Login existing user
 export const loginUserHandler: AsyncRequestHandler = async (req, res, next) => {
-// TODO IMMEDIATELY: validate against OpenAPI schema
+  // TODO IMMEDIATELY: validate against OpenAPI schema
   const password: string | undefined = req.body.password
   const username: string | undefined = req.body.username
 
   if (password === undefined || username === undefined) {
-    return res.status(401).json({ message: i18n.messages.INVALID_USERNAME_OR_PASSWORD })
+    return res
+      .status(401)
+      .json({ message: i18n.messages.INVALID_USERNAME_OR_PASSWORD })
   }
 
   const user = await getUserWithCredentials({ username, password })
 
   if (user === null) {
-    return res.status(401).json({ message: i18n.messages.INVALID_USERNAME_OR_PASSWORD })
+    return res
+      .status(401)
+      .json({ message: i18n.messages.INVALID_USERNAME_OR_PASSWORD })
   } else {
     // user exists and credentials are correct, so we create session
 

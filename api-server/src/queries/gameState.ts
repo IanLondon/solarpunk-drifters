@@ -1,7 +1,7 @@
 import type { GameState } from '../controllers/gameState'
-import { DiffableGameStore } from '../gamePersistenceLayer/types'
+import { type DiffableGameStore } from '../gamePersistenceLayer/types'
 import {
-  InMemoryDb,
+  type InMemoryDb,
   createInMemoryGameStoreForUser
 } from '../gamePersistenceLayer/utils/gameStateDiff'
 

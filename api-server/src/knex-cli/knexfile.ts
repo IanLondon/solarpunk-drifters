@@ -47,7 +47,6 @@ const config: Record<string, Knex.Config> = {
       tableName: 'knex_migrations'
     }
   }
-
 }
 
 module.exports = config

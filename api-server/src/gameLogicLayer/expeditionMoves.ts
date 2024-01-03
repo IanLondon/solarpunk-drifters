@@ -1,7 +1,6 @@
 import {
+  type GameMode,
   BETWEEN_ENCOUNTERS,
-  GameMode,
-  GameState,
   LOADOUT
 } from '../controllers/gameState'
 import * as events from './events'

@@ -5,7 +5,6 @@ import type { GameMoveOutcome } from '../gameLogicLayer/events'
 import type {
   DiffableGameStore,
   GameStateDiff,
-  GameStore,
   PersistenceError
 } from '../gamePersistenceLayer/types'
 
@@ -13,7 +12,7 @@ type ClientEvent = never // NOT IMPLEMENTED. TODO
 
 interface ExpeditionResponse {
   update: GameStateDiff
-  clientEvents: Array<ClientEvent>
+  clientEvents: ClientEvent[]
 }
 
 function fakeEncounterCardDeck(): string {
@@ -36,11 +35,13 @@ export async function processOutcome(
 
     // Run persistence layer effects
     const persistenceResult = runPersistence(store, gameEvents)
-    return processPersistenceResult(persistenceResult)
+    return await processPersistenceResult(persistenceResult)
   } else {
     const gameErrorEvent = gameOutcome
     throw new Error(
-      `NOT IMPLEMENTED: controller got error event ${gameErrorEvent}`
+      `NOT IMPLEMENTED: controller got error event ${JSON.stringify(
+        gameErrorEvent
+      )}`
     )
   }
 }
@@ -53,12 +54,14 @@ export async function processPersistenceResult(
 
     // NOT IMPLEMENTED. TODO.
     // This should use some fn from gameTransportLayer
-    const clientEvents: Array<ClientEvent> = []
+    const clientEvents: ClientEvent[] = []
 
     return { update: gameStateDiff, clientEvents }
   } else {
     throw new Error(
-      `NOT IMPLEMENTED: runPersistence returned PersistenceError ${persistenceResult}`
+      `NOT IMPLEMENTED: runPersistence returned PersistenceError ${JSON.stringify(
+        persistenceResult
+      )}`
     )
   }
 }

@@ -9,10 +9,15 @@ export interface UsersTableRow {
 
 export interface NewUser extends Omit<UsersTableRow, 'uid'> {}
 
-export async function insertUser (username: string, passhash: string): Promise<string> {
+export async function insertUser(
+  username: string,
+  passhash: string
+): Promise<string> {
   const knex = connectKnex()
 
-  const ret: Array<{ uid: string }> = await knex<UsersTableRow>('users').returning('uid').insert({ username, passhash })
+  const ret: Array<{ uid: string }> = await knex<UsersTableRow>('users')
+    .returning('uid')
+    .insert({ username, passhash })
   if (ret.length === 1) {
     const uid = ret[0].uid
     await createUserGameData(uid)
@@ -22,20 +27,26 @@ export async function insertUser (username: string, passhash: string): Promise<s
   }
 }
 
-export async function getUserByUid (uid: string): Promise<UsersTableRow | null> {
+export async function getUserByUid(uid: string): Promise<UsersTableRow | null> {
   const knex = connectKnex()
 
-  return await knex<UsersTableRow>('users')
-    .select('*')
-    .where('uid', uid)
-    .first() ?? null
+  return (
+    (await knex<UsersTableRow>('users')
+      .select('*')
+      .where('uid', uid)
+      .first()) ?? null
+  )
 }
 
-export async function getUserByUsername (username: string): Promise<UsersTableRow | null> {
+export async function getUserByUsername(
+  username: string
+): Promise<UsersTableRow | null> {
   const knex = connectKnex()
 
-  return await knex<UsersTableRow>('users')
-    .select('*')
-    .where('username', username)
-    .first() ?? null
+  return (
+    (await knex<UsersTableRow>('users')
+      .select('*')
+      .where('username', username)
+      .first()) ?? null
+  )
 }

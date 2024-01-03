@@ -3,7 +3,7 @@ import session from 'express-session'
 import connectSessionKnex from 'connect-session-knex'
 import connectKnex from './connectKnex'
 
-export function getSessionStore (): session.Store {
+export function getSessionStore(): session.Store {
   if (process.env.ENSURE_NO_DB === '1') {
     console.log('ENSURE_NO_DB=1, using MemoryStore for express-session.')
     return new session.MemoryStore()
@@ -22,7 +22,10 @@ export function getSessionStore (): session.Store {
   return store
 }
 
-export function addSessionMiddlewareFactory (app: Express, store: session.Store): Express {
+export function addSessionMiddlewareFactory(
+  app: Express,
+  store: session.Store
+): Express {
   const SESSION_SECRET = process.env.SESSION_SECRET
 
   if (SESSION_SECRET === undefined) {
@@ -46,6 +49,6 @@ export function addSessionMiddlewareFactory (app: Express, store: session.Store)
   return app
 }
 
-export default function addSessionMiddleware (app: Express): Express {
+export default function addSessionMiddleware(app: Express): Express {
   return addSessionMiddlewareFactory(app, getSessionStore())
 }

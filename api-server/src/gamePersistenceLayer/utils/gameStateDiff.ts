@@ -1,10 +1,10 @@
 import {
-  CharacterStats,
-  ExpeditionProgress,
-  GameMode,
-  GameState
+  type CharacterStats,
+  type ExpeditionProgress,
+  type GameMode,
+  type GameState
 } from '../../controllers/gameState'
-import type { DiffableGameStore, GameStateDiff } from '../types'
+import type { DiffableGameStore } from '../types'
 import { createPatch } from 'rfc6902'
 
 export type InMemoryDb = Record<string, InMemoryGameStoreForUser>

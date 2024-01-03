@@ -1,4 +1,4 @@
-import type { ExpeditionProgress, GameMode } from '../controllers/gameState'
+import type { ExpeditionProgress } from '../controllers/gameState'
 
 // TODO: factor out new types!
 export const REACHED_DESTINATION = 'REACHED_DESTINATION'
@@ -150,4 +150,4 @@ export type GameEvent =
   | EndExpeditionEvent
   | DiceRollOutcomeEvent
 
-export type GameMoveOutcome = Array<GameEvent> | GameErrorEvent
+export type GameMoveOutcome = GameEvent[] | GameErrorEvent

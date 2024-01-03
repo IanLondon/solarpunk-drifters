@@ -3,7 +3,7 @@ import knexConfig, { type Knex } from 'knex'
 
 // Connect to database once, reuse knex object for subsequent calls.
 let knex: Knex | null = null
-export default function connectKnex (): Knex {
+export default function connectKnex(): Knex {
   if (process.env.ENSURE_NO_DB === '1') {
     throw new Error('ENSURE_NO_DB is set to 1, but connectKnex was called.')
   }

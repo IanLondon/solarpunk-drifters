@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals'
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+import { describe, expect, it, jest } from '@jest/globals'
 import persistGameEventEffects from './persistGameEventEffects'
 import * as events from '../../gameLogicLayer/events'
 import {
   BETWEEN_ENCOUNTERS,
-  ExpeditionProgress,
+  type ExpeditionProgress,
   LOADOUT
 } from '../../controllers/gameState'
 
