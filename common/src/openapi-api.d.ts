@@ -18,12 +18,12 @@ export interface paths {
       };
     };
   };
-  "/encounter-cards/{card_id}": {
+  "/encounter-cards/{encounter_card_id}": {
     /** @description Get a single Encounter Card */
     get: {
       parameters: {
         path: {
-          card_id: string;
+          encounter_card_id: string;
         };
       };
       responses: {
@@ -33,6 +33,10 @@ export interface paths {
             "application/json": components["schemas"]["EncounterCard"];
           };
         };
+        /** @description Encounter Card with the given ID does not exist */
+        404: {
+          content: never;
+        };
       };
     };
   };
@@ -40,7 +44,7 @@ export interface paths {
     /** @description Begin an expedition */
     post: {
       responses: {
-        /** @description Successfully began expedition. Response contains ExpeditionUpdate */
+        /** @description Successfully began expedition. */
         200: {
           content: {
             "application/json": components["schemas"]["ExpeditionUpdate"];
@@ -53,7 +57,7 @@ export interface paths {
     /** @description Begin next encounter (draw a new encounter card) */
     post: {
       responses: {
-        /** @description Successfully began new encounter. Response contains ExpeditionUpdate */
+        /** @description Successfully began new encounter. */
         200: {
           content: {
             "application/json": components["schemas"]["ExpeditionUpdate"];
@@ -66,7 +70,7 @@ export interface paths {
     /** @description Turn back, ending the expedition. */
     post: {
       responses: {
-        /** @description Successfully ended the expedition. Response contains ExpeditionUpdate */
+        /** @description Successfully ended the expedition. */
         200: {
           content: {
             "application/json": components["schemas"]["ExpeditionUpdate"];
@@ -87,7 +91,7 @@ export interface paths {
         };
       };
       responses: {
-        /** @description Successfully executed a choice. Response contains ExpeditionUpdate */
+        /** @description Successfully executed a choice. */
         200: {
           content: {
             "application/json": components["schemas"]["ExpeditionUpdate"];
@@ -108,7 +112,7 @@ export interface paths {
         };
       };
       responses: {
-        /** @description Successfully played a Drifter Card. Response contains ExpeditionUpdate */
+        /** @description Successfully played a Drifter Card. */
         200: {
           content: {
             "application/json": components["schemas"]["ExpeditionUpdate"];

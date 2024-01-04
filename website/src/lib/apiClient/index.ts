@@ -7,9 +7,9 @@ export const { GET, POST } = createClient<paths>({ baseUrl: BASE_API_URL })
 
 // use like this
 async function getEncounterCard(cardId: string): Promise<any> {
-  const { data, error } = await GET('/encounter-cards/{card_id}', {
+  const { data, error } = await GET('/encounter-cards/{encounter_card_id}', {
     params: {
-      path: { card_id: 'my-post' }
+      path: { encounter_card_id: 'my-post' }
     }
   })
   return { data, error }

@@ -18,17 +18,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GameState'
-  /encounter-cards/{card_id}:
+  /encounter-cards/{encounter_card_id}:
     get:
       description: Get a single Encounter Card
       parameters:
-        - name: card_id
+        - name: encounter_card_id
           in: path
           required: true
           schema:
             type: string
             description: The Encounter Card's ID
-            example: 3b5b1707-b82c-4b1d-9078-157053902525
+            example: 'buffalo-demo-123456'
       responses:
         '200':
           description: A single Encounter Card
@@ -36,12 +36,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EncounterCard'
+        '404':
+          description: Encounter Card with the given ID does not exist
   /expeditions/begin-expedition:
     post:
       description: Begin an expedition
       responses:
         '200':
-          description: Successfully began expedition. Response contains ExpeditionUpdate
+          description: Successfully began expedition.
           content:
             application/json:
               schema:
@@ -51,7 +53,7 @@ paths:
       description: Begin next encounter (draw a new encounter card)
       responses:
         '200':
-          description: Successfully began new encounter. Response contains ExpeditionUpdate
+          description: Successfully began new encounter.
           content:
             application/json:
               schema:
@@ -61,7 +63,7 @@ paths:
       description: Turn back, ending the expedition.
       responses:
         '200':
-          description: Successfully ended the expedition. Response contains ExpeditionUpdate
+          description: Successfully ended the expedition.
           content:
             application/json:
               schema:
@@ -81,7 +83,7 @@ paths:
                   minimum: 0
       responses:
         '200':
-          description: Successfully executed a choice. Response contains ExpeditionUpdate
+          description: Successfully executed a choice.
           content:
             application/json:
               schema:
@@ -100,7 +102,7 @@ paths:
                   type: string
       responses:
         '200':
-          description: Successfully played a Drifter Card. Response contains ExpeditionUpdate
+          description: Successfully played a Drifter Card.
           content:
             application/json:
               schema:

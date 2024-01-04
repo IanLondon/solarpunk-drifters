@@ -2,6 +2,7 @@ import 'dotenv/config'
 import express, { type Express } from 'express'
 import 'express-async-errors'
 import addSessionMiddleware from './addSessionMiddleware'
+import encounterCardRouter from './routes/encounter-cards'
 import expeditionsRouter from './routes/expeditions'
 import gameStateRouter from './routes/game-state'
 import loginRouter from './routes/login'
@@ -26,6 +27,7 @@ addSessionMiddleware(app)
 // Routes
 
 app.use('/', rootRouter)
+app.use('/encounter-cards', encounterCardRouter)
 app.use('/expeditions', expeditionsRouter)
 app.use('/game-state', gameStateRouter)
 app.use('/login', loginRouter)

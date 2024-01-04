@@ -1,4 +1,8 @@
 import {
+  type DrifterCard,
+  type EncounterCard
+} from '@solarpunk-drifters/common'
+import {
   type GameMode,
   BETWEEN_ENCOUNTERS,
   LOADOUT
@@ -6,21 +10,17 @@ import {
 import { EXPEDITION_DISTANCE, INITIAL_EXPEDITION_PROGRESS } from './constants'
 import * as events from './events'
 import type { GameMoveOutcome } from './events'
+import type { EncounterCardDeckFn } from './types'
 
-// TODO: factor out this type
-export type EncounterCardDeckFn = () => string
-
-// =========
-
-export function beginExpedition(
+export async function beginExpedition(
   gameMode: GameMode,
   encounterCardDeck: EncounterCardDeckFn
-): GameMoveOutcome {
+): Promise<GameMoveOutcome> {
   if (gameMode !== LOADOUT) {
     return events.moveNotAllowedError()
   }
 
-  const newEncounterCardId = encounterCardDeck()
+  const newEncounterCardId = await encounterCardDeck()
   return [
     events.drawEncounterCard(newEncounterCardId),
     events.newExpedition({
@@ -30,19 +30,19 @@ export function beginExpedition(
   ]
 }
 
-export function nextEncounter(
+export async function nextEncounter(
   gameMode: GameMode,
   encounterCardDeck: EncounterCardDeckFn
-): GameMoveOutcome {
+): Promise<GameMoveOutcome> {
   if (gameMode !== BETWEEN_ENCOUNTERS) {
     return events.moveNotAllowedError()
   }
 
-  const newEncounterCardId = encounterCardDeck()
+  const newEncounterCardId = await encounterCardDeck()
   return [events.drawEncounterCard(newEncounterCardId)]
 }
 
-export function turnBack(gameMode: GameMode): GameMoveOutcome {
+export async function turnBack(gameMode: GameMode): Promise<GameMoveOutcome> {
   if (gameMode !== BETWEEN_ENCOUNTERS) {
     return events.moveNotAllowedError()
   }
@@ -50,18 +50,18 @@ export function turnBack(gameMode: GameMode): GameMoveOutcome {
   return [events.endExpedition(events.TURNED_BACK)]
 }
 
-export function encounterCardChoice(args: {
+export async function encounterCardChoice(args: {
   choiceIndex: number
-  encounterCard: unknown // EncounterCard -- TODO import type
+  encounterCard: EncounterCard
   gameMode: GameMode
-}): GameMoveOutcome {
+}): Promise<GameMoveOutcome> {
   // const { gameMode, encounterCard, choiceIndex } = args
   throw new Error('NOT IMPLEMENTED: encounterCardChoice')
 }
 
-export function playDrifterCard(args: {
+export async function playDrifterCard(args: {
   gameMode: GameMode
-  drifterCard: unknown // TODO: define DrifterCard type
-}): GameMoveOutcome {
+  drifterCard: DrifterCard
+}): Promise<GameMoveOutcome> {
   throw new Error('NOT IMPLEMENTED: playDrifterCard')
 }

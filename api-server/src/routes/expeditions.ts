@@ -50,6 +50,7 @@ router.post(
         uid,
         choiceIndex
       })
+
       res.json(expeditionRes)
     } else if (path === PLAY_DRIFTER_CARD_PATH) {
       // TODO: rename this route to `/play-drifter-card`

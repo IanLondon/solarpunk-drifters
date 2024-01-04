@@ -8,6 +8,7 @@ import {
 } from './events'
 import { beginExpedition, nextEncounter, turnBack } from './expeditionMoves'
 import { EXPEDITION_DISTANCE, INITIAL_EXPEDITION_PROGRESS } from './constants'
+import { type EncounterCardDeckFn } from './types'
 
 // TODO IMMEDIATELY import these
 const LOADOUT = 'LOADOUT' as const
@@ -48,12 +49,13 @@ const MOCK_ENCOUNTER_CARD_ID = 'mock-encounter-card-id'
 //   throw new Error('noDice fake was called')
 // }
 
-const encounterCardDeckMocker = (): string => MOCK_ENCOUNTER_CARD_ID
+const encounterCardDeckMocker: EncounterCardDeckFn = async () =>
+  MOCK_ENCOUNTER_CARD_ID
 
 describe('expedition moves', () => {
   describe('begin expedition', () => {
-    it('should begin new expedition and start an active encounter', () => {
-      const output = beginExpedition(LOADOUT, encounterCardDeckMocker)
+    it('should begin new expedition and start an active encounter', async () => {
+      const output = await beginExpedition(LOADOUT, encounterCardDeckMocker)
 
       expect(output).toEqual([
         drawEncounterCard(MOCK_ENCOUNTER_CARD_ID),
@@ -64,24 +66,27 @@ describe('expedition moves', () => {
       ])
     })
 
-    it('should give an error when in any mode but loadout', () => {
-      NOT_LOADOUT.forEach((gameMode) => {
-        const output = beginExpedition(gameMode, encounterCardDeckMocker)
+    NOT_LOADOUT.forEach((gameMode) => {
+      it(`should give an error when in any mode but loadout (${gameMode})`, async () => {
+        const output = await beginExpedition(gameMode, encounterCardDeckMocker)
         expect(output).toEqual(moveNotAllowedError())
       })
     })
   })
 
   describe('next encounter', () => {
-    it('should start a new encounter', () => {
-      const output = nextEncounter(BETWEEN_ENCOUNTERS, encounterCardDeckMocker)
+    it('should start a new encounter', async () => {
+      const output = await nextEncounter(
+        BETWEEN_ENCOUNTERS,
+        encounterCardDeckMocker
+      )
 
       expect(output).toEqual([drawEncounterCard(MOCK_ENCOUNTER_CARD_ID)])
     })
 
-    it('should give an error when in any mode but "between encounters"', () => {
-      NOT_BETWEEN_ENCOUNTERS.forEach((gameMode) => {
-        const output = nextEncounter(gameMode, encounterCardDeckMocker)
+    NOT_BETWEEN_ENCOUNTERS.forEach((gameMode) => {
+      it(`should give an error when in any mode but "between encounters" (${gameMode})`, async () => {
+        const output = await nextEncounter(gameMode, encounterCardDeckMocker)
 
         expect(output).toEqual(moveNotAllowedError())
       })
@@ -90,15 +95,15 @@ describe('expedition moves', () => {
 })
 
 describe('turn back', () => {
-  it('should end the expedition', () => {
-    const output = turnBack(BETWEEN_ENCOUNTERS)
+  it('should end the expedition', async () => {
+    const output = await turnBack(BETWEEN_ENCOUNTERS)
 
     expect(output).toEqual([endExpedition(TURNED_BACK)])
   })
 
-  it('should give an error when in any mode but "between encounters"', () => {
-    NOT_BETWEEN_ENCOUNTERS.forEach((gameMode) => {
-      const output = turnBack(gameMode)
+  NOT_BETWEEN_ENCOUNTERS.forEach((gameMode) => {
+    it(`should give an error when in any mode but "between encounters" (${gameMode})`, async () => {
+      const output = await turnBack(gameMode)
       expect(output).toEqual(moveNotAllowedError())
     })
   })

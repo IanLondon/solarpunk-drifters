@@ -4,18 +4,13 @@ import runPersistence from '../gamePersistenceLayer'
 import type { GameMoveOutcome } from '../gameLogicLayer/events'
 import type { GameStore, PersistenceError } from '../gamePersistenceLayer/types'
 import { ACTIVE_ENCOUNTER } from './gameState'
-import { getEncounterCard } from '../queries/encounterCards'
+import { encounterCardDeck, getEncounterCard } from '../queries/encounterCards'
 import { getDrifterCard } from '../queries/drifterCards'
-import type { ClientEvent, PatchRequest } from '@solarpunk-drifters/common'
-
-interface ExpeditionResponse {
-  update: PatchRequest
-  clientEvents: ClientEvent[]
-}
-
-function fakeEncounterCardDeck(): string {
-  return 'fake-encounter-card-id'
-}
+import type {
+  ClientEvent,
+  PatchRequest,
+  ExpeditionUpdate
+} from '@solarpunk-drifters/common'
 
 /**
  * This is the "imperative shell" of "functional core, imperative shell."
@@ -27,7 +22,7 @@ function fakeEncounterCardDeck(): string {
 export async function processOutcome(
   store: GameStore,
   gameOutcome: GameMoveOutcome
-): Promise<ExpeditionResponse> {
+): Promise<ExpeditionUpdate> {
   if (Array.isArray(gameOutcome)) {
     const gameEvents = gameOutcome
 
@@ -46,7 +41,7 @@ export async function processOutcome(
 
 export async function processPersistenceResult(
   persistenceResult: PatchRequest | PersistenceError
-): Promise<ExpeditionResponse> {
+): Promise<ExpeditionUpdate> {
   if (Array.isArray(persistenceResult)) {
     const gameStateDiff = persistenceResult
 
@@ -66,13 +61,13 @@ export async function processPersistenceResult(
 
 export async function beginExpeditionController(
   uid: string
-): Promise<ExpeditionResponse> {
+): Promise<ExpeditionUpdate> {
   const store = await getUserGameStore(uid)
 
   const gameMode = store.getGameState().gameMode
-  const gameOutcome = expeditionMoves.beginExpedition(
+  const gameOutcome = await expeditionMoves.beginExpedition(
     gameMode,
-    fakeEncounterCardDeck
+    encounterCardDeck
   )
 
   return await processOutcome(store, gameOutcome)
@@ -80,13 +75,13 @@ export async function beginExpeditionController(
 
 export async function nextEncounterController(
   uid: string
-): Promise<ExpeditionResponse> {
+): Promise<ExpeditionUpdate> {
   const store = await getUserGameStore(uid)
 
   const gameMode = store.getGameState().gameMode
-  const gameOutcome = expeditionMoves.nextEncounter(
+  const gameOutcome = await expeditionMoves.nextEncounter(
     gameMode,
-    fakeEncounterCardDeck
+    encounterCardDeck
   )
 
   return await processOutcome(store, gameOutcome)
@@ -94,11 +89,11 @@ export async function nextEncounterController(
 
 export async function turnBackController(
   uid: string
-): Promise<ExpeditionResponse> {
+): Promise<ExpeditionUpdate> {
   const store = await getUserGameStore(uid)
 
   const gameMode = store.getGameState().gameMode
-  const gameOutcome = expeditionMoves.turnBack(gameMode)
+  const gameOutcome = await expeditionMoves.turnBack(gameMode)
 
   return await processOutcome(store, gameOutcome)
 }
@@ -106,17 +101,26 @@ export async function turnBackController(
 export async function encounterCardChoiceController(args: {
   uid: string
   choiceIndex: number
-}): Promise<ExpeditionResponse> {
+}): Promise<ExpeditionUpdate> {
   const { uid, choiceIndex } = args
   const store = await getUserGameStore(uid)
 
   const gameState = store.getGameState()
   if (gameState.gameMode === ACTIVE_ENCOUNTER) {
-    const encounterCardId = gameState.activeEncounterCardId
+    const { activeEncounterCardId } = gameState
 
-    const encounterCard = await getEncounterCard(encounterCardId)
+    const encounterCard = await getEncounterCard(activeEncounterCardId)
 
-    const gameOutcome = expeditionMoves.encounterCardChoice({
+    if (encounterCard === null) {
+      // TODO use custom error type. This is an error in the gameState,
+      // it's invalid for the gameState to have an activeEncounterCardId
+      // that doesn't reference a known Encounter Card
+      throw new Error(
+        `activeEncounterCardId ${activeEncounterCardId} has no Encounter Card`
+      )
+    }
+
+    const gameOutcome = await expeditionMoves.encounterCardChoice({
       gameMode: gameState.gameMode,
       choiceIndex,
       encounterCard
@@ -133,14 +137,17 @@ export async function encounterCardChoiceController(args: {
 export async function playDrifterCardController(args: {
   uid: string
   drifterCardId: string
-}): Promise<ExpeditionResponse> {
+}): Promise<ExpeditionUpdate> {
   const { uid, drifterCardId } = args
   const store = await getUserGameStore(uid)
 
   const gameMode = store.getGameState().gameMode
   const drifterCard = await getDrifterCard(drifterCardId)
 
-  const gameOutcome = expeditionMoves.playDrifterCard({ gameMode, drifterCard })
+  const gameOutcome = await expeditionMoves.playDrifterCard({
+    gameMode,
+    drifterCard
+  })
 
   return await processOutcome(store, gameOutcome)
 }
