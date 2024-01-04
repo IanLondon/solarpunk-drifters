@@ -1,7 +1,7 @@
 import { createAction, type Dispatch } from '@reduxjs/toolkit'
 import { EXPEDITIONS_URL, GAME_STATE_URL } from '@/app/serverRoutes'
 import { encounterUpdate, setGameState } from '.'
-import type { Rolling, ServerGameState } from '@/types'
+import type { PendingEncounterResult, ServerGameState } from '@/types'
 import { type ExpeditionUpdate } from '@solarpunk-drifters/common'
 
 export function fetchInitialGameState() {
@@ -50,7 +50,7 @@ export type ExpeditionMove =
   | {
       moveType: typeof ENCOUNTER_CARD_CHOICE
       body: { choice: number }
-      meta: Rolling
+      meta: PendingEncounterResult
     }
   | { moveType: typeof PLAY_CARD; body: { cardId: string } }
 

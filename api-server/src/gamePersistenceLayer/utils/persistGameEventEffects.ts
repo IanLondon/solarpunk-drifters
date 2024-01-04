@@ -54,7 +54,7 @@ export default function persistGameEventEffects(
       return filterOutput(out1, out2)
     }
 
-    case events.DICE_ROLL_OUTCOME: {
+    case events.ENCOUNTER_RESULT: {
       // do nothing
       return []
     }

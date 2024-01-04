@@ -167,15 +167,15 @@ components:
     ClientEvent:
       description: Describes an event that happened in the game, relevant to the client
       oneOf:
-        - $ref: '#/components/schemas/ClientEventRollResult'
-    ClientEventRollResult:
+        - $ref: '#/components/schemas/ClientEventEncounterResult'
+    ClientEventEncounterResult:
       type: object
       properties:
         type:
           type: string
-          enum: ['CLIENT_EVENT_ROLL_RESULT']
+          enum: ['CLIENT_EVENT_ENCOUNTER_RESULT']
         payload:
-          $ref: '#/components/schemas/RollResult'
+          $ref: '#/components/schemas/EncounterResult'
       required: [type, payload]
 
     EncounterCard:
@@ -318,7 +318,8 @@ components:
           type: string
       required: [alt, height, width, src]
 
-    RollResult:
+    EncounterResult:
+      description: The result of a an encounter card choice player move
       type: object
       properties:
         rolls:
@@ -327,13 +328,13 @@ components:
             type: integer
         outcome:
           $ref: '#/components/schemas/RollOutcome'
-      required: [rolls, outcome]
+      required: [outcome]
     RollOutcome:
       type: string
       enum:
-        - 'ROLL_OUTCOME_FAILURE'
-        - 'ROLL_OUTCOME_MIXED_SUCCESS'
-        - 'ROLL_OUTCOME_STRONG_SUCCESS'
+        - 'ENCOUNTER_OUTCOME_FAILURE'
+        - 'ENCOUNTER_OUTCOME_MIXED_SUCCESS'
+        - 'ENCOUNTER_OUTCOME_STRONG_SUCCESS'
 
     Skill:
       type: string

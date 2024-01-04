@@ -9,7 +9,7 @@ import {
   LOADOUT
 } from '../../controllers/gameState'
 import {
-  ROLL_OUTCOME_MIXED_SUCCESS,
+  ENCOUNTER_OUTCOME_MIXED_SUCCESS,
   type ExpeditionProgress
 } from '@solarpunk-drifters/common'
 import { type StoreError } from '../types'
@@ -143,11 +143,11 @@ describe('persistGameEventEffects', () => {
       })
     })
   })
-  describe('DiceRollOutcomeEvent', () => {
+  describe('EncounterResultEvent', () => {
     it('should do nothing (dice rolls are not persisted)', () => {
       const store = {}
       const rolls = [3]
-      const outcome = ROLL_OUTCOME_MIXED_SUCCESS
+      const outcome = ENCOUNTER_OUTCOME_MIXED_SUCCESS
       const e = events.diceRollOutcome(rolls, outcome)
       const out = persistGameEventEffects(store as any, e)
       expect(out).toEqual([])

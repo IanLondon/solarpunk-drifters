@@ -178,11 +178,11 @@ export interface components {
       luck: components["schemas"]["StatNumber"];
     };
     /** @description Describes an event that happened in the game, relevant to the client */
-    ClientEvent: components["schemas"]["ClientEventRollResult"];
-    ClientEventRollResult: {
+    ClientEvent: components["schemas"]["ClientEventEncounterResult"];
+    ClientEventEncounterResult: {
       /** @enum {string} */
-      type: "CLIENT_EVENT_ROLL_RESULT";
-      payload: components["schemas"]["RollResult"];
+      type: "CLIENT_EVENT_ENCOUNTER_RESULT";
+      payload: components["schemas"]["EncounterResult"];
     };
     EncounterCard: {
       /** @example some-id-123-blah */
@@ -251,12 +251,13 @@ export interface components {
       width: number;
       src: string;
     };
-    RollResult: {
-      rolls: number[];
+    /** @description The result of a an encounter card choice player move */
+    EncounterResult: {
+      rolls?: number[];
       outcome: components["schemas"]["RollOutcome"];
     };
     /** @enum {string} */
-    RollOutcome: "ROLL_OUTCOME_FAILURE" | "ROLL_OUTCOME_MIXED_SUCCESS" | "ROLL_OUTCOME_STRONG_SUCCESS";
+    RollOutcome: "ENCOUNTER_OUTCOME_FAILURE" | "ENCOUNTER_OUTCOME_MIXED_SUCCESS" | "ENCOUNTER_OUTCOME_STRONG_SUCCESS";
     /** @enum {string} */
     Skill: "agility" | "diy" | "harmony" | "luck";
     StatNumber: number;

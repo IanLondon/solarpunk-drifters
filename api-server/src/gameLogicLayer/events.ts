@@ -1,5 +1,5 @@
 import {
-  type RollResultOutcome,
+  type EncounterOutcome,
   type ExpeditionProgress
 } from '@solarpunk-drifters/common'
 
@@ -85,18 +85,18 @@ export const endExpedition = (
   outcome
 })
 
-export const DICE_ROLL_OUTCOME = 'DICE_ROLL_OUTCOME'
-export interface DiceRollOutcomeEvent {
-  type: typeof DICE_ROLL_OUTCOME
+export const ENCOUNTER_RESULT = 'ENCOUNTER_RESULT'
+export interface EncounterResultEvent {
+  type: typeof ENCOUNTER_RESULT
   rolls: number[]
-  outcome: RollResultOutcome
+  outcome: EncounterOutcome
 }
 
 export const diceRollOutcome = (
   rolls: number[],
-  outcome: RollResultOutcome
-): DiceRollOutcomeEvent => ({
-  type: DICE_ROLL_OUTCOME,
+  outcome: EncounterOutcome
+): EncounterResultEvent => ({
+  type: ENCOUNTER_RESULT,
   rolls,
   outcome
 })
@@ -128,6 +128,6 @@ export type GameEvent =
   | AdvanceExpeditionProgressEvent
   | CompleteActiveEncounterEvent
   | EndExpeditionEvent
-  | DiceRollOutcomeEvent
+  | EncounterResultEvent
 
 export type GameMoveOutcome = GameEvent[] | GameErrorEvent

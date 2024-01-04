@@ -1,15 +1,40 @@
 import React, { useCallback } from 'react'
 import EncounterCard from '@/components/EncounterCard'
 import LoadingSection from '@/components/LoadingSection'
-import RollResultBar from '@/components/RollResultBar'
 import {
   ENCOUNTER_CARD_CHOICE,
   postExpeditionPlayerMove,
-  selectDiceState,
+  selectEncounterResult,
+  selectRollingDice,
   useDispatch,
   useGetCardQuery,
   useSelector
 } from '@/lib/redux'
+import { DiceRollResultBar, RandomRollingDiceBar } from '@/components/diceBars'
+import { isRollResult } from '@/types'
+
+/** Conditionally renders the results of a roll, or a pending roll, or nothing */
+function EncounterResultBar(): React.ReactNode {
+  const rollingDice = useSelector(selectRollingDice)
+  const encounterResult = useSelector(selectEncounterResult)
+
+  if (rollingDice !== null) {
+    return <RandomRollingDiceBar dice={rollingDice} />
+  } else if (encounterResult !== null) {
+    if (isRollResult(encounterResult)) {
+      return <DiceRollResultBar rollResult={encounterResult} />
+    } else {
+      // TODO: not implemented, this is a dummy component. Needs design.
+      // We have an outcome but the Encounter Card choice didn't use a dice roll.
+      return (
+        <div>
+          <strong>OUTCOME:</strong>
+          {encounterResult.outcome}
+        </div>
+      )
+    }
+  }
+}
 
 export interface GameActiveEncounterProps {
   activeEncounterCardId: string
@@ -25,7 +50,6 @@ export default function GameActiveEncounter(
   } = useGetCardQuery(props.activeEncounterCardId)
 
   const dispatch = useDispatch()
-  const rollResult = useSelector(selectDiceState)
 
   // TODO: use action creator to hide the `moveType` string
   // TODO: error handling, delete 'void' here
@@ -54,7 +78,7 @@ export default function GameActiveEncounter(
     <article>
       <div>Active encounter!!!</div>
       <EncounterCard data={cardData} onChooseOption={chooseOptionCb} />
-      {rollResult !== null ? <RollResultBar {...rollResult} /> : null}
+      <EncounterResultBar />
     </article>
   )
 }

@@ -1,11 +1,11 @@
 import { type Server, createServer, Response } from 'miragejs'
 import {
   ACTIVE_ENCOUNTER,
-  CLIENT_EVENT_ROLL_RESULT,
+  CLIENT_EVENT_ENCOUNTER_RESULT,
   DEMO_BUFFALO_ENCOUNTER_CARD,
   type ExpeditionUpdate,
   LOADOUT,
-  ROLL_OUTCOME_MIXED_SUCCESS
+  ENCOUNTER_OUTCOME_MIXED_SUCCESS
 } from '@solarpunk-drifters/common'
 import { type ServerGameState } from './types/gameState'
 import {
@@ -115,8 +115,11 @@ export function makeMirageServer({ environment = 'test' }): Server {
           // fake dice roll, assume it's a dice choice
           clientEvents = [
             {
-              type: CLIENT_EVENT_ROLL_RESULT,
-              payload: { rolls: [2, 3, 4], outcome: ROLL_OUTCOME_MIXED_SUCCESS }
+              type: CLIENT_EVENT_ENCOUNTER_RESULT,
+              payload: {
+                rolls: [2, 3, 4],
+                outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS
+              }
             }
           ]
         } else if (action === PLAY_CARD) {

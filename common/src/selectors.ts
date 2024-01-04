@@ -1,11 +1,11 @@
 import {
-  CLIENT_EVENT_ROLL_RESULT,
+  CLIENT_EVENT_ENCOUNTER_RESULT,
   type ClientEvent,
-  type ClientEventRollResult
+  type ClientEventEncounterResult
 } from './openapiTypes'
 
-export function filterClientEventRollResult(
+export function filterClientEventEncounterResult(
   clientEvents: ClientEvent[]
-): ClientEventRollResult[] {
-  return clientEvents.filter((ce) => ce.type === CLIENT_EVENT_ROLL_RESULT)
+): ClientEventEncounterResult[] {
+  return clientEvents.filter((ce) => ce.type === CLIENT_EVENT_ENCOUNTER_RESULT)
 }
