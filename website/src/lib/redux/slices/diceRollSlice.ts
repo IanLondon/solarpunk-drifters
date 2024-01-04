@@ -4,8 +4,10 @@ import {
   type RollResult,
   filterClientEventRollResult
 } from '@solarpunk-drifters/common'
+import type { Rolling } from '@/types'
+import { ENCOUNTER_CARD_CHOICE, expeditionPlayerMoveSentAction } from '..'
 
-export type DiceRollState = RollResult | null
+export type DiceRollState = RollResult | Rolling | null
 
 const initialState = null as DiceRollState
 
@@ -14,31 +16,37 @@ export const diceRollSlice = createSlice({
   initialState,
   reducers: {},
   extraReducers(builder) {
-    builder.addCase(encounterUpdate, (state, action) => {
-      if (action.payload.clientEvents !== undefined) {
-        const rollResultEvents = filterClientEventRollResult(
-          action.payload.clientEvents
-        )
-        if (rollResultEvents.length === 0) {
-          // no client events of interest
-          return state
+    builder
+      .addCase(expeditionPlayerMoveSentAction, (state, action) => {
+        if (action.payload.moveType === ENCOUNTER_CARD_CHOICE) {
+          return action.payload.meta
         }
-        if (rollResultEvents.length > 1) {
-          console.error(
-            `NOT IMPLEMENTED: got multiple roll events, expected just one. Roll events: ${JSON.stringify(
-              rollResultEvents
-            )}`
+      })
+      .addCase(encounterUpdate, (state, action) => {
+        if (action.payload.clientEvents !== undefined) {
+          const rollResultEvents = filterClientEventRollResult(
+            action.payload.clientEvents
           )
+          if (rollResultEvents.length === 0) {
+            // no client events of interest
+            return state
+          }
+          if (rollResultEvents.length > 1) {
+            console.error(
+              `NOT IMPLEMENTED: got multiple roll events, expected just one. Roll events: ${JSON.stringify(
+                rollResultEvents
+              )}`
+            )
+          }
+          return rollResultEvents[0].payload
         }
-        return rollResultEvents[0].payload
-      }
-    })
+      })
   },
   selectors: {
-    selectDiceRolls: (state) => state
+    selectDiceState: (state) => state
   }
 })
 
-export const { selectDiceRolls } = diceRollSlice.selectors
+export const { selectDiceState } = diceRollSlice.selectors
 
 export default diceRollSlice

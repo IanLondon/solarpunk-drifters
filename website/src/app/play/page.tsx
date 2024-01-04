@@ -9,7 +9,7 @@ import {
 import CharacterStatsBar from '@/components/CharacterStatsBar'
 import {
   fetchInitialGameState,
-  postExpeditionAction,
+  postExpeditionPlayerMove,
   selectActiveEncounterCardId,
   selectCharacterStats,
   selectExpeditionProgress,
@@ -52,29 +52,29 @@ export default function PlayPage(): React.ReactNode {
   }, [dispatch])
 
   const beginExpedition = useCallback(() => {
-    // TODO: use action creator to hide the play `action` string
+    // TODO: use action creator to hide the play `moveType` string
     // TODO: error handling, delete 'void' here
-    void dispatch(postExpeditionAction({ action: 'begin-expedition' }))
+    void dispatch(postExpeditionPlayerMove({ moveType: 'begin-expedition' }))
   }, [dispatch])
 
   const nextEncounter = useCallback(() => {
-    // TODO: use action creator to hide the play `action` string
+    // TODO: use action creator to hide the play `moveType` string
     // TODO: error handling, delete 'void' here
-    void dispatch(postExpeditionAction({ action: 'next-encounter' }))
+    void dispatch(postExpeditionPlayerMove({ moveType: 'next-encounter' }))
   }, [dispatch])
 
   const turnBack = useCallback(() => {
-    // TODO: use action creator to hide the play `action` string
+    // TODO: use action creator to hide the play `moveType` string
     // TODO: error handling, delete 'void' here
-    void dispatch(postExpeditionAction({ action: 'turn-back' }))
+    void dispatch(postExpeditionPlayerMove({ moveType: 'turn-back' }))
   }, [dispatch])
 
   const playCardFromHand = useCallback(
     (cardId: string) => {
-      // TODO: use action creator to hide the play `action` string
+      // TODO: use action creator to hide the play `moveType` string
       // TODO: error handling, delete 'void' here
       void dispatch(
-        postExpeditionAction({ action: 'play-card', body: { cardId } })
+        postExpeditionPlayerMove({ moveType: 'play-card', body: { cardId } })
       )
     },
     [dispatch]

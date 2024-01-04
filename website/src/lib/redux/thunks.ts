@@ -1,7 +1,7 @@
-import { type Dispatch } from '@reduxjs/toolkit'
+import { createAction, type Dispatch } from '@reduxjs/toolkit'
 import { EXPEDITIONS_URL, GAME_STATE_URL } from '@/app/serverRoutes'
 import { encounterUpdate, setGameState } from '.'
-import { type ServerGameState } from '@/types/gameState'
+import type { Rolling, ServerGameState } from '@/types'
 import { type ExpeditionUpdate } from '@solarpunk-drifters/common'
 
 export function fetchInitialGameState() {
@@ -39,25 +39,39 @@ export const PLAY_CARD = 'play-card'
 // Moves a player can make related to an expedition
 export type ExpeditionMove =
   | {
-      action: typeof BEGIN_EXPEDITION
+      moveType: typeof BEGIN_EXPEDITION
     }
   | {
-      action: typeof NEXT_ENCOUNTER
+      moveType: typeof NEXT_ENCOUNTER
     }
   | {
-      action: typeof TURN_BACK
+      moveType: typeof TURN_BACK
     }
-  | { action: typeof ENCOUNTER_CARD_CHOICE; body: { choice: number } }
-  | { action: typeof PLAY_CARD; body: { cardId: string } }
+  | {
+      moveType: typeof ENCOUNTER_CARD_CHOICE
+      body: { choice: number }
+      meta: Rolling
+    }
+  | { moveType: typeof PLAY_CARD; body: { cardId: string } }
 
-export function postExpeditionAction(action: ExpeditionMove) {
-  return async function postExpeditionActionThunk(dispatch: Dispatch) {
+// Redux action. The above are generic descriptions of "player moves".
+export const expeditionPlayerMoveSentAction = createAction<
+  ExpeditionMove,
+  'EXPEDITION_MOVE_SENT'
+>('EXPEDITION_MOVE_SENT')
+
+export function postExpeditionPlayerMove(move: ExpeditionMove) {
+  return async function postExpeditionPlayerMoveThunk(dispatch: Dispatch) {
     // TODO: DRY vs above
+
+    // Dispatch an action indicating that the player made an Expedition Player Move
+    dispatch(expeditionPlayerMoveSentAction(move))
+
     try {
-      const response = await fetch(`${EXPEDITIONS_URL}/${action.action}`, {
+      const response = await fetch(`${EXPEDITIONS_URL}/${move.moveType}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: 'body' in action ? JSON.stringify(action.body) : undefined
+        body: 'body' in move ? JSON.stringify(move.body) : undefined
       })
       const text = await response.text()
 

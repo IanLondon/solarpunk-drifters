@@ -3,8 +3,9 @@ import EncounterCard from '@/components/EncounterCard'
 import LoadingSection from '@/components/LoadingSection'
 import RollResultBar from '@/components/RollResultBar'
 import {
-  postExpeditionAction,
-  selectDiceRolls,
+  ENCOUNTER_CARD_CHOICE,
+  postExpeditionPlayerMove,
+  selectDiceState,
   useDispatch,
   useGetCardQuery,
   useSelector
@@ -24,17 +25,19 @@ export default function GameActiveEncounter(
   } = useGetCardQuery(props.activeEncounterCardId)
 
   const dispatch = useDispatch()
-  const rollResult = useSelector(selectDiceRolls)
+  const rollResult = useSelector(selectDiceState)
 
-  // TODO: use action creator to hide the play `action` string
+  // TODO: use action creator to hide the `moveType` string
   // TODO: error handling, delete 'void' here
   // (See ./page.tsx)
   const chooseOptionCb = useCallback(
     (choice: number) => {
+      const rollingDice = 3 // TODO this should be derived from the encounter card choice
       void dispatch(
-        postExpeditionAction({
-          action: 'encounter-card-choice',
-          body: { choice }
+        postExpeditionPlayerMove({
+          moveType: ENCOUNTER_CARD_CHOICE,
+          body: { choice },
+          meta: { rollingDice }
         })
       )
     },
@@ -51,9 +54,7 @@ export default function GameActiveEncounter(
     <article>
       <div>Active encounter!!!</div>
       <EncounterCard data={cardData} onChooseOption={chooseOptionCb} />
-      {rollResult !== null ? (
-        <RollResultBar results={rollResult.rolls} />
-      ) : null}
+      {rollResult !== null ? <RollResultBar {...rollResult} /> : null}
     </article>
   )
 }
