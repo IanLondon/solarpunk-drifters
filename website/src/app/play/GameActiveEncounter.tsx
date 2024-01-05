@@ -4,37 +4,9 @@ import LoadingSection from '@/components/LoadingSection'
 import {
   ENCOUNTER_CARD_CHOICE,
   postExpeditionPlayerMove,
-  selectEncounterResult,
-  selectRollingDice,
   useDispatch,
-  useGetEncounterCardQuery,
-  useSelector
+  useGetEncounterCardQuery
 } from '@/lib/redux'
-import { DiceRollResultBar, RandomRollingDiceBar } from '@/components/diceBars'
-import { isRollResult } from '@/types'
-
-/** Conditionally renders the results of a roll, or a pending roll, or nothing */
-function EncounterResultBar(): React.ReactNode {
-  const rollingDice = useSelector(selectRollingDice)
-  const encounterResult = useSelector(selectEncounterResult)
-
-  if (rollingDice !== null) {
-    return <RandomRollingDiceBar dice={rollingDice} />
-  } else if (encounterResult !== null) {
-    if (isRollResult(encounterResult)) {
-      return <DiceRollResultBar rollResult={encounterResult} />
-    } else {
-      // TODO: not implemented, this is a dummy component. Needs design.
-      // We have an outcome but the Encounter Card choice didn't use a dice roll.
-      return (
-        <div>
-          <strong>OUTCOME:</strong>
-          {encounterResult.outcome}
-        </div>
-      )
-    }
-  }
-}
 
 export interface GameActiveEncounterProps {
   activeEncounterCardId: string
@@ -79,7 +51,6 @@ export default function GameActiveEncounter(
     <article>
       <div>Active encounter!!!</div>
       <EncounterCard data={encounterCardData} onChooseOption={chooseOptionCb} />
-      <EncounterResultBar />
     </article>
   )
 }

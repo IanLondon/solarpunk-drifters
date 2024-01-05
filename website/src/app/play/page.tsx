@@ -6,18 +6,22 @@ import {
   LOADOUT
 } from '@solarpunk-drifters/common'
 import CharacterStatsBar from '@/components/CharacterStatsBar'
+import EncounterResultBar from '@/components/EncounterResultBar'
+import LoadingSection from '@/components/LoadingSection'
+import ProgressMeter from '@/components/ProgressMeter'
 import {
+  dismissEncounterResult,
   fetchInitialGameState,
   selectActiveEncounterCardId,
   selectCharacterStats,
+  selectEncounterResult,
   selectExpeditionProgress,
   selectGameMode,
+  selectRollingDice,
   useDispatch,
   useSelector
 } from '@/lib/redux'
 import { makeMirageServer } from '@/mirage'
-import LoadingSection from '@/components/LoadingSection'
-import ProgressMeter from '@/components/ProgressMeter'
 import { useBeginExpedition } from '@/lib/playerMoveHooks'
 import GameActiveEncounter from './GameActiveEncounter'
 import GameBetweenEncounters from './GameBetweenEncounters'
@@ -37,6 +41,8 @@ export default function PlayPage(): React.ReactNode {
   const gameMode = useSelector(selectGameMode)
   const activeEncounterCardId = useSelector(selectActiveEncounterCardId)
   const expeditionProgress = useSelector(selectExpeditionProgress)
+  const rollingDice = useSelector(selectRollingDice)
+  const encounterResult = useSelector(selectEncounterResult)
 
   const beginExpedition = useBeginExpedition()
 
@@ -57,12 +63,23 @@ export default function PlayPage(): React.ReactNode {
     return <LoadingSection />
   }
 
+  // TODO: factor out, use ConnectedProgressMeter
   let progressMeter = null
   if (expeditionProgress !== null) {
     progressMeter = <ProgressMeter {...expeditionProgress} />
   }
 
   let gameComponent = <LoadingSection />
+
+  if (encounterResult !== null || rollingDice !== null) {
+    return (
+      <EncounterResultBar
+        dismissEncounterResult={() => dispatch(dismissEncounterResult())}
+        encounterResult={encounterResult}
+        rollingDice={rollingDice}
+      />
+    )
+  }
 
   switch (gameMode) {
     case LOADOUT: {
