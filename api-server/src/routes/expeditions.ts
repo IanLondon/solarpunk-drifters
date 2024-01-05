@@ -16,7 +16,7 @@ const BEGIN_EXPEDITION_PATH = '/begin-expedition'
 const NEXT_ENCOUNTER_PATH = '/next-encounter'
 const TURN_BACK_PATH = '/turn-back'
 const ENCOUNTER_CARD_CHOICE_PATH = '/encounter-card-choice'
-const PLAY_DRIFTER_CARD_PATH = '/play-card'
+const PLAY_DRIFTER_CARD_PATH = '/play-drifter-card'
 
 router.post(
   [
@@ -53,11 +53,8 @@ router.post(
 
       res.json(expeditionRes)
     } else if (path === PLAY_DRIFTER_CARD_PATH) {
-      // TODO: rename this route to `/play-drifter-card`
-      // and use `drifterCardId` not `cardId`
-
       // TODO: validate input with OpenAPI definition
-      const drifterCardId: string = req.body.cardId
+      const drifterCardId: string = req.body.drifterCardId
       const expeditionRes = await playDrifterCardController({
         uid,
         drifterCardId

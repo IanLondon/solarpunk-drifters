@@ -20,6 +20,8 @@ export const CLIENT_EVENT_ENCOUNTER_RESULT: ClientEventEncounterResult['type'] =
 
 export type CoreGameState = components['schemas']['CoreGameState']
 
+export type DrifterCard = components['schemas']['DrifterCard']
+
 export type EncounterCard = components['schemas']['EncounterCard']
 
 export type EncounterCheck = components['schemas']['EncounterCheck']

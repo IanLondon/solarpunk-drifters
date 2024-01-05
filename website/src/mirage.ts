@@ -13,7 +13,7 @@ import {
   NEXT_ENCOUNTER,
   TURN_BACK,
   ENCOUNTER_CARD_CHOICE,
-  PLAY_CARD
+  PLAY_DRIFTER_CARD
 } from './lib/redux'
 
 const betweenEncountersGameState: ServerGameState = {
@@ -50,7 +50,7 @@ export function makeMirageServer({ environment = 'test' }): Server {
         return betweenEncountersGameState
       })
 
-      this.get('encounter-cards/:cardId', (schema, request) => {
+      this.get('encounter-cards/:encounterCardId', (schema, request) => {
         if (request.params.cardId === DEMO_BUFFALO_ENCOUNTER_CARD.id) {
           return DEMO_BUFFALO_ENCOUNTER_CARD
         }
@@ -122,7 +122,7 @@ export function makeMirageServer({ environment = 'test' }): Server {
               }
             }
           ]
-        } else if (action === PLAY_CARD) {
+        } else if (action === PLAY_DRIFTER_CARD) {
           console.log('Got a play card choice:', request.requestBody)
         } else {
           console.error('Mirage got unexpected expeditions/:action', action)

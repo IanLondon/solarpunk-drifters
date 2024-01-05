@@ -34,10 +34,10 @@ export const BEGIN_EXPEDITION = 'begin-expedition'
 export const NEXT_ENCOUNTER = 'next-encounter'
 export const TURN_BACK = 'turn-back'
 export const ENCOUNTER_CARD_CHOICE = 'encounter-card-choice'
-export const PLAY_CARD = 'play-card'
+export const PLAY_DRIFTER_CARD = 'play-drifter-card'
 
 // Moves a player can make related to an expedition
-export type ExpeditionMove =
+type ExpeditionMove =
   | {
       moveType: typeof BEGIN_EXPEDITION
     }
@@ -52,7 +52,7 @@ export type ExpeditionMove =
       body: { choice: number }
       meta: PendingEncounterResult
     }
-  | { moveType: typeof PLAY_CARD; body: { cardId: string } }
+  | { moveType: typeof PLAY_DRIFTER_CARD; body: { drifterCardId: string } }
 
 // Redux action. The above are generic descriptions of "player moves".
 export const expeditionPlayerMoveSentAction = createAction<

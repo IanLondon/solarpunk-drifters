@@ -15,13 +15,3 @@ export type GameMode =
   | typeof LOADOUT
   | typeof BETWEEN_ENCOUNTERS
   | typeof ACTIVE_ENCOUNTER
-
-// TODO: this should be added to the OpenAPI spec and needs a route.
-// It's like EncounterCard in the way it should have a GET
-// and should have its TS type defined by an OpenAPI schema def.
-export interface DrifterCard {
-  id: string
-  title: string
-  description: string
-  image: ImageInfo
-}

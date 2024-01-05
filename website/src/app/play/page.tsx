@@ -70,11 +70,14 @@ export default function PlayPage(): React.ReactNode {
   }, [dispatch])
 
   const playCardFromHand = useCallback(
-    (cardId: string) => {
+    (drifterCardId: string) => {
       // TODO: use action creator to hide the play `moveType` string
       // TODO: error handling, delete 'void' here
       void dispatch(
-        postExpeditionPlayerMove({ moveType: 'play-card', body: { cardId } })
+        postExpeditionPlayerMove({
+          moveType: 'play-drifter-card',
+          body: { drifterCardId }
+        })
       )
     },
     [dispatch]

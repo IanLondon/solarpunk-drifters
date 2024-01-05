@@ -18,8 +18,30 @@ export interface paths {
       };
     };
   };
+  "/drifter-cards/{drifter_card_id}": {
+    /** @description Get data for a single Drifter Card */
+    get: {
+      parameters: {
+        path: {
+          drifter_card_id: string;
+        };
+      };
+      responses: {
+        /** @description A single Drifter Card */
+        200: {
+          content: {
+            "application/json": components["schemas"]["DrifterCard"];
+          };
+        };
+        /** @description Drifter Card with the given ID does not exist */
+        404: {
+          content: never;
+        };
+      };
+    };
+  };
   "/encounter-cards/{encounter_card_id}": {
-    /** @description Get a single Encounter Card */
+    /** @description Get data for a single Encounter Card */
     get: {
       parameters: {
         path: {
@@ -100,14 +122,14 @@ export interface paths {
       };
     };
   };
-  "/expeditions/play-card": {
+  "/expeditions/play-drifter-card": {
     /** @description Play a Drifter Card in the player's hand (between encounters) */
     post: {
       /** @description A request to play a Drifter Card */
       requestBody?: {
         content: {
           "application/json": {
-            cardId?: string;
+            drifterCardId?: string;
           };
         };
       };
@@ -183,6 +205,15 @@ export interface components {
       /** @enum {string} */
       type: "CLIENT_EVENT_ENCOUNTER_RESULT";
       payload: components["schemas"]["EncounterResult"];
+    };
+    DrifterCard: {
+      /** @example make-progress-123 */
+      id: string;
+      /** @example Make Progress */
+      title: string;
+      /** @example Progress 200 km toward your destination. Costs 1 ration. */
+      description: string;
+      image: components["schemas"]["ImageInfo"];
     };
     EncounterCard: {
       /** @example some-id-123-blah */

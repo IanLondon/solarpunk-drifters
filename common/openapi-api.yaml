@@ -18,9 +18,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GameState'
+  /drifter-cards/{drifter_card_id}:
+    get:
+      description: Get data for a single Drifter Card
+      parameters:
+        - name: drifter_card_id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: The Drifter Card's ID
+            example: 'make-progress-123'
+      responses:
+        '200':
+          description: A single Drifter Card
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DrifterCard'
+        '404':
+          description: Drifter Card with the given ID does not exist
   /encounter-cards/{encounter_card_id}:
     get:
-      description: Get a single Encounter Card
+      description: Get data for a single Encounter Card
       parameters:
         - name: encounter_card_id
           in: path
@@ -88,7 +108,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExpeditionUpdate'
-  /expeditions/play-card:
+  /expeditions/play-drifter-card:
     post:
       description: Play a Drifter Card in the player's hand (between encounters)
       requestBody:
@@ -98,7 +118,7 @@ paths:
             schema:
               type: object
               properties:
-                cardId:
+                drifterCardId:
                   type: string
       responses:
         '200':
@@ -177,6 +197,22 @@ components:
         payload:
           $ref: '#/components/schemas/EncounterResult'
       required: [type, payload]
+
+    DrifterCard:
+      type: object
+      properties:
+        id:
+          type: string
+          example: make-progress-123
+        title:
+          type: string
+          example: Make Progress
+        description:
+          type: string
+          example: Progress 200 km toward your destination. Costs 1 ration.
+        image:
+          $ref: '#/components/schemas/ImageInfo'
+      required: [id, title, description, image]
 
     EncounterCard:
       type: object
