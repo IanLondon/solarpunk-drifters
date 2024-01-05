@@ -9,7 +9,7 @@ import {
   ACTIVE_ENCOUNTER,
   BETWEEN_ENCOUNTERS,
   LOADOUT
-} from '../controllers/gameState'
+} from '@solarpunk-drifters/common'
 import type { GameStore } from './types'
 
 const uid = 'some-user-id-123' as const

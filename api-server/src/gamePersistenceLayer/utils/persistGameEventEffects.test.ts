@@ -6,9 +6,7 @@ import * as events from '../../gameLogicLayer/events'
 import {
   ACTIVE_ENCOUNTER,
   BETWEEN_ENCOUNTERS,
-  LOADOUT
-} from '../../controllers/gameState'
-import {
+  LOADOUT,
   ENCOUNTER_OUTCOME_MIXED_SUCCESS,
   type ExpeditionProgress
 } from '@solarpunk-drifters/common'

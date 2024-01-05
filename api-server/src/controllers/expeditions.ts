@@ -3,14 +3,14 @@ import * as expeditionMoves from '../gameLogicLayer/expeditionMoves'
 import runPersistence from '../gamePersistenceLayer'
 import type { GameMoveOutcome } from '../gameLogicLayer/events'
 import type { GameStore, PersistenceError } from '../gamePersistenceLayer/types'
-import { ACTIVE_ENCOUNTER } from './gameState'
 import { encounterCardDeck, getEncounterCard } from '../queries/encounterCards'
 import { getDrifterCard } from '../queries/drifterCards'
 import {
+  ACTIVE_ENCOUNTER,
+  getRandomND6,
   type ClientEvent,
   type PatchRequest,
-  type ExpeditionUpdate,
-  getRandomND6
+  type ExpeditionUpdate
 } from '@solarpunk-drifters/common'
 
 /**

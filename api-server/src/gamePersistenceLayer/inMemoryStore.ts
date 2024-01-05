@@ -4,12 +4,10 @@ import {
   ACTIVE_ENCOUNTER,
   BETWEEN_ENCOUNTERS,
   LOADOUT,
-  type GameMode
-} from '../controllers/gameState'
-import type {
-  CharacterStats,
-  ExpeditionProgress,
-  GameState
+  type CharacterStats,
+  type ExpeditionProgress,
+  type GameMode,
+  type GameState
 } from '@solarpunk-drifters/common'
 import { getInvalidItems } from '../utils/getInvalidItems'
 import { mapValues, pickBy } from 'lodash'

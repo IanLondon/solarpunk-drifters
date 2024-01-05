@@ -2,7 +2,7 @@ import {
   ACTIVE_ENCOUNTER,
   BETWEEN_ENCOUNTERS,
   LOADOUT
-} from '../../controllers/gameState'
+} from '@solarpunk-drifters/common'
 import * as events from '../../gameLogicLayer/events'
 import type { GameEvent } from '../../gameLogicLayer/events'
 import type { GameStore, StoreError, StoreOut } from '../types'

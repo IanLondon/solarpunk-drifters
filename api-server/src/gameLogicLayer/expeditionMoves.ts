@@ -1,16 +1,14 @@
 import {
-  type EncounterChoice,
-  type DrifterCard,
-  type CharacterStats,
   ACTIVE_ENCOUNTER,
-  type GameState,
-  ENCOUNTER_OUTCOME_STRONG_SUCCESS
-} from '@solarpunk-drifters/common'
-import {
-  type GameMode,
   BETWEEN_ENCOUNTERS,
-  LOADOUT
-} from '../controllers/gameState'
+  ENCOUNTER_OUTCOME_STRONG_SUCCESS,
+  LOADOUT,
+  type CharacterStats,
+  type DrifterCard,
+  type EncounterChoice,
+  type GameMode,
+  type GameState
+} from '@solarpunk-drifters/common'
 import { EXPEDITION_DISTANCE, INITIAL_EXPEDITION_PROGRESS } from './constants'
 import * as events from './events'
 import type { GameMoveOutcome } from './events'

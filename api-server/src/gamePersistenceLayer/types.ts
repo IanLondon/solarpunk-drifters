@@ -1,5 +1,8 @@
-import type { GameMode } from '../controllers/gameState'
-import type { ExpeditionProgress, GameState } from '@solarpunk-drifters/common'
+import type {
+  ExpeditionProgress,
+  GameMode,
+  GameState
+} from '@solarpunk-drifters/common'
 import { type DeepReadonly } from 'ts-essentials'
 
 export interface StoreError {
