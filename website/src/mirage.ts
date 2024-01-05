@@ -6,7 +6,8 @@ import {
   type ExpeditionUpdate,
   LOADOUT,
   ENCOUNTER_OUTCOME_MIXED_SUCCESS,
-  DEMO_MAKE_PROGRESS_DRIFTER_CARD
+  DEMO_MAKE_PROGRESS_DRIFTER_CARD,
+  BETWEEN_ENCOUNTERS
 } from '@solarpunk-drifters/common'
 import { type ServerGameState } from './types/gameState'
 import {
@@ -17,7 +18,7 @@ import {
   PLAY_DRIFTER_CARD
 } from './lib/redux'
 
-const betweenEncountersGameState: ServerGameState = {
+const loadoutGameState: ServerGameState = {
   characterStats: {
     agility: 0,
     harmony: 1,
@@ -30,11 +31,7 @@ const betweenEncountersGameState: ServerGameState = {
   resources: {
     caravanIntegrity: 20
   },
-  gameMode: 'BETWEEN_ENCOUNTERS',
-  expeditionProgress: {
-    current: 50,
-    total: 1500
-  }
+  gameMode: LOADOUT
 }
 
 export function makeMirageServer({ environment = 'test' }): Server {
@@ -48,7 +45,7 @@ export function makeMirageServer({ environment = 'test' }): Server {
       this.get('/game-state', () => {
         // Always just return this static fake initial game state.
         // Anything else that happens, Mirage server will return in responses.
-        return betweenEncountersGameState
+        return loadoutGameState
       })
 
       this.get('drifter-cards/:drifterCardId', (schema, request) => {
@@ -124,7 +121,14 @@ export function makeMirageServer({ environment = 'test' }): Server {
             }
           ]
         } else if (action === ENCOUNTER_CARD_CHOICE) {
-          // fake dice roll, assume it's a skill check
+          // fake dice roll, assume it's a skill check with mixed success outcome
+          responseUpdate = [
+            {
+              op: 'replace',
+              path: '/gameMode',
+              value: BETWEEN_ENCOUNTERS
+            }
+          ]
           clientEvents = [
             {
               type: CLIENT_EVENT_ENCOUNTER_RESULT,
@@ -138,7 +142,7 @@ export function makeMirageServer({ environment = 'test' }): Server {
           console.log('Got a play card choice:', request.requestBody)
         } else {
           console.error('Mirage got unexpected expeditions/:action', action)
-          return new Response(404)
+          return new Response(500)
         }
         const res: ExpeditionUpdate = {
           update: responseUpdate,
