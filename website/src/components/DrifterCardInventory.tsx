@@ -2,10 +2,10 @@ import React from 'react'
 import { MiniDrifterCard } from './MiniDrifterCard'
 import type { DrifterCard } from '@solarpunk-drifters/common'
 
-// Shows all the cards in your hand
+// Shows all the Drifter Cards in your hand
 export default function DrifterCardInventory(props: {
   cards: DrifterCard[]
-  onCardSelect: (cardId: string) => void
+  onCardSelect: (drifterCardId: string) => void
 }): React.ReactNode {
   const { cards, onCardSelect } = props
   return (

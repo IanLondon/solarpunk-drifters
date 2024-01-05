@@ -69,7 +69,7 @@ export default function PlayPage(): React.ReactNode {
     void dispatch(postExpeditionPlayerMove({ moveType: 'turn-back' }))
   }, [dispatch])
 
-  const playCardFromHand = useCallback(
+  const playDrifterCard = useCallback(
     (drifterCardId: string) => {
       // TODO: use action creator to hide the play `moveType` string
       // TODO: error handling, delete 'void' here
@@ -108,7 +108,7 @@ export default function PlayPage(): React.ReactNode {
           nextEncounter={nextEncounter}
           turnBack={turnBack}
           drifterCards={[DEMO_MAKE_PROGRESS_DRIFTER_CARD]} // TODO use actual card inventory
-          onCardSelect={playCardFromHand}
+          onCardSelect={playDrifterCard}
         />
       )
       break

@@ -18,7 +18,7 @@ export default function GameBetweenEncounters(
       <button onClick={nextEncounter}>Draw the next Encounter card</button>
 
       <div className='text-center'>
-        <p>Play a card from your hand...</p>
+        <p>Play a Drifter Card from your hand...</p>
 
         <DrifterCardInventory
           onCardSelect={onCardSelect}
