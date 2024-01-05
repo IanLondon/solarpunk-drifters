@@ -4,27 +4,22 @@ import runPersistence from '../gamePersistenceLayer'
 import type { GameMoveOutcome } from '../gameLogicLayer/events'
 import type {
   GameEventPersistor,
-  GameStore,
-  PersistenceError
+  GameStore
 } from '../gamePersistenceLayer/types'
 import { encounterCardDeck, getEncounterCard } from '../queries/encounterCards'
 import { getDrifterCard } from '../queries/drifterCards'
 import {
   ACTIVE_ENCOUNTER,
   getRandomND6,
-  type ClientEvent,
-  type PatchRequest,
   type ExpeditionUpdate
 } from '@solarpunk-drifters/common'
 import persistGameEventEffects from '../gamePersistenceLayer/utils/persistGameEventEffects'
+import { generateClientEvents } from '../gameTransportLayer'
 
 /**
  * This is the "imperative shell" of "functional core, imperative shell."
  */
-// TODO: break up into smaller parts:
-// - Separate GameMoveOutcome = GameEvent[] versus = GameErrorEvent,
-//     processOutcome shouldn't do both.
-// - Transform the GameEvents to ClientEvents via a new gameTransportLayer fn
+// TODO: Needs test coverage, maybe TDD the error handling when implemented
 export async function processOutcome(
   store: GameStore,
   gameOutcome: GameMoveOutcome
@@ -40,32 +35,22 @@ export async function processOutcome(
       persistor,
       store.getGameState
     )
-    return await processPersistenceResult(persistenceResult)
-  } else {
-    const gameErrorEvent = gameOutcome
-    throw new Error(
-      `NOT IMPLEMENTED: controller got error event ${JSON.stringify(
-        gameErrorEvent
-      )}`
-    )
-  }
-}
 
-export async function processPersistenceResult(
-  persistenceResult: PatchRequest | PersistenceError
-): Promise<ExpeditionUpdate> {
-  if (Array.isArray(persistenceResult)) {
-    const gameStateDiff = persistenceResult
-
-    // NOT IMPLEMENTED. TODO.
-    // This should use some fn from gameTransportLayer
-    const clientEvents: ClientEvent[] = []
-
-    return { update: gameStateDiff, clientEvents }
+    if (Array.isArray(persistenceResult)) {
+      const gameStatePatch = persistenceResult
+      const clientEvents = generateClientEvents(gameEvents)
+      return { update: gameStatePatch, clientEvents }
+    } else {
+      throw new Error(
+        `NOT IMPLEMENTED -- runPersistence returned PersistenceError: ${JSON.stringify(
+          persistenceResult
+        )}`
+      )
+    }
   } else {
     throw new Error(
-      `NOT IMPLEMENTED: runPersistence returned PersistenceError ${JSON.stringify(
-        persistenceResult
+      `NOT IMPLEMENTED -- processOutcome got GameErrorEvent:  ${JSON.stringify(
+        gameOutcome
       )}`
     )
   }

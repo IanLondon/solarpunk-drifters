@@ -1,3 +1,4 @@
+// TODO: rename this file gameEvents.ts and import like: `* as gameEvents` (find all)
 import {
   type EncounterResult,
   type ExpeditionProgress
