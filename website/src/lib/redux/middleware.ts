@@ -1,3 +1,3 @@
-import { encounterCardSlice } from './slices'
+import { apiCacheSlice } from './slices'
 
-export const middleware = [encounterCardSlice.middleware]
+export const middleware = [apiCacheSlice.middleware]

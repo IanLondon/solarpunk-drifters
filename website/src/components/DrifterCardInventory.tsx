@@ -1,20 +1,27 @@
 import React from 'react'
-import { MiniDrifterCard } from './MiniDrifterCard'
-import type { DrifterCard } from '@solarpunk-drifters/common'
+import { ConnectedMiniDrifterCard } from './MiniDrifterCard'
+import { DEMO_MAKE_PROGRESS_DRIFTER_CARD } from '@solarpunk-drifters/common'
 
-// Shows all the Drifter Cards in your hand
-export default function DrifterCardInventory(props: {
-  cards: DrifterCard[]
-  onCardSelect: (drifterCardId: string) => void
+/** Shows all the Drifter Cards in your hand */
+export function DrifterCardInventory(props: {
+  children: React.ReactNode
 }): React.ReactNode {
-  const { cards, onCardSelect } = props
   return (
     <div className='flex h-60 w-full justify-center bg-slate-600'>
-      {cards.map((card, i) => (
-        <span key={i} className='max-w-40 flex-1'>
-          <MiniDrifterCard card={card} onCardSelect={onCardSelect} />
-        </span>
-      ))}
+      {props.children}
     </div>
+  )
+}
+
+export function ConnectedDrifterCardInventory(): React.ReactNode {
+  // TODO: not implemented, we should be able to select this from gameState
+  const drifterCardInventory = [DEMO_MAKE_PROGRESS_DRIFTER_CARD.id]
+  return (
+    <DrifterCardInventory>
+      {/* NOTE: need to key by index bc multiples of the same card can exist */}
+      {drifterCardInventory.map((drifterCardId, index) => (
+        <ConnectedMiniDrifterCard key={index} drifterCardId={drifterCardId} />
+      ))}
+    </DrifterCardInventory>
   )
 }

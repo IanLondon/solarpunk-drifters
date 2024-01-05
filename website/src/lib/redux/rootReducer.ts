@@ -1,11 +1,7 @@
-import {
-  encounterResultSlice,
-  encounterCardSlice,
-  gameStateSlice
-} from './slices'
+import { apiCacheSlice, encounterResultSlice, gameStateSlice } from './slices'
 
 export const reducer = {
+  [apiCacheSlice.reducerPath]: apiCacheSlice.reducer,
   [encounterResultSlice.reducerPath]: encounterResultSlice.reducer,
-  [encounterCardSlice.reducerPath]: encounterCardSlice.reducer,
   [gameStateSlice.reducerPath]: gameStateSlice.reducer
 }

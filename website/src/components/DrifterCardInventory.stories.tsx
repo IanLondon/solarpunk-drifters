@@ -1,13 +1,13 @@
+import React from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
-import DrifterCardInventory from '@/components/DrifterCardInventory'
-import { DEMO_MAKE_PROGRESS_DRIFTER_CARD } from '@solarpunk-drifters/common'
+import { DrifterCardInventory } from '@/components/DrifterCardInventory'
+import { LoadingMiniDrifterCard, MiniDrifterCard } from './MiniDrifterCard'
+import { MakeProgress } from './MiniDrifterCard.stories'
 
 const meta = {
   title: 'Cards/DrifterCardInventory',
   component: DrifterCardInventory,
-  argTypes: {
-    onCardSelect: { action: 'Select card' }
-  },
+  argTypes: {},
   tags: ['autodocs'],
   parameters: {
     layout: 'fullscreen'
@@ -19,22 +19,29 @@ type Story = StoryObj<typeof meta>
 
 export const NoCards: Story = {
   args: {
-    cards: []
+    children: []
   }
+}
+
+const exampleMiniDrifterCardArgs = {
+  ...MakeProgress.args,
+  onCardSelect: (): void => {}
 }
 
 export const MakeProgressOne: Story = {
   args: {
-    cards: [DEMO_MAKE_PROGRESS_DRIFTER_CARD]
+    children: <MiniDrifterCard {...exampleMiniDrifterCardArgs} />
   }
 }
 
-export const MakeProgressThree: Story = {
+export const ThreeCardsOneLoading: Story = {
   args: {
-    cards: [
-      DEMO_MAKE_PROGRESS_DRIFTER_CARD,
-      DEMO_MAKE_PROGRESS_DRIFTER_CARD,
-      DEMO_MAKE_PROGRESS_DRIFTER_CARD
-    ]
+    children: (
+      <>
+        <MiniDrifterCard {...exampleMiniDrifterCardArgs} />
+        <MiniDrifterCard {...exampleMiniDrifterCardArgs} />
+        <LoadingMiniDrifterCard />
+      </>
+    )
   }
 }

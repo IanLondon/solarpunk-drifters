@@ -5,7 +5,8 @@ import {
   DEMO_BUFFALO_ENCOUNTER_CARD,
   type ExpeditionUpdate,
   LOADOUT,
-  ENCOUNTER_OUTCOME_MIXED_SUCCESS
+  ENCOUNTER_OUTCOME_MIXED_SUCCESS,
+  DEMO_MAKE_PROGRESS_DRIFTER_CARD
 } from '@solarpunk-drifters/common'
 import { type ServerGameState } from './types/gameState'
 import {
@@ -50,12 +51,23 @@ export function makeMirageServer({ environment = 'test' }): Server {
         return betweenEncountersGameState
       })
 
+      this.get('drifter-cards/:drifterCardId', (schema, request) => {
+        const id = request.params.drifterCardId
+        if (id === DEMO_MAKE_PROGRESS_DRIFTER_CARD.id) {
+          return DEMO_MAKE_PROGRESS_DRIFTER_CARD
+        }
+        return new Response(404, undefined, {
+          error: `No such Encounter Card ID "${id}" (at least not in Mirage!)`
+        })
+      })
+
       this.get('encounter-cards/:encounterCardId', (schema, request) => {
-        if (request.params.encounterCardId === DEMO_BUFFALO_ENCOUNTER_CARD.id) {
+        const id = request.params.encounterCardId
+        if (id === DEMO_BUFFALO_ENCOUNTER_CARD.id) {
           return DEMO_BUFFALO_ENCOUNTER_CARD
         }
         return new Response(404, undefined, {
-          error: 'No such card ID (at least not in Mirage!)'
+          error: `No such Encounter Card ID "${id}" (at least not in Mirage!)`
         })
       })
 

@@ -7,7 +7,7 @@ import {
   selectEncounterResult,
   selectRollingDice,
   useDispatch,
-  useGetCardQuery,
+  useGetEncounterCardQuery,
   useSelector
 } from '@/lib/redux'
 import { DiceRollResultBar, RandomRollingDiceBar } from '@/components/diceBars'
@@ -44,10 +44,10 @@ export default function GameActiveEncounter(
   props: GameActiveEncounterProps
 ): React.ReactNode {
   const {
-    data: cardData,
+    data: encounterCardData,
     isFetching,
     isSuccess
-  } = useGetCardQuery(props.activeEncounterCardId)
+  } = useGetEncounterCardQuery(props.activeEncounterCardId)
 
   const dispatch = useDispatch()
 
@@ -74,10 +74,11 @@ export default function GameActiveEncounter(
     // TODO handle gracefully
     return <div>ERROR FETCHING!</div>
   }
+
   return (
     <article>
       <div>Active encounter!!!</div>
-      <EncounterCard data={cardData} onChooseOption={chooseOptionCb} />
+      <EncounterCard data={encounterCardData} onChooseOption={chooseOptionCb} />
       <EncounterResultBar />
     </article>
   )

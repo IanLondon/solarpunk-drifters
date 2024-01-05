@@ -1,3 +1,3 @@
 export * from './encounterResultSlice'
-export * from './encounterCardsSlice'
+export * from './apiCacheSlice'
 export * from './gameStateSlice'

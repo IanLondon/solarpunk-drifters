@@ -1,15 +1,13 @@
 'use client'
-import React, { useCallback, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import {
   ACTIVE_ENCOUNTER,
   BETWEEN_ENCOUNTERS,
-  LOADOUT,
-  DEMO_MAKE_PROGRESS_DRIFTER_CARD
+  LOADOUT
 } from '@solarpunk-drifters/common'
 import CharacterStatsBar from '@/components/CharacterStatsBar'
 import {
   fetchInitialGameState,
-  postExpeditionPlayerMove,
   selectActiveEncounterCardId,
   selectCharacterStats,
   selectExpeditionProgress,
@@ -20,6 +18,7 @@ import {
 import { makeMirageServer } from '@/mirage'
 import LoadingSection from '@/components/LoadingSection'
 import ProgressMeter from '@/components/ProgressMeter'
+import { useBeginExpedition } from '@/lib/playerMoveHooks'
 import GameActiveEncounter from './GameActiveEncounter'
 import GameBetweenEncounters from './GameBetweenEncounters'
 import GameLoadout from './GameLoadout'
@@ -39,6 +38,8 @@ export default function PlayPage(): React.ReactNode {
   const activeEncounterCardId = useSelector(selectActiveEncounterCardId)
   const expeditionProgress = useSelector(selectExpeditionProgress)
 
+  const beginExpedition = useBeginExpedition()
+
   // Get initial game state from server
   useEffect(() => {
     const get = async (): Promise<void> => {
@@ -50,38 +51,6 @@ export default function PlayPage(): React.ReactNode {
     }
     void get()
   }, [dispatch])
-
-  const beginExpedition = useCallback(() => {
-    // TODO: use action creator to hide the play `moveType` string
-    // TODO: error handling, delete 'void' here
-    void dispatch(postExpeditionPlayerMove({ moveType: 'begin-expedition' }))
-  }, [dispatch])
-
-  const nextEncounter = useCallback(() => {
-    // TODO: use action creator to hide the play `moveType` string
-    // TODO: error handling, delete 'void' here
-    void dispatch(postExpeditionPlayerMove({ moveType: 'next-encounter' }))
-  }, [dispatch])
-
-  const turnBack = useCallback(() => {
-    // TODO: use action creator to hide the play `moveType` string
-    // TODO: error handling, delete 'void' here
-    void dispatch(postExpeditionPlayerMove({ moveType: 'turn-back' }))
-  }, [dispatch])
-
-  const playDrifterCard = useCallback(
-    (drifterCardId: string) => {
-      // TODO: use action creator to hide the play `moveType` string
-      // TODO: error handling, delete 'void' here
-      void dispatch(
-        postExpeditionPlayerMove({
-          moveType: 'play-drifter-card',
-          body: { drifterCardId }
-        })
-      )
-    },
-    [dispatch]
-  )
 
   if (gameMode === null || characterStats === null) {
     // Initial load
@@ -103,14 +72,7 @@ export default function PlayPage(): React.ReactNode {
     }
 
     case BETWEEN_ENCOUNTERS: {
-      gameComponent = (
-        <GameBetweenEncounters
-          nextEncounter={nextEncounter}
-          turnBack={turnBack}
-          drifterCards={[DEMO_MAKE_PROGRESS_DRIFTER_CARD]} // TODO use actual card inventory
-          onCardSelect={playDrifterCard}
-        />
-      )
+      gameComponent = <GameBetweenEncounters />
       break
     }
 
