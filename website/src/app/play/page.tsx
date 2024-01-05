@@ -5,17 +5,15 @@ import {
   BETWEEN_ENCOUNTERS,
   LOADOUT
 } from '@solarpunk-drifters/common'
-import CharacterStatsBar from '@/components/CharacterStatsBar'
+import { ConnectedCharacterStatsBar } from '@/components/CharacterStatsBar'
 import EncounterResultBar from '@/components/EncounterResultBar'
 import LoadingSection from '@/components/LoadingSection'
-import ProgressMeter from '@/components/ProgressMeter'
+import { ConnectedProgressMeter } from '@/components/ProgressMeter'
 import {
   dismissEncounterResult,
   fetchInitialGameState,
   selectActiveEncounterCardId,
-  selectCharacterStats,
   selectEncounterResult,
-  selectExpeditionProgress,
   selectGameMode,
   selectRollingDice,
   useDispatch,
@@ -37,10 +35,8 @@ if (process.env.NEXT_PUBLIC_USE_MIRAGE_SERVER === '1') {
 
 export default function PlayPage(): React.ReactNode {
   const dispatch = useDispatch()
-  const characterStats = useSelector(selectCharacterStats)
   const gameMode = useSelector(selectGameMode)
   const activeEncounterCardId = useSelector(selectActiveEncounterCardId)
-  const expeditionProgress = useSelector(selectExpeditionProgress)
   const rollingDice = useSelector(selectRollingDice)
   const encounterResult = useSelector(selectEncounterResult)
 
@@ -58,15 +54,9 @@ export default function PlayPage(): React.ReactNode {
     void get()
   }, [dispatch])
 
-  if (gameMode === null || characterStats === null) {
+  if (gameMode === null) {
     // Initial load
     return <LoadingSection />
-  }
-
-  // TODO: factor out, use ConnectedProgressMeter
-  let progressMeter = null
-  if (expeditionProgress !== null) {
-    progressMeter = <ProgressMeter {...expeditionProgress} />
   }
 
   let gameComponent = <LoadingSection />
@@ -111,8 +101,8 @@ export default function PlayPage(): React.ReactNode {
 
   return (
     <section>
-      <CharacterStatsBar stats={characterStats} />
-      {progressMeter}
+      <ConnectedCharacterStatsBar />
+      <ConnectedProgressMeter />
       {gameComponent}
     </section>
   )

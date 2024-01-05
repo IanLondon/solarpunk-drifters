@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import ProgressMeter from '@/components/ProgressMeter'
+import { ProgressMeter } from '@/components/ProgressMeter'
 
 const meta = {
   title: 'Stats/ProgressMeter',

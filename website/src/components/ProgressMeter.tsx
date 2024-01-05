@@ -1,11 +1,10 @@
 import React from 'react'
 import type { ExpeditionProgress } from '@solarpunk-drifters/common'
+import { selectExpeditionProgress, useSelector } from '@/lib/redux'
 
 type ProgressMeterProps = ExpeditionProgress
 
-export default function ProgressMeter(
-  props: ProgressMeterProps
-): React.ReactNode {
+export function ProgressMeter(props: ProgressMeterProps): React.ReactNode {
   const { current, total } = props
   const percent = current / total
   return (
@@ -23,4 +22,11 @@ export default function ProgressMeter(
       </div>
     </article>
   )
+}
+
+export function ConnectedProgressMeter(): React.ReactNode {
+  const expeditionProgress = useSelector(selectExpeditionProgress)
+  if (expeditionProgress !== null) {
+    return <ProgressMeter {...expeditionProgress} />
+  }
 }

@@ -1,8 +1,9 @@
 import React from 'react'
 import { SKILLS_LIST, type CharacterStats } from '@solarpunk-drifters/common'
+import { selectCharacterStats, useSelector } from '@/lib/redux'
 import SkillIcon from './SkillIcon'
 
-export default function CharacterStatsBar(props: {
+export function CharacterStatsBar(props: {
   stats: CharacterStats
 }): React.ReactNode {
   return (
@@ -15,4 +16,13 @@ export default function CharacterStatsBar(props: {
       ))}
     </article>
   )
+}
+
+export function ConnectedCharacterStatsBar(): React.ReactNode {
+  const characterStats = useSelector(selectCharacterStats)
+  if (characterStats !== null) {
+    return <CharacterStatsBar stats={characterStats} />
+  }
+  // TODO NOT IMPLEMENTED NEEDS DESIGN
+  return <span>loading stats...</span>
 }
