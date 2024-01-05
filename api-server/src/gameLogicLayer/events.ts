@@ -12,21 +12,19 @@ export type ExpeditionOutcome =
   | typeof OUT_OF_RATIONS
   | typeof TURNED_BACK
 
-// OUTCOMES
+// GAME EVENTS
 
-export const ADD_ITEM_TO_INVENTORY = 'ADD_ITEM_TO_INVENTORY'
-export interface AddItemToInventoryEvent {
-  type: typeof ADD_ITEM_TO_INVENTORY
-  item: string
-  quantity: number
+export const ADD_SUBTRACT_INVENTORY_ITEMS = 'ADD_SUBTRACT_INVENTORY_ITEMS'
+export interface AddOrSubstractInventoryItems {
+  type: typeof ADD_SUBTRACT_INVENTORY_ITEMS
+  itemPatch: Readonly<Record<string, number>>
 }
+// TODO IMMEDIATELY rename addSubtractInventoryItems
 export const addItemToInventory = (
-  item: string,
-  quantity: number
-): AddItemToInventoryEvent => ({
-  type: ADD_ITEM_TO_INVENTORY,
-  item,
-  quantity
+  itemPatch: AddOrSubstractInventoryItems['itemPatch']
+): AddOrSubstractInventoryItems => ({
+  type: ADD_SUBTRACT_INVENTORY_ITEMS,
+  itemPatch
 })
 
 export const NEW_EXPEDITION = 'NEW_EXPEDITION'
@@ -65,14 +63,6 @@ export const advanceExpeditionProgress = (
   increment
 })
 
-export const COMPLETE_ACTIVE_ENCOUNTER = 'COMPLETE_ACTIVE_ENCOUNTER'
-export interface CompleteActiveEncounterEvent {
-  type: typeof COMPLETE_ACTIVE_ENCOUNTER
-}
-export const completeActiveEncounter = (): CompleteActiveEncounterEvent => ({
-  type: COMPLETE_ACTIVE_ENCOUNTER
-})
-
 export const END_EXPEDITION = 'END_EXPEDITION'
 export interface EndExpeditionEvent {
   type: typeof END_EXPEDITION
@@ -88,11 +78,14 @@ export const endExpedition = (
 export const ENCOUNTER_RESULT = 'ENCOUNTER_RESULT'
 export interface EncounterResultEvent {
   type: typeof ENCOUNTER_RESULT
-  rolls: number[]
+  // TODO IMMEDIATELY modify these args.
+  // should be {encounterResult: EncounterResult} from OpenAPI
+  rolls?: number[]
   outcome: EncounterOutcome
 }
 
-export const diceRollOutcome = (
+export const encounterResult = (
+  // TODO IMMEDIATELY modify these args: should be EncounterResult from OpenAPI
   rolls: number[],
   outcome: EncounterOutcome
 ): EncounterResultEvent => ({
@@ -117,16 +110,32 @@ export const moveNotAllowedError = (): MoveNotAllowedErrorEvent => ({
   type: MOVE_NOT_ALLOWED
 })
 
+export const NOT_ENOUGH_CONSUMABLES = 'NOT_ENOUGH_CONSUMABLES'
+export interface NotEnoughConsumablesErrorEvent extends ErrorEvent {
+  type: typeof NOT_ENOUGH_CONSUMABLES
+  items: string[]
+  resources: string[]
+}
+export const notEnoughConsumablesError = (args: {
+  items: string[]
+  resources: []
+}): NotEnoughConsumablesErrorEvent => ({
+  ...args,
+  error: true,
+  type: NOT_ENOUGH_CONSUMABLES
+})
+
 // BIG UNION TYPES
 
-export type GameErrorEvent = MoveNotAllowedErrorEvent
+export type GameErrorEvent =
+  | MoveNotAllowedErrorEvent
+  | NotEnoughConsumablesErrorEvent
 
 export type GameEvent =
-  | AddItemToInventoryEvent
+  | AddOrSubstractInventoryItems
   | NewExpeditionEvent
   | DrawEncounterCardEvent
   | AdvanceExpeditionProgressEvent
-  | CompleteActiveEncounterEvent
   | EndExpeditionEvent
   | EncounterResultEvent
 

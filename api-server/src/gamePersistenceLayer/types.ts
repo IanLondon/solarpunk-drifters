@@ -10,8 +10,9 @@ export type StoreOut = null | StoreError
 
 export interface GameStore {
   // Write methods
-  addInventoryItem: (item: string, quantity: number) => StoreOut
-  removeInventoryItem: (item: string, quantity: number) => StoreOut
+  addSubtractInventoryItems: (
+    itemPatch: Readonly<Record<string, number>>
+  ) => StoreOut
   setGameMode: (gameMode: GameMode) => StoreOut
   setActiveEncounterCard: (cardId: string) => StoreOut
   clearActiveEncounterCard: () => StoreOut

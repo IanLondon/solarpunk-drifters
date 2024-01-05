@@ -4,50 +4,37 @@ import {
   drawEncounterCard,
   newExpedition,
   endExpedition,
-  TURNED_BACK
+  TURNED_BACK,
+  encounterResult,
+  notEnoughConsumablesError,
+  addItemToInventory
 } from './events'
-import { beginExpedition, nextEncounter, turnBack } from './expeditionMoves'
+import {
+  beginExpedition,
+  encounterCardChoice,
+  nextEncounter,
+  turnBack
+} from './expeditionMoves'
 import { EXPEDITION_DISTANCE, INITIAL_EXPEDITION_PROGRESS } from './constants'
 import { type EncounterCardDeckFn } from './types'
-
-// TODO IMMEDIATELY import these
-const LOADOUT = 'LOADOUT' as const
-const BETWEEN_ENCOUNTERS = 'BETWEEN_ENCOUNTERS' as const
-const ACTIVE_ENCOUNTER = 'ACTIVE_ENCOUNTER' as const
+import {
+  type CharacterStats,
+  type EncounterChoice,
+  ENCOUNTER_OUTCOME_MIXED_SUCCESS,
+  ENCOUNTER_OUTCOME_STRONG_SUCCESS,
+  BETWEEN_ENCOUNTERS,
+  ACTIVE_ENCOUNTER,
+  LOADOUT
+} from '@solarpunk-drifters/common'
+import { diceMockerFactory, noDice } from './__fixtures__/diceFnFakes'
 
 // TODO LATER import these too
-export const NOT_LOADOUT = [BETWEEN_ENCOUNTERS, ACTIVE_ENCOUNTER]
-export const NOT_BETWEEN_ENCOUNTERS = [LOADOUT, ACTIVE_ENCOUNTER]
-export const NOT_ACTIVE_ENCOUNTER = [LOADOUT, BETWEEN_ENCOUNTERS]
+export const NOT_LOADOUT = [BETWEEN_ENCOUNTERS, ACTIVE_ENCOUNTER] as const
+export const NOT_BETWEEN_ENCOUNTERS = [LOADOUT, ACTIVE_ENCOUNTER] as const
+export const NOT_ACTIVE_ENCOUNTER = [LOADOUT, BETWEEN_ENCOUNTERS] as const
 
 // TODO hook up to mocks
 const MOCK_ENCOUNTER_CARD_ID = 'mock-encounter-card-id'
-
-// const diceMockerFactory =
-//   (
-//     outcome: DiceRollOutcome,
-//     rolls: number[],
-//     expectedN: number,
-//     expectedModifier: number
-//   ) =>
-//   (n: number, modifier: number): DiceRoll => {
-//     if (n !== expectedN) {
-//       throw new Error(`diceMocker expected n=${expectedN}, called with ${n}`)
-//     }
-//     if (modifier !== expectedModifier) {
-//       throw new Error(
-//         `diceMocker expected modifier=${expectedModifier}, called with ${modifier}`
-//       )
-//     }
-//     return {
-//       outcome,
-//       rolls
-//     }
-//   }
-
-// const noDice = (n: number, modifier: number): DiceRoll => {
-//   throw new Error('noDice fake was called')
-// }
 
 const encounterCardDeckMocker: EncounterCardDeckFn = async () =>
   MOCK_ENCOUNTER_CARD_ID
@@ -110,14 +97,122 @@ describe('turn back', () => {
 })
 
 describe('encounter card choice', () => {
-  it('should generate a dice roll and a game state update', () => {
-    // NOTE: this will probably call a few fns (prob faked here, passed in as args)
-    //   TODO
-    // no more encounter card
-    // expect(output.activeEncounterCardId).toBeUndefined()
+  it('should return an encounter result for a skill check,', async () => {
+    const gameMode = ACTIVE_ENCOUNTER
+    const characterStats: CharacterStats = {
+      agility: 1,
+      harmony: 2,
+      diy: 3,
+      luck: 1
+    }
+    const choice: EncounterChoice = {
+      description: 'test choice',
+      check: {
+        skill: 'harmony'
+      }
+    }
+
+    const rolls = [3, 4] // harmony, with 2 points, should roll 2 dice
+
+    const dice = diceMockerFactory(rolls)
+
+    const output = await encounterCardChoice({
+      gameMode,
+      characterStats,
+      choice,
+      dice,
+      inventory: {}
+    })
+
+    expect(output).toEqual([
+      encounterResult(rolls, ENCOUNTER_OUTCOME_MIXED_SUCCESS)
+    ])
   })
-  it('should give an error when in any mode but "active encounter"', () => {
-    // TODO
+
+  it('should return an encounter result for a valid item check,', async () => {
+    const gameMode = ACTIVE_ENCOUNTER
+    const characterStats: CharacterStats = {
+      agility: 1,
+      harmony: 2,
+      diy: 3,
+      luck: 1
+    }
+    const choice: EncounterChoice = {
+      description: 'test choice',
+      check: {
+        items: {
+          rations: 2,
+          testItem: 42
+        }
+      }
+    }
+
+    const dice = noDice
+
+    const output = await encounterCardChoice({
+      gameMode,
+      characterStats,
+      choice,
+      dice,
+      inventory: {
+        rations: 3,
+        testItem: 42
+      }
+    })
+
+    expect(output).toEqual([
+      addItemToInventory({ rations: -2, testItem: -42 }),
+      // TODO IMMEDIATELY: encounterResult dice should be optional, use option arg
+      encounterResult([], ENCOUNTER_OUTCOME_STRONG_SUCCESS)
+    ])
+  })
+
+  it('should return an encounter result for an invalid item check,', async () => {
+    const gameMode = ACTIVE_ENCOUNTER
+    const characterStats: CharacterStats = {
+      agility: 1,
+      harmony: 2,
+      diy: 3,
+      luck: 1
+    }
+    const choice: EncounterChoice = {
+      description: 'test choice',
+      check: {
+        items: {
+          // it takes 3 rations
+          rations: 3
+        }
+      }
+    }
+
+    const dice = noDice
+
+    const output = await encounterCardChoice({
+      gameMode,
+      characterStats,
+      choice,
+      dice,
+      inventory: {
+        // oh no we only have 2 but need 3
+        rations: 2
+      }
+    })
+
+    expect(output).toEqual(
+      notEnoughConsumablesError({ items: ['rations'], resources: [] })
+    )
+  })
+
+  it('should give an error when in any mode but "active encounter"', async () => {
+    const output = await encounterCardChoice({
+      gameMode: LOADOUT,
+      characterStats: {} as any,
+      choice: {} as any,
+      dice: noDice,
+      inventory: {}
+    })
+
+    expect(output).toEqual(moveNotAllowedError())
   })
 })
 

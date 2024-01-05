@@ -11,6 +11,8 @@ import type {
   ExpeditionProgress,
   GameState
 } from '@solarpunk-drifters/common'
+import { getInvalidItems } from '../utils/getInvalidItems'
+import { mapValues, pickBy } from 'lodash'
 
 export type InMemoryDb = Record<string, InMemoryGameStoreForUser>
 
@@ -115,20 +117,33 @@ export function createInMemoryGameStoreForUser(
   const store = inMemoryDb[uid]
 
   return {
-    addInventoryItem: (item, quantity) => {
-      if (item in store.inventory) {
-        store.inventory[item] += quantity
-      } else {
-        store.inventory[item] = quantity
+    addSubtractInventoryItems: (itemPatch) => {
+      // Pick the negative values and then invert them for getInvalidItems
+      // (we're only checking validity of items that will be removed, which are
+      // the itemPatch's negative values)
+      const invalidItems = getInvalidItems({
+        inventory: store.inventory,
+        itemsToRemove: mapValues(
+          pickBy(itemPatch, (quantity) => quantity < 0),
+          (n) => -1 * n
+        )
+      })
+
+      if (invalidItems.length > 0) {
+        return {
+          method: 'addSubtractInventoryItems',
+          error: 'insufficientQuantity'
+        }
       }
-      return null
-    },
-    removeInventoryItem: (item, quantity) => {
-      const prevQuantity = store.inventory[item]
-      if (prevQuantity < quantity) {
-        return { method: 'removeInventoryItem', error: 'insufficientQuantity' }
-      }
-      store.inventory[item] -= quantity
+
+      Object.entries(itemPatch).forEach(([item, diff]) => {
+        if (item in store.inventory) {
+          store.inventory[item] += diff
+        } else {
+          store.inventory[item] = diff
+        }
+      })
+
       return null
     },
     setGameMode: (gameMode) => {

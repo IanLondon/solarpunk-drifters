@@ -17,9 +17,9 @@ export default function persistGameEventEffects(
   e: GameEvent
 ): StoreError[] {
   switch (e.type) {
-    case events.ADD_ITEM_TO_INVENTORY: {
-      const { item, quantity } = e
-      const out = store.addInventoryItem(item, quantity)
+    case events.ADD_SUBTRACT_INVENTORY_ITEMS: {
+      const { itemPatch } = e
+      const out = store.addSubtractInventoryItems(itemPatch)
       return filterOutput(out)
     }
 
@@ -42,12 +42,6 @@ export default function persistGameEventEffects(
       return filterOutput(out)
     }
 
-    case events.COMPLETE_ACTIVE_ENCOUNTER: {
-      const out1 = store.clearActiveEncounterCard()
-      const out2 = store.setGameMode(BETWEEN_ENCOUNTERS)
-      return filterOutput(out1, out2)
-    }
-
     case events.END_EXPEDITION: {
       const out1 = store.setGameMode(LOADOUT)
       const out2 = store.clearExpeditionState()
@@ -55,8 +49,9 @@ export default function persistGameEventEffects(
     }
 
     case events.ENCOUNTER_RESULT: {
-      // do nothing
-      return []
+      const out1 = store.clearActiveEncounterCard()
+      const out2 = store.setGameMode(BETWEEN_ENCOUNTERS)
+      return filterOutput(out1, out2)
     }
 
     default:

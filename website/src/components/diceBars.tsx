@@ -2,16 +2,7 @@ import React, { useState } from 'react'
 import DieD6 from './DieD6'
 import { useInterval } from 'react-use'
 import type { RollResult } from '../types'
-
-// TODO: this file should get factored out
-
-export function getRandomD6(): number {
-  return Math.floor(Math.random() * 6) + 1
-}
-
-export function getRandomND6(n: number): number[] {
-  return Array.from({ length: n }, () => getRandomD6())
-}
+import { getRandomND6 } from '@solarpunk-drifters/common'
 
 const ROLL_DELAY = 100
 

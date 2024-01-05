@@ -50,59 +50,98 @@ describe('createInMemoryGameStoreForUser', () => {
     expect(inMemoryDb[uid]).toEqual(userStore)
   })
 
-  describe('addInventoryItem', () => {
-    it('should increment the quantity of the given item', () => {
-      const { store } = createMemoryGameStoreHelper({
-        inventory: { fooItem: 3 }
+  describe('addSubtractInventoryItems', () => {
+    describe('addition', () => {
+      it('should increment the quantity of the given item', () => {
+        const { store } = createMemoryGameStoreHelper({
+          inventory: { fooItem: 3 }
+        })
+
+        const output = store.addSubtractInventoryItems({ fooItem: 2 })
+
+        expect(store.getGameState().inventory).toEqual({ fooItem: 3 + 2 })
+        expect(output).toBe(null)
       })
 
-      const output = store.addInventoryItem('fooItem', 2)
+      it("should create a new entry for an item that didn't exist", () => {
+        const { store } = createMemoryGameStoreHelper()
 
-      expect(store.getGameState().inventory).toEqual({ fooItem: 3 + 2 })
-      expect(output).toBe(null)
+        const output = store.addSubtractInventoryItems({ fooItem: 2 })
+
+        expect(store.getGameState()).toHaveProperty('inventory.fooItem', 2)
+        expect(output).toBe(null)
+      })
     })
 
-    it("should create a new entry for an item that didn't exist", () => {
-      const { store } = createMemoryGameStoreHelper()
+    describe('subtraction', () => {
+      it('should remove an item if there is more than enough', () => {
+        const { store } = createMemoryGameStoreHelper({
+          inventory: { fooItem: 3 }
+        })
 
-      const output = store.addInventoryItem('fooItem', 2)
+        const output = store.addSubtractInventoryItems({ fooItem: -2 })
 
-      expect(store.getGameState()).toHaveProperty('inventory.fooItem', 2)
-      expect(output).toBe(null)
+        expect(store.getGameState()).toHaveProperty('inventory.fooItem', 3 - 2)
+        expect(output).toBe(null)
+      })
+      it("should set an item's quantity to zero if there is exactly enough", () => {
+        const { store } = createMemoryGameStoreHelper({
+          inventory: { fooItem: 3 }
+        })
+
+        const output = store.addSubtractInventoryItems({ fooItem: -3 })
+
+        expect(store.getGameState()).toHaveProperty('inventory.fooItem', 0)
+        expect(output).toBe(null)
+      })
+      it('should return an error if there is not enough', () => {
+        const { store } = createMemoryGameStoreHelper({
+          inventory: { fooItem: 2 }
+        })
+
+        const output = store.addSubtractInventoryItems({ fooItem: -3 })
+
+        expect(store.getGameState()).toHaveProperty('inventory.fooItem', 2)
+        expect(output).toEqual({
+          method: 'addSubtractInventoryItems',
+          error: 'insufficientQuantity'
+        })
+      })
     })
-  })
 
-  describe('removeInventoryItem', () => {
-    it('should remove an item if there is more than enough', () => {
-      const { store } = createMemoryGameStoreHelper({
-        inventory: { fooItem: 3 }
+    describe('both addition and subtraction in the patch', () => {
+      it('should do both addition and subtraction', () => {
+        const { store } = createMemoryGameStoreHelper({
+          inventory: { rations: 4, fooItem: 3 }
+        })
+
+        const output = store.addSubtractInventoryItems({
+          rations: -1,
+          fooItem: 2
+        })
+
+        expect(store.getGameState()).toHaveProperty('inventory.rations', 4 - 1)
+        expect(store.getGameState()).toHaveProperty('inventory.fooItem', 3 + 2)
+        expect(output).toBe(null)
       })
 
-      const output = store.removeInventoryItem('fooItem', 2)
+      it('should not do any addition operations if any subtractions would fail', () => {
+        const { store } = createMemoryGameStoreHelper({
+          inventory: { rations: 4, fooItem: 3 }
+        })
 
-      expect(store.getGameState()).toHaveProperty('inventory.fooItem', 3 - 2)
-      expect(output).toBe(null)
-    })
-    it("should set an item's quantity to zero if there is exactly enough", () => {
-      const { store } = createMemoryGameStoreHelper({
-        inventory: { fooItem: 3 }
-      })
+        const output = store.addSubtractInventoryItems({
+          rations: -100,
+          fooItem: 2
+        })
 
-      const output = store.removeInventoryItem('fooItem', 3)
-
-      expect(store.getGameState()).toHaveProperty('inventory.fooItem', 0)
-      expect(output).toBe(null)
-    })
-    it('should return an error if there is not enough', () => {
-      const { store } = createMemoryGameStoreHelper({
-        inventory: { fooItem: 2 }
-      })
-
-      const output = store.removeInventoryItem('fooItem', 3)
-
-      expect(output).toEqual({
-        method: 'removeInventoryItem',
-        error: 'insufficientQuantity'
+        // unchanged
+        expect(store.getGameState()).toHaveProperty('inventory.rations', 4)
+        expect(store.getGameState()).toHaveProperty('inventory.fooItem', 3)
+        expect(output).toEqual({
+          method: 'addSubtractInventoryItems',
+          error: 'insufficientQuantity'
+        })
       })
     })
   })

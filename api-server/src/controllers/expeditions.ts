@@ -6,10 +6,11 @@ import type { GameStore, PersistenceError } from '../gamePersistenceLayer/types'
 import { ACTIVE_ENCOUNTER } from './gameState'
 import { encounterCardDeck, getEncounterCard } from '../queries/encounterCards'
 import { getDrifterCard } from '../queries/drifterCards'
-import type {
-  ClientEvent,
-  PatchRequest,
-  ExpeditionUpdate
+import {
+  type ClientEvent,
+  type PatchRequest,
+  type ExpeditionUpdate,
+  getRandomND6
 } from '@solarpunk-drifters/common'
 
 /**
@@ -122,8 +123,10 @@ export async function encounterCardChoiceController(args: {
 
     const gameOutcome = await expeditionMoves.encounterCardChoice({
       gameMode: gameState.gameMode,
-      choiceIndex,
-      encounterCard
+      characterStats: gameState.characterStats,
+      choice: encounterCard.choices[choiceIndex],
+      dice: getRandomND6,
+      inventory: gameState.inventory
     })
 
     return await processOutcome(store, gameOutcome)
