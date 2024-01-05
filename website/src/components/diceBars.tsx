@@ -17,13 +17,15 @@ function DiceBar(props: { children: React.ReactNode }): React.ReactNode {
 export function DiceRollResultBar(props: {
   rollResult: RollResult
 }): React.ReactNode {
-  const { rolls, outcome } = props.rollResult
+  const { outcome } = props.rollResult
+  const { rolls, disadvantage } = props.rollResult.skillCheckRoll
   return (
     <DiceBar>
       {rolls.map((i) => (
         <DieD6 key={i} n={i} />
       ))}
       {/* TODO presentation is not implemented, need design */}
+      {disadvantage ? <div>WITH DISADVANTAGE</div> : false}
       <div>{outcome}</div>
     </DiceBar>
   )

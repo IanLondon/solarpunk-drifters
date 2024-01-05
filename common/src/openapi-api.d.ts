@@ -284,11 +284,21 @@ export interface components {
     };
     /** @description The result of a an encounter card choice player move */
     EncounterResult: {
-      rolls?: number[];
-      outcome: components["schemas"]["RollOutcome"];
+      skillCheckRoll?: components["schemas"]["SkillCheckRoll"];
+      outcome: components["schemas"]["EncounterOutcome"];
     };
-    /** @enum {string} */
-    RollOutcome: "ENCOUNTER_OUTCOME_FAILURE" | "ENCOUNTER_OUTCOME_MIXED_SUCCESS" | "ENCOUNTER_OUTCOME_STRONG_SUCCESS";
+    /**
+     * @description The outcome of the Encounter (failure / mixed success / strong success)
+     * @enum {string}
+     */
+    EncounterOutcome: "ENCOUNTER_OUTCOME_FAILURE" | "ENCOUNTER_OUTCOME_MIXED_SUCCESS" | "ENCOUNTER_OUTCOME_STRONG_SUCCESS";
+    /** @description The result of a skill check dice roll */
+    SkillCheckRoll: {
+      /** @description The number of each die roll */
+      rolls: number[];
+      /** @description If true, the roll was "with disadvantage" (must choose the lowest die) */
+      disadvantage: boolean;
+    };
     /** @enum {string} */
     Skill: "agility" | "diy" | "harmony" | "luck";
     StatNumber: number;

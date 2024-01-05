@@ -1,12 +1,13 @@
 import {
-  type Skill,
   type CharacterStats,
   type EncounterOutcome,
+  type Skill,
+  type SkillCheckRoll,
   ENCOUNTER_OUTCOME_FAILURE,
   ENCOUNTER_OUTCOME_MIXED_SUCCESS,
   ENCOUNTER_OUTCOME_STRONG_SUCCESS
 } from '@solarpunk-drifters/common'
-import type { DiceFn, SkillCheckRoll } from './types'
+import type { DiceFn } from './types'
 
 /** Returns results of a dice roll and whether it's at "disadvantage" */
 export function skillCheckRoller(args: {

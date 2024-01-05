@@ -112,12 +112,12 @@ export function makeMirageServer({ environment = 'test' }): Server {
             }
           ]
         } else if (action === ENCOUNTER_CARD_CHOICE) {
-          // fake dice roll, assume it's a dice choice
+          // fake dice roll, assume it's a skill check
           clientEvents = [
             {
               type: CLIENT_EVENT_ENCOUNTER_RESULT,
               payload: {
-                rolls: [2, 3, 4],
+                skillCheckRoll: { rolls: [2, 3, 4], disadvantage: false },
                 outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS
               }
             }

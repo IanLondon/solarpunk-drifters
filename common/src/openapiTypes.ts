@@ -56,6 +56,8 @@ export const ENCOUNTER_OUTCOME_STRONG_SUCCESS: EncounterOutcome =
 
 export type Skill = components['schemas']['Skill']
 
+export type SkillCheckRoll = components['schemas']['SkillCheckRoll']
+
 export type StatNumber = components['schemas']['StatNumber']
 
 export type UserLogin = components['schemas']['UserLogin']

@@ -82,7 +82,6 @@ export interface EncounterResultEvent {
 }
 
 export const encounterResult = (
-  // TODO IMMEDIATELY modify these args: should be EncounterResult from OpenAPI
   encounterResult: EncounterResult
 ): EncounterResultEvent => ({
   type: ENCOUNTER_RESULT,

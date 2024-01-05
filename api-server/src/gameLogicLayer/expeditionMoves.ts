@@ -77,8 +77,10 @@ export async function encounterCardChoice(args: {
     const skillCheckRoll = skillCheckRoller({ characterStats, dice, skill })
     const outcome = skillCheckRollToEncounterOutcome(skillCheckRoll)
     return [
-      // TODO IMMEDIATELY: disadvantage should go in this event
-      events.encounterResult({ rolls: skillCheckRoll.rolls, outcome })
+      events.encounterResult({
+        skillCheckRoll,
+        outcome
+      })
     ]
   }
 

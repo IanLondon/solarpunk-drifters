@@ -10,7 +10,7 @@ export interface PendingEncounterResult {
   rollingDice?: number
 }
 
-export type RollResult = MarkRequired<EncounterResult, 'rolls'>
+export type RollResult = MarkRequired<EncounterResult, 'skillCheckRoll'>
 // WARNING: this is a *type predicate*.
 // https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates
 // If it's not unit-tested, it could easily break and TypeScript would
@@ -18,5 +18,5 @@ export type RollResult = MarkRequired<EncounterResult, 'rolls'>
 // EncounterResult type is defined externally, so we would likely forget to check
 // this type predicate fn if/when EncounterResult changes.
 export function isRollResult(er: EncounterResult): er is RollResult {
-  return 'rolls' in er && Array.isArray(er.rolls)
+  return 'skillCheckRoll' in er && er.skillCheckRoll !== undefined
 }

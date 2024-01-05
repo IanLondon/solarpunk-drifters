@@ -358,19 +358,31 @@ components:
       description: The result of a an encounter card choice player move
       type: object
       properties:
-        rolls:
-          type: array
-          items:
-            type: integer
+        skillCheckRoll:
+          $ref: '#/components/schemas/SkillCheckRoll'
         outcome:
-          $ref: '#/components/schemas/RollOutcome'
+          $ref: '#/components/schemas/EncounterOutcome'
       required: [outcome]
-    RollOutcome:
+    EncounterOutcome:
+      description: The outcome of the Encounter (failure / mixed success / strong success)
       type: string
       enum:
         - 'ENCOUNTER_OUTCOME_FAILURE'
         - 'ENCOUNTER_OUTCOME_MIXED_SUCCESS'
         - 'ENCOUNTER_OUTCOME_STRONG_SUCCESS'
+    SkillCheckRoll:
+      type: object
+      description: The result of a skill check dice roll
+      properties:
+        rolls:
+          description: The number of each die roll
+          type: array
+          items:
+            type: integer
+        disadvantage:
+          type: boolean
+          description: If true, the roll was "with disadvantage" (must choose the lowest die)
+      required: [disadvantage, rolls]
 
     Skill:
       type: string

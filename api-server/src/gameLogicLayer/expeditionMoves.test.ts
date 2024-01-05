@@ -125,7 +125,10 @@ describe('encounter card choice', () => {
     })
 
     expect(output).toEqual([
-      encounterResult({ rolls, outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS })
+      encounterResult({
+        skillCheckRoll: { rolls, disadvantage: false },
+        outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS
+      })
     ])
   })
 

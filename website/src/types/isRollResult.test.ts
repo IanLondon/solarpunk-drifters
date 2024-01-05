@@ -11,7 +11,7 @@ import {
 describe('isRollResult', () => {
   it('should return true for a RollResult', () => {
     const input: RollResult = {
-      rolls: [1],
+      skillCheckRoll: { rolls: [1], disadvantage: false },
       outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS
     }
 
@@ -28,7 +28,7 @@ describe('isRollResult', () => {
 
   it('should return false for a non-RollResult EncounterResult (rolls: undefined)', () => {
     const input: EncounterResult = {
-      rolls: undefined,
+      skillCheckRoll: undefined,
       outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS
     }
 
