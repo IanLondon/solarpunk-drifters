@@ -100,7 +100,7 @@ export async function encounterCardChoice(args: {
         // NOTE: our `items` is all positive, and addSubtractInventoryItems takes
         // a patch where negative values subtract from the inventory,
         // so we invert them
-        events.addItemToInventory(mapValues(items, (n) => -1 * n)),
+        events.addSubtractInventoryItems(mapValues(items, (n) => -1 * n)),
         // TODO: no rolls
         events.encounterResult([], ENCOUNTER_OUTCOME_STRONG_SUCCESS)
       ]

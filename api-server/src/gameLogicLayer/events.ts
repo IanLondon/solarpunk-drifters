@@ -15,14 +15,14 @@ export type ExpeditionOutcome =
 // GAME EVENTS
 
 export const ADD_SUBTRACT_INVENTORY_ITEMS = 'ADD_SUBTRACT_INVENTORY_ITEMS'
-export interface AddOrSubstractInventoryItems {
+export interface AddSubstractInventoryItems {
   type: typeof ADD_SUBTRACT_INVENTORY_ITEMS
   itemPatch: Readonly<Record<string, number>>
 }
 // TODO IMMEDIATELY rename addSubtractInventoryItems
-export const addItemToInventory = (
-  itemPatch: AddOrSubstractInventoryItems['itemPatch']
-): AddOrSubstractInventoryItems => ({
+export const addSubtractInventoryItems = (
+  itemPatch: AddSubstractInventoryItems['itemPatch']
+): AddSubstractInventoryItems => ({
   type: ADD_SUBTRACT_INVENTORY_ITEMS,
   itemPatch
 })
@@ -132,7 +132,7 @@ export type GameErrorEvent =
   | NotEnoughConsumablesErrorEvent
 
 export type GameEvent =
-  | AddOrSubstractInventoryItems
+  | AddSubstractInventoryItems
   | NewExpeditionEvent
   | DrawEncounterCardEvent
   | AdvanceExpeditionProgressEvent

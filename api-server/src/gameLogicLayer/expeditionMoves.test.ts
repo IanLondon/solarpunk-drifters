@@ -7,7 +7,7 @@ import {
   TURNED_BACK,
   encounterResult,
   notEnoughConsumablesError,
-  addItemToInventory
+  addSubtractInventoryItems
 } from './events'
 import {
   beginExpedition,
@@ -161,7 +161,7 @@ describe('encounter card choice', () => {
     })
 
     expect(output).toEqual([
-      addItemToInventory({ rations: -2, testItem: -42 }),
+      addSubtractInventoryItems({ rations: -2, testItem: -42 }),
       // TODO IMMEDIATELY: encounterResult dice should be optional, use option arg
       encounterResult([], ENCOUNTER_OUTCOME_STRONG_SUCCESS)
     ])

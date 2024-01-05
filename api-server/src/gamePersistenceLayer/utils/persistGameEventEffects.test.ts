@@ -21,11 +21,11 @@ import { type StoreError } from '../types'
 // that only those methods were called and no other methods were.
 
 describe('persistGameEventEffects', () => {
-  describe('AddOrSubstractInventoryItems', () => {
+  describe('AddSubstractInventoryItems', () => {
     it('should add item to inventory', () => {
       const store = { addSubtractInventoryItems: jest.fn(() => null) }
       const itemPatch = { rations: 3, testItem: -5 }
-      const e = events.addItemToInventory(itemPatch)
+      const e = events.addSubtractInventoryItems(itemPatch)
 
       const out = persistGameEventEffects(store as any, e)
 
@@ -35,7 +35,7 @@ describe('persistGameEventEffects', () => {
   })
 
   describe('error handling', () => {
-    it('should return StoreError[] if there are errors (only testing addItemToInventory)', () => {
+    it('should return StoreError[] if there are errors (only testing addSubtractInventoryItems)', () => {
       const testStoreError: StoreError = {
         method: 'addSubtractInventoryItems',
         error: 'some mock error'
@@ -44,7 +44,7 @@ describe('persistGameEventEffects', () => {
         addSubtractInventoryItems: jest.fn(() => testStoreError)
       }
       const items = { rations: 3 }
-      const e = events.addItemToInventory(items)
+      const e = events.addSubtractInventoryItems(items)
 
       const out = persistGameEventEffects(store as any, e)
 
