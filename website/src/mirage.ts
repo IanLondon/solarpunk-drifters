@@ -51,7 +51,7 @@ export function makeMirageServer({ environment = 'test' }): Server {
       })
 
       this.get('encounter-cards/:encounterCardId', (schema, request) => {
-        if (request.params.cardId === DEMO_BUFFALO_ENCOUNTER_CARD.id) {
+        if (request.params.encounterCardId === DEMO_BUFFALO_ENCOUNTER_CARD.id) {
           return DEMO_BUFFALO_ENCOUNTER_CARD
         }
         return new Response(404, undefined, {
