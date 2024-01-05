@@ -23,7 +23,7 @@ export async function createUserGameData(uid: string): Promise<void> {
 
 export async function getUserGameState(uid: string): Promise<GameState> {
   const store = createInMemoryGameStoreForUser(uid, inMemoryDbSingleton)
-  return store.getGameState()
+  return await store.getGameState()
 }
 
 export async function getUserGameStore(uid: string): Promise<GameStore> {

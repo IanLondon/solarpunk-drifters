@@ -1,21 +1,21 @@
-import persistGameEventEffects from './utils/persistGameEventEffects'
-import type { GameEvent } from '../gameLogicLayer/events'
-import type { GameStore, PersistenceError } from './types'
 import { createPatch } from 'rfc6902'
-import type { PatchRequest } from '@solarpunk-drifters/common'
+import type { GameState, PatchRequest } from '@solarpunk-drifters/common'
+import type { GameEvent } from '../gameLogicLayer/events'
+import type { GameEventPersistor, PersistenceError } from './types'
 
-export default function runPersistence(
-  store: GameStore,
-  gameEvents: GameEvent[]
-): PatchRequest | PersistenceError {
+export default async function runPersistence(
+  gameEvents: GameEvent[],
+  gameEventPersistor: GameEventPersistor,
+  getGameState: () => Promise<GameState>
+): Promise<PatchRequest | PersistenceError> {
   // TODO: use deep copy instead of JSON ser/deser
-  const initialGameState = JSON.parse(JSON.stringify(store.getGameState()))
+  const initialGameState = JSON.parse(JSON.stringify(await getGameState()))
 
   // Run persistence layer effects
   for (const evt of gameEvents) {
     // TODO: implement error handling, early abort
     // TODO: allow transaction
-    const persistOut = persistGameEventEffects(store, evt)
+    const persistOut = await gameEventPersistor(evt)
     if (persistOut.length > 0) {
       throw new Error(
         `Not implemented: got errors from persistGameEventEffects. ${JSON.stringify(
@@ -25,7 +25,7 @@ export default function runPersistence(
     }
   }
 
-  const finalGameState = store.getGameState()
+  const finalGameState = await getGameState()
 
   return createPatch(initialGameState, finalGameState)
 }

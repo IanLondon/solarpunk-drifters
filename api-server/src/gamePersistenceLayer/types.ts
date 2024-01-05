@@ -4,6 +4,7 @@ import type {
   GameState
 } from '@solarpunk-drifters/common'
 import { type DeepReadonly } from 'ts-essentials'
+import { type GameEvent } from '../gameLogicLayer/events'
 
 export interface StoreError {
   method: keyof GameStore
@@ -15,16 +16,19 @@ export interface GameStore {
   // Write methods
   addSubtractInventoryItems: (
     itemPatch: Readonly<Record<string, number>>
-  ) => StoreOut
-  setGameMode: (gameMode: GameMode) => StoreOut
-  setActiveEncounterCard: (cardId: string) => StoreOut
-  clearActiveEncounterCard: () => StoreOut
-  clearExpeditionState: () => StoreOut
-  createExpeditionState: (progress: ExpeditionProgress) => StoreOut
-  incrementExpeditionProgress: (distance: number) => StoreOut
+  ) => Promise<StoreOut>
+  setGameMode: (gameMode: GameMode) => Promise<StoreOut>
+  setActiveEncounterCard: (cardId: string) => Promise<StoreOut>
+  clearActiveEncounterCard: () => Promise<StoreOut>
+  clearExpeditionState: () => Promise<StoreOut>
+  createExpeditionState: (progress: ExpeditionProgress) => Promise<StoreOut>
+  incrementExpeditionProgress: (distance: number) => Promise<StoreOut>
   // Read methods
-  getGameState: () => DeepReadonly<GameState>
+  getGameState: () => Promise<DeepReadonly<GameState>>
 }
+
+/** A fn bound to a store that persists the given game event to the store */
+export type GameEventPersistor = (e: GameEvent) => Promise<StoreError[]>
 
 export interface PersistenceError {
   error: true

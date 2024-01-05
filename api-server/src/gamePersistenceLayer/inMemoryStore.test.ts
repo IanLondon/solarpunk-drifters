@@ -52,56 +52,69 @@ describe('createInMemoryGameStoreForUser', () => {
 
   describe('addSubtractInventoryItems', () => {
     describe('addition', () => {
-      it('should increment the quantity of the given item', () => {
+      it('should increment the quantity of the given item', async () => {
         const { store } = createMemoryGameStoreHelper({
           inventory: { fooItem: 3 }
         })
 
-        const output = store.addSubtractInventoryItems({ fooItem: 2 })
+        const output = await store.addSubtractInventoryItems({ fooItem: 2 })
+        const gameState = await store.getGameState()
 
-        expect(store.getGameState().inventory).toEqual({ fooItem: 3 + 2 })
+        expect(gameState.inventory).toEqual({ fooItem: 3 + 2 })
         expect(output).toBe(null)
       })
 
-      it("should create a new entry for an item that didn't exist", () => {
+      it("should create a new entry for an item that didn't exist", async () => {
         const { store } = createMemoryGameStoreHelper()
 
-        const output = store.addSubtractInventoryItems({ fooItem: 2 })
+        const output = await store.addSubtractInventoryItems({ fooItem: 2 })
 
-        expect(store.getGameState()).toHaveProperty('inventory.fooItem', 2)
+        expect(await store.getGameState()).toHaveProperty(
+          'inventory.fooItem',
+          2
+        )
         expect(output).toBe(null)
       })
     })
 
     describe('subtraction', () => {
-      it('should remove an item if there is more than enough', () => {
+      it('should remove an item if there is more than enough', async () => {
         const { store } = createMemoryGameStoreHelper({
           inventory: { fooItem: 3 }
         })
 
-        const output = store.addSubtractInventoryItems({ fooItem: -2 })
+        const output = await store.addSubtractInventoryItems({ fooItem: -2 })
 
-        expect(store.getGameState()).toHaveProperty('inventory.fooItem', 3 - 2)
+        expect(await store.getGameState()).toHaveProperty(
+          'inventory.fooItem',
+          3 - 2
+        )
         expect(output).toBe(null)
       })
-      it("should set an item's quantity to zero if there is exactly enough", () => {
+      it("should set an item's quantity to zero if there is exactly enough", async () => {
         const { store } = createMemoryGameStoreHelper({
           inventory: { fooItem: 3 }
         })
 
-        const output = store.addSubtractInventoryItems({ fooItem: -3 })
+        const output = await store.addSubtractInventoryItems({ fooItem: -3 })
 
-        expect(store.getGameState()).toHaveProperty('inventory.fooItem', 0)
+        expect(await store.getGameState()).toHaveProperty(
+          'inventory.fooItem',
+          0
+        )
         expect(output).toBe(null)
       })
-      it('should return an error if there is not enough', () => {
+      it('should return an error if there is not enough', async () => {
         const { store } = createMemoryGameStoreHelper({
           inventory: { fooItem: 2 }
         })
 
-        const output = store.addSubtractInventoryItems({ fooItem: -3 })
+        const output = await store.addSubtractInventoryItems({ fooItem: -3 })
 
-        expect(store.getGameState()).toHaveProperty('inventory.fooItem', 2)
+        expect(await store.getGameState()).toHaveProperty(
+          'inventory.fooItem',
+          2
+        )
         expect(output).toEqual({
           method: 'addSubtractInventoryItems',
           error: 'insufficientQuantity'
@@ -110,34 +123,36 @@ describe('createInMemoryGameStoreForUser', () => {
     })
 
     describe('both addition and subtraction in the patch', () => {
-      it('should do both addition and subtraction', () => {
+      it('should do both addition and subtraction', async () => {
         const { store } = createMemoryGameStoreHelper({
           inventory: { rations: 4, fooItem: 3 }
         })
 
-        const output = store.addSubtractInventoryItems({
+        const output = await store.addSubtractInventoryItems({
           rations: -1,
           fooItem: 2
         })
+        const gameState = await store.getGameState()
 
-        expect(store.getGameState()).toHaveProperty('inventory.rations', 4 - 1)
-        expect(store.getGameState()).toHaveProperty('inventory.fooItem', 3 + 2)
+        expect(gameState).toHaveProperty('inventory.rations', 4 - 1)
+        expect(gameState).toHaveProperty('inventory.fooItem', 3 + 2)
         expect(output).toBe(null)
       })
 
-      it('should not do any addition operations if any subtractions would fail', () => {
+      it('should not do any addition operations if any subtractions would fail', async () => {
         const { store } = createMemoryGameStoreHelper({
           inventory: { rations: 4, fooItem: 3 }
         })
 
-        const output = store.addSubtractInventoryItems({
+        const output = await store.addSubtractInventoryItems({
           rations: -100,
           fooItem: 2
         })
+        const gameState = await store.getGameState()
 
         // unchanged
-        expect(store.getGameState()).toHaveProperty('inventory.rations', 4)
-        expect(store.getGameState()).toHaveProperty('inventory.fooItem', 3)
+        expect(gameState).toHaveProperty('inventory.rations', 4)
+        expect(gameState).toHaveProperty('inventory.fooItem', 3)
         expect(output).toEqual({
           method: 'addSubtractInventoryItems',
           error: 'insufficientQuantity'
@@ -147,7 +162,7 @@ describe('createInMemoryGameStoreForUser', () => {
   })
 
   describe('setGameMode', () => {
-    it('should set the gameMode', () => {
+    it('should set the gameMode', async () => {
       const { store } = createMemoryGameStoreHelper({
         gameMode: LOADOUT,
         // These fields can't be null if we're going to ACTIVE_ENCOUNTER:
@@ -155,15 +170,16 @@ describe('createInMemoryGameStoreForUser', () => {
         expeditionProgress: { current: 123, total: 1234 }
       })
 
-      const output = store.setGameMode(ACTIVE_ENCOUNTER)
+      const output = await store.setGameMode(ACTIVE_ENCOUNTER)
+      const gameState = await store.getGameState()
 
-      expect(store.getGameState().gameMode).toEqual(ACTIVE_ENCOUNTER)
+      expect(gameState.gameMode).toEqual(ACTIVE_ENCOUNTER)
       expect(output).toEqual(null)
     })
   })
 
   describe('setActiveEncounterCard', () => {
-    it('should set the active encounter card to the given cardId', () => {
+    it('should set the active encounter card to the given cardId', async () => {
       const cardId = 'some-test-card-id-8293'
       // set game mode for GameState type consistency
       const { store } = createMemoryGameStoreHelper({
@@ -171,9 +187,9 @@ describe('createInMemoryGameStoreForUser', () => {
         expeditionProgress: { current: 123, total: 1234 }
       })
 
-      const output = store.setActiveEncounterCard(cardId)
+      const output = await store.setActiveEncounterCard(cardId)
 
-      expect(store.getGameState()).toHaveProperty(
+      expect(await store.getGameState()).toHaveProperty(
         'activeEncounterCardId',
         cardId
       )
@@ -182,44 +198,48 @@ describe('createInMemoryGameStoreForUser', () => {
   })
 
   describe('clearActiveEncounterCard', () => {
-    it('should unset the active encounter card key', () => {
+    it('should unset the active encounter card key', async () => {
       const cardId = 'some-card-id-987'
       const { store } = createMemoryGameStoreHelper({
         gameMode: LOADOUT,
         activeEncounterCardId: cardId
       })
 
-      const output = store.clearActiveEncounterCard()
+      const output = await store.clearActiveEncounterCard()
 
-      expect(store.getGameState()).not.toHaveProperty('activeEncounterCardId')
+      expect(await store.getGameState()).not.toHaveProperty(
+        'activeEncounterCardId'
+      )
       expect(output).toEqual(null)
     })
   })
 
   describe('clearExpeditionState', () => {
-    it('should unset the expeditionProgress ', () => {
+    it('should unset the expeditionProgress ', async () => {
       const initialProgress = { current: 123, total: 1234 }
       const { store } = createMemoryGameStoreHelper({
         expeditionProgress: initialProgress
       })
 
-      const output = store.clearExpeditionState()
+      const output = await store.clearExpeditionState()
 
-      expect(store.getGameState()).not.toHaveProperty('expeditionProgress')
+      expect(await store.getGameState()).not.toHaveProperty(
+        'expeditionProgress'
+      )
       expect(output).toEqual(null)
     })
   })
 
   describe('createExpeditionState', () => {
-    it('should set the expedition progress to given data', () => {
+    it('should set the expedition progress to given data', async () => {
       const { store } = createMemoryGameStoreHelper({
         gameMode: BETWEEN_ENCOUNTERS
       })
       const newProgress = { current: 123, total: 1234 }
 
-      const output = store.createExpeditionState(newProgress)
+      const output = await store.createExpeditionState(newProgress)
 
-      expect(store.getGameState()).toHaveProperty(
+      expect(await store.getGameState()).toHaveProperty(
         'expeditionProgress',
         newProgress
       )
@@ -228,30 +248,30 @@ describe('createInMemoryGameStoreForUser', () => {
   })
 
   describe('incrementExpeditionProgress', () => {
-    it('should increment the current expedition progress by the given distance', () => {
+    it('should increment the current expedition progress by the given distance', async () => {
       const initialProgress = { current: 123, total: 1234 }
       const { store } = createMemoryGameStoreHelper({
         gameMode: BETWEEN_ENCOUNTERS,
         expeditionProgress: initialProgress
       })
-      expect(store.getGameState()).toHaveProperty(
+      expect(await store.getGameState()).toHaveProperty(
         'expeditionProgress',
         initialProgress
       )
 
-      const output = store.incrementExpeditionProgress(500)
+      const output = await store.incrementExpeditionProgress(500)
 
-      expect(store.getGameState()).toHaveProperty('expeditionProgress', {
+      expect(await store.getGameState()).toHaveProperty('expeditionProgress', {
         current: 123 + 500,
         total: 1234
       })
       expect(output).toEqual(null)
     })
 
-    it("should return an error if the expedition progress isn't instantiated", () => {
+    it("should return an error if the expedition progress isn't instantiated", async () => {
       const { store } = createMemoryGameStoreHelper()
 
-      const output = store.incrementExpeditionProgress(500)
+      const output = await store.incrementExpeditionProgress(500)
 
       expect(output).toEqual({
         method: 'incrementExpeditionProgress',

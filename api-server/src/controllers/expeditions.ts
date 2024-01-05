@@ -2,7 +2,11 @@ import { getUserGameStore } from '../queries/gameState'
 import * as expeditionMoves from '../gameLogicLayer/expeditionMoves'
 import runPersistence from '../gamePersistenceLayer'
 import type { GameMoveOutcome } from '../gameLogicLayer/events'
-import type { GameStore, PersistenceError } from '../gamePersistenceLayer/types'
+import type {
+  GameEventPersistor,
+  GameStore,
+  PersistenceError
+} from '../gamePersistenceLayer/types'
 import { encounterCardDeck, getEncounterCard } from '../queries/encounterCards'
 import { getDrifterCard } from '../queries/drifterCards'
 import {
@@ -12,6 +16,7 @@ import {
   type PatchRequest,
   type ExpeditionUpdate
 } from '@solarpunk-drifters/common'
+import persistGameEventEffects from '../gamePersistenceLayer/utils/persistGameEventEffects'
 
 /**
  * This is the "imperative shell" of "functional core, imperative shell."
@@ -28,7 +33,13 @@ export async function processOutcome(
     const gameEvents = gameOutcome
 
     // Run persistence layer effects
-    const persistenceResult = runPersistence(store, gameEvents)
+    const persistor: GameEventPersistor = async (gameEvent) =>
+      await persistGameEventEffects(store, gameEvent)
+    const persistenceResult = await runPersistence(
+      gameEvents,
+      persistor,
+      store.getGameState
+    )
     return await processPersistenceResult(persistenceResult)
   } else {
     const gameErrorEvent = gameOutcome
@@ -64,8 +75,8 @@ export async function beginExpeditionController(
   uid: string
 ): Promise<ExpeditionUpdate> {
   const store = await getUserGameStore(uid)
-
-  const gameMode = store.getGameState().gameMode
+  const gameState = await store.getGameState()
+  const { gameMode } = gameState
   const gameOutcome = await expeditionMoves.beginExpedition(
     gameMode,
     encounterCardDeck
@@ -78,8 +89,8 @@ export async function nextEncounterController(
   uid: string
 ): Promise<ExpeditionUpdate> {
   const store = await getUserGameStore(uid)
-
-  const gameMode = store.getGameState().gameMode
+  const gameState = await store.getGameState()
+  const { gameMode } = gameState
   const gameOutcome = await expeditionMoves.nextEncounter(
     gameMode,
     encounterCardDeck
@@ -92,8 +103,8 @@ export async function turnBackController(
   uid: string
 ): Promise<ExpeditionUpdate> {
   const store = await getUserGameStore(uid)
-
-  const gameMode = store.getGameState().gameMode
+  const gameState = await store.getGameState()
+  const { gameMode } = gameState
   const gameOutcome = await expeditionMoves.turnBack(gameMode)
 
   return await processOutcome(store, gameOutcome)
@@ -105,9 +116,9 @@ export async function encounterCardChoiceController(args: {
 }): Promise<ExpeditionUpdate> {
   const { uid, choiceIndex } = args
   const store = await getUserGameStore(uid)
-
-  const gameState = store.getGameState()
-  if (gameState.gameMode === ACTIVE_ENCOUNTER) {
+  const gameState = await store.getGameState()
+  const { gameMode } = gameState
+  if (gameMode === ACTIVE_ENCOUNTER) {
     const { activeEncounterCardId } = gameState
 
     const encounterCard = await getEncounterCard(activeEncounterCardId)
@@ -122,7 +133,7 @@ export async function encounterCardChoiceController(args: {
     }
 
     const gameOutcome = await expeditionMoves.encounterCardChoice({
-      gameMode: gameState.gameMode,
+      gameMode,
       characterStats: gameState.characterStats,
       choice: encounterCard.choices[choiceIndex],
       dice: getRandomND6,
@@ -143,8 +154,8 @@ export async function playDrifterCardController(args: {
 }): Promise<ExpeditionUpdate> {
   const { uid, drifterCardId } = args
   const store = await getUserGameStore(uid)
-
-  const gameMode = store.getGameState().gameMode
+  const gameState = await store.getGameState()
+  const { gameMode } = gameState
   const drifterCard = await getDrifterCard(drifterCardId)
 
   const gameOutcome = await expeditionMoves.playDrifterCard({

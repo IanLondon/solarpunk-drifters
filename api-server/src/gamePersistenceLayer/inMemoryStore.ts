@@ -115,7 +115,7 @@ export function createInMemoryGameStoreForUser(
   const store = inMemoryDb[uid]
 
   return {
-    addSubtractInventoryItems: (itemPatch) => {
+    addSubtractInventoryItems: async (itemPatch) => {
       // Pick the negative values and then invert them for getInvalidItems
       // (we're only checking validity of items that will be removed, which are
       // the itemPatch's negative values)
@@ -144,33 +144,33 @@ export function createInMemoryGameStoreForUser(
 
       return null
     },
-    setGameMode: (gameMode) => {
+    setGameMode: async (gameMode) => {
       store.gameMode = gameMode
       return null
     },
-    setActiveEncounterCard: (cardId) => {
+    setActiveEncounterCard: async (cardId) => {
       store.activeEncounterCardId = cardId
       return null
     },
-    clearActiveEncounterCard: () => {
+    clearActiveEncounterCard: async () => {
       store.activeEncounterCardId = null
       return null
     },
-    clearExpeditionState: () => {
+    clearExpeditionState: async () => {
       store.expeditionProgress = null
       return null
     },
-    createExpeditionState: (progress) => {
+    createExpeditionState: async (progress) => {
       store.expeditionProgress = progress
       return null
     },
-    incrementExpeditionProgress: (distance) => {
+    incrementExpeditionProgress: async (distance) => {
       if (store.expeditionProgress === null) {
         return { method: 'incrementExpeditionProgress', error: 'noProgress' }
       }
       store.expeditionProgress.current += distance
       return null
     },
-    getGameState: () => rawStoreStateToGameState(store)
+    getGameState: async () => rawStoreStateToGameState(store)
   }
 }

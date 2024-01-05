@@ -12,45 +12,45 @@ function filterOutput(...so: StoreOut[]): StoreError[] {
 }
 
 // TODO: implement error handling, allow transaction
-export default function persistGameEventEffects(
+export default async function persistGameEventEffects(
   store: GameStore,
   e: GameEvent
-): StoreError[] {
+): Promise<StoreError[]> {
   switch (e.type) {
     case events.ADD_SUBTRACT_INVENTORY_ITEMS: {
       const { itemPatch } = e
-      const out = store.addSubtractInventoryItems(itemPatch)
+      const out = await store.addSubtractInventoryItems(itemPatch)
       return filterOutput(out)
     }
 
     case events.NEW_EXPEDITION: {
       const { current, total } = e
-      const out = store.createExpeditionState({ current, total })
+      const out = await store.createExpeditionState({ current, total })
       return filterOutput(out)
     }
 
     case events.DRAW_ENCOUNTER_CARD: {
       const { cardId } = e
-      const out1 = store.setActiveEncounterCard(cardId)
-      const out2 = store.setGameMode(ACTIVE_ENCOUNTER)
+      const out1 = await store.setActiveEncounterCard(cardId)
+      const out2 = await store.setGameMode(ACTIVE_ENCOUNTER)
       return filterOutput(out1, out2)
     }
 
     case events.ADVANCE_EXPEDITION_PROGRESS: {
       const { increment } = e
-      const out = store.incrementExpeditionProgress(increment)
+      const out = await store.incrementExpeditionProgress(increment)
       return filterOutput(out)
     }
 
     case events.END_EXPEDITION: {
-      const out1 = store.setGameMode(LOADOUT)
-      const out2 = store.clearExpeditionState()
+      const out1 = await store.setGameMode(LOADOUT)
+      const out2 = await store.clearExpeditionState()
       return filterOutput(out1, out2)
     }
 
     case events.ENCOUNTER_RESULT: {
-      const out1 = store.clearActiveEncounterCard()
-      const out2 = store.setGameMode(BETWEEN_ENCOUNTERS)
+      const out1 = await store.clearActiveEncounterCard()
+      const out2 = await store.setGameMode(BETWEEN_ENCOUNTERS)
       return filterOutput(out1, out2)
     }
 
