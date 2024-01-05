@@ -135,7 +135,10 @@ describe('persistGameEventEffects', () => {
         setGameMode: jest.fn(() => null),
         clearActiveEncounterCard: jest.fn(() => null)
       }
-      const e = events.encounterResult([1, 4], ENCOUNTER_OUTCOME_MIXED_SUCCESS)
+      const e = events.encounterResult({
+        rolls: [1, 4],
+        outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS
+      })
 
       const out = persistGameEventEffects(store as any, e)
 

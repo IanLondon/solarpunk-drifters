@@ -125,7 +125,7 @@ describe('encounter card choice', () => {
     })
 
     expect(output).toEqual([
-      encounterResult(rolls, ENCOUNTER_OUTCOME_MIXED_SUCCESS)
+      encounterResult({ rolls, outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS })
     ])
   })
 
@@ -162,8 +162,7 @@ describe('encounter card choice', () => {
 
     expect(output).toEqual([
       addSubtractInventoryItems({ rations: -2, testItem: -42 }),
-      // TODO IMMEDIATELY: encounterResult dice should be optional, use option arg
-      encounterResult([], ENCOUNTER_OUTCOME_STRONG_SUCCESS)
+      encounterResult({ outcome: ENCOUNTER_OUTCOME_STRONG_SUCCESS })
     ])
   })
 

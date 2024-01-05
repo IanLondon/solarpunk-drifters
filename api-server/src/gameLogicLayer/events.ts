@@ -1,5 +1,5 @@
 import {
-  type EncounterOutcome,
+  type EncounterResult,
   type ExpeditionProgress
 } from '@solarpunk-drifters/common'
 
@@ -78,20 +78,15 @@ export const endExpedition = (
 export const ENCOUNTER_RESULT = 'ENCOUNTER_RESULT'
 export interface EncounterResultEvent {
   type: typeof ENCOUNTER_RESULT
-  // TODO IMMEDIATELY modify these args.
-  // should be {encounterResult: EncounterResult} from OpenAPI
-  rolls?: number[]
-  outcome: EncounterOutcome
+  encounterResult: EncounterResult
 }
 
 export const encounterResult = (
   // TODO IMMEDIATELY modify these args: should be EncounterResult from OpenAPI
-  rolls: number[],
-  outcome: EncounterOutcome
+  encounterResult: EncounterResult
 ): EncounterResultEvent => ({
   type: ENCOUNTER_RESULT,
-  rolls,
-  outcome
+  encounterResult
 })
 
 // ERRORS

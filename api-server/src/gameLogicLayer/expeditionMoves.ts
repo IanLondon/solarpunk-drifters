@@ -80,7 +80,7 @@ export async function encounterCardChoice(args: {
     const outcome = skillCheckRollToEncounterOutcome(skillCheckRoll)
     return [
       // TODO IMMEDIATELY: disadvantage should go in this event
-      events.encounterResult(skillCheckRoll.rolls, outcome)
+      events.encounterResult({ rolls: skillCheckRoll.rolls, outcome })
     ]
   }
 
@@ -101,8 +101,7 @@ export async function encounterCardChoice(args: {
         // a patch where negative values subtract from the inventory,
         // so we invert them
         events.addSubtractInventoryItems(mapValues(items, (n) => -1 * n)),
-        // TODO: no rolls
-        events.encounterResult([], ENCOUNTER_OUTCOME_STRONG_SUCCESS)
+        events.encounterResult({ outcome: ENCOUNTER_OUTCOME_STRONG_SUCCESS })
       ]
     }
   }
