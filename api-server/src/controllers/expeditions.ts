@@ -151,12 +151,16 @@ export async function encounterCardChoiceController(args: {
 export async function playDrifterCardController(args: {
   uid: string
   drifterCardId: string
-}): Promise<ExpeditionUpdate> {
+}): Promise<ExpeditionUpdate | null> {
   const { uid, drifterCardId } = args
   const store = await getUserGameStore(uid)
   const gameState = await store.getGameState()
   const { gameMode } = gameState
   const drifterCard = await getDrifterCard(drifterCardId)
+
+  if (drifterCard === null) {
+    throw new Error('NOT IMPLEMENTED: user specified invalid Drifter Card id')
+  }
 
   const gameOutcome = await expeditionMoves.playDrifterCard({
     gameMode,
