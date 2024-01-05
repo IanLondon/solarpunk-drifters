@@ -1,5 +1,5 @@
 import { type ClientEvent } from '@solarpunk-drifters/common'
-import { ENCOUNTER_RESULT, type GameEvent } from '../gameLogicLayer/events'
+import { ENCOUNTER_RESULT, type GameEvent } from '../gameLogicLayer/gameEvents'
 import * as clientEvents from './clientEvents'
 export function generateClientEvents(gameEvents: GameEvent[]): ClientEvent[] {
   const result: ClientEvent[] = []

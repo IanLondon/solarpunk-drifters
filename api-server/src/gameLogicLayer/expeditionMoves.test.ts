@@ -1,14 +1,5 @@
 import { describe, expect, it } from '@jest/globals'
-import {
-  moveNotAllowedError,
-  drawEncounterCard,
-  newExpedition,
-  endExpedition,
-  TURNED_BACK,
-  encounterResult,
-  notEnoughConsumablesError,
-  addSubtractInventoryItems
-} from './events'
+import * as gameEvents from './gameEvents'
 import {
   beginExpedition,
   encounterCardChoice,
@@ -45,8 +36,8 @@ describe('expedition moves', () => {
       const output = await beginExpedition(LOADOUT, encounterCardDeckMocker)
 
       expect(output).toEqual([
-        drawEncounterCard(MOCK_ENCOUNTER_CARD_ID),
-        newExpedition({
+        gameEvents.drawEncounterCard(MOCK_ENCOUNTER_CARD_ID),
+        gameEvents.newExpedition({
           current: INITIAL_EXPEDITION_PROGRESS,
           total: EXPEDITION_DISTANCE
         })
@@ -56,7 +47,7 @@ describe('expedition moves', () => {
     NOT_LOADOUT.forEach((gameMode) => {
       it(`should give an error when in any mode but loadout (${gameMode})`, async () => {
         const output = await beginExpedition(gameMode, encounterCardDeckMocker)
-        expect(output).toEqual(moveNotAllowedError())
+        expect(output).toEqual(gameEvents.moveNotAllowedError())
       })
     })
   })
@@ -68,14 +59,16 @@ describe('expedition moves', () => {
         encounterCardDeckMocker
       )
 
-      expect(output).toEqual([drawEncounterCard(MOCK_ENCOUNTER_CARD_ID)])
+      expect(output).toEqual([
+        gameEvents.drawEncounterCard(MOCK_ENCOUNTER_CARD_ID)
+      ])
     })
 
     NOT_BETWEEN_ENCOUNTERS.forEach((gameMode) => {
       it(`should give an error when in any mode but "between encounters" (${gameMode})`, async () => {
         const output = await nextEncounter(gameMode, encounterCardDeckMocker)
 
-        expect(output).toEqual(moveNotAllowedError())
+        expect(output).toEqual(gameEvents.moveNotAllowedError())
       })
     })
   })
@@ -85,13 +78,13 @@ describe('turn back', () => {
   it('should end the expedition', async () => {
     const output = await turnBack(BETWEEN_ENCOUNTERS)
 
-    expect(output).toEqual([endExpedition(TURNED_BACK)])
+    expect(output).toEqual([gameEvents.endExpedition(gameEvents.TURNED_BACK)])
   })
 
   NOT_BETWEEN_ENCOUNTERS.forEach((gameMode) => {
     it(`should give an error when in any mode but "between encounters" (${gameMode})`, async () => {
       const output = await turnBack(gameMode)
-      expect(output).toEqual(moveNotAllowedError())
+      expect(output).toEqual(gameEvents.moveNotAllowedError())
     })
   })
 })
@@ -125,7 +118,7 @@ describe('encounter card choice', () => {
     })
 
     expect(output).toEqual([
-      encounterResult({
+      gameEvents.encounterResult({
         skillCheckRoll: { rolls, disadvantage: false },
         outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS
       })
@@ -164,8 +157,8 @@ describe('encounter card choice', () => {
     })
 
     expect(output).toEqual([
-      addSubtractInventoryItems({ rations: -2, testItem: -42 }),
-      encounterResult({ outcome: ENCOUNTER_OUTCOME_STRONG_SUCCESS })
+      gameEvents.addSubtractInventoryItems({ rations: -2, testItem: -42 }),
+      gameEvents.encounterResult({ outcome: ENCOUNTER_OUTCOME_STRONG_SUCCESS })
     ])
   })
 
@@ -201,7 +194,10 @@ describe('encounter card choice', () => {
     })
 
     expect(output).toEqual(
-      notEnoughConsumablesError({ items: ['rations'], resources: [] })
+      gameEvents.notEnoughConsumablesError({
+        items: ['rations'],
+        resources: []
+      })
     )
   })
 
@@ -214,7 +210,7 @@ describe('encounter card choice', () => {
       inventory: {}
     })
 
-    expect(output).toEqual(moveNotAllowedError())
+    expect(output).toEqual(gameEvents.moveNotAllowedError())
   })
 })
 

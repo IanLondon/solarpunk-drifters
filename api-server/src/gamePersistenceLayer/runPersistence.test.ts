@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@jest/globals'
 import runPersistence from '.'
 import { type GameState } from '@solarpunk-drifters/common'
-import { drawEncounterCard } from '../gameLogicLayer/events'
+import * as gameEvents from '../gameLogicLayer/gameEvents'
 import { type GameEventPersistor } from './types'
 
 function dummyGetGameState(
@@ -22,10 +22,10 @@ function dummyGetGameState(
 describe('runPersistence', () => {
   it('should generate a patch ', async () => {
     const getGameState = dummyGetGameState({ a: 1 }, { a: 2, b: 5 })
-    const gameEvents = [drawEncounterCard('some-id')]
+    const gameEventsInput = [gameEvents.drawEncounterCard('some-id')]
     const persistor: GameEventPersistor = async (e) => []
 
-    const patch = await runPersistence(gameEvents, persistor, getGameState)
+    const patch = await runPersistence(gameEventsInput, persistor, getGameState)
 
     expect(patch).toEqual(
       expect.arrayContaining([

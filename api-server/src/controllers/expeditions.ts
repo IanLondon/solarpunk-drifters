@@ -1,7 +1,7 @@
 import { getUserGameStore } from '../queries/gameState'
 import * as expeditionMoves from '../gameLogicLayer/expeditionMoves'
 import runPersistence from '../gamePersistenceLayer'
-import type { GameMoveOutcome } from '../gameLogicLayer/events'
+import type { GameMoveOutcome } from '../gameLogicLayer/gameEvents'
 import type {
   GameEventPersistor,
   GameStore

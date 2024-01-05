@@ -4,7 +4,7 @@ import type {
   GameState
 } from '@solarpunk-drifters/common'
 import { type DeepReadonly } from 'ts-essentials'
-import { type GameEvent } from '../gameLogicLayer/events'
+import { type GameEvent } from '../gameLogicLayer/gameEvents'
 
 export interface StoreError {
   method: keyof GameStore

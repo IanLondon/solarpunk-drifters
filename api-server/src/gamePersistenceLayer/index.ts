@@ -1,6 +1,6 @@
 import { createPatch } from 'rfc6902'
 import type { GameState, PatchRequest } from '@solarpunk-drifters/common'
-import type { GameEvent } from '../gameLogicLayer/events'
+import type { GameEvent } from '../gameLogicLayer/gameEvents'
 import type { GameEventPersistor, PersistenceError } from './types'
 
 export default async function runPersistence(

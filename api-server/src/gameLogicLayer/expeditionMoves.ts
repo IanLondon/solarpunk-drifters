@@ -10,8 +10,8 @@ import {
   type GameState
 } from '@solarpunk-drifters/common'
 import { EXPEDITION_DISTANCE, INITIAL_EXPEDITION_PROGRESS } from './constants'
-import * as events from './events'
-import type { GameMoveOutcome } from './events'
+import * as gameEvents from './gameEvents'
+import type { GameMoveOutcome } from './gameEvents'
 import type { DiceFn, EncounterCardDeckFn } from './types'
 import {
   skillCheckRollToEncounterOutcome,
@@ -25,13 +25,13 @@ export async function beginExpedition(
   encounterCardDeck: EncounterCardDeckFn
 ): Promise<GameMoveOutcome> {
   if (gameMode !== LOADOUT) {
-    return events.moveNotAllowedError()
+    return gameEvents.moveNotAllowedError()
   }
 
   const newEncounterCardId = await encounterCardDeck()
   return [
-    events.drawEncounterCard(newEncounterCardId),
-    events.newExpedition({
+    gameEvents.drawEncounterCard(newEncounterCardId),
+    gameEvents.newExpedition({
       current: INITIAL_EXPEDITION_PROGRESS,
       total: EXPEDITION_DISTANCE
     })
@@ -43,19 +43,19 @@ export async function nextEncounter(
   encounterCardDeck: EncounterCardDeckFn
 ): Promise<GameMoveOutcome> {
   if (gameMode !== BETWEEN_ENCOUNTERS) {
-    return events.moveNotAllowedError()
+    return gameEvents.moveNotAllowedError()
   }
 
   const newEncounterCardId = await encounterCardDeck()
-  return [events.drawEncounterCard(newEncounterCardId)]
+  return [gameEvents.drawEncounterCard(newEncounterCardId)]
 }
 
 export async function turnBack(gameMode: GameMode): Promise<GameMoveOutcome> {
   if (gameMode !== BETWEEN_ENCOUNTERS) {
-    return events.moveNotAllowedError()
+    return gameEvents.moveNotAllowedError()
   }
 
-  return [events.endExpedition(events.TURNED_BACK)]
+  return [gameEvents.endExpedition(gameEvents.TURNED_BACK)]
 }
 
 export async function encounterCardChoice(args: {
@@ -68,7 +68,7 @@ export async function encounterCardChoice(args: {
   const { gameMode, characterStats, choice, dice, inventory } = args
 
   if (gameMode !== ACTIVE_ENCOUNTER) {
-    return events.moveNotAllowedError()
+    return gameEvents.moveNotAllowedError()
   }
 
   const skill = choice.check?.skill
@@ -77,7 +77,7 @@ export async function encounterCardChoice(args: {
     const skillCheckRoll = skillCheckRoller({ characterStats, dice, skill })
     const outcome = skillCheckRollToEncounterOutcome(skillCheckRoll)
     return [
-      events.encounterResult({
+      gameEvents.encounterResult({
         skillCheckRoll,
         outcome
       })
@@ -91,7 +91,7 @@ export async function encounterCardChoice(args: {
     })
 
     if (invalidItems.length > 0) {
-      return events.notEnoughConsumablesError({
+      return gameEvents.notEnoughConsumablesError({
         items: invalidItems,
         resources: []
       })
@@ -100,8 +100,10 @@ export async function encounterCardChoice(args: {
         // NOTE: our `items` is all positive, and addSubtractInventoryItems takes
         // a patch where negative values subtract from the inventory,
         // so we invert them
-        events.addSubtractInventoryItems(mapValues(items, (n) => -1 * n)),
-        events.encounterResult({ outcome: ENCOUNTER_OUTCOME_STRONG_SUCCESS })
+        gameEvents.addSubtractInventoryItems(mapValues(items, (n) => -1 * n)),
+        gameEvents.encounterResult({
+          outcome: ENCOUNTER_OUTCOME_STRONG_SUCCESS
+        })
       ]
     }
   }

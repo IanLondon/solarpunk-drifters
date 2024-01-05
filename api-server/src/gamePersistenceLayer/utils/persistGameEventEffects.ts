@@ -3,8 +3,8 @@ import {
   BETWEEN_ENCOUNTERS,
   LOADOUT
 } from '@solarpunk-drifters/common'
-import * as events from '../../gameLogicLayer/events'
-import type { GameEvent } from '../../gameLogicLayer/events'
+import * as gameEvents from '../../gameLogicLayer/gameEvents'
+import type { GameEvent } from '../../gameLogicLayer/gameEvents'
 import type { GameStore, StoreError, StoreOut } from '../types'
 
 function filterOutput(...so: StoreOut[]): StoreError[] {
@@ -17,38 +17,38 @@ export default async function persistGameEventEffects(
   e: GameEvent
 ): Promise<StoreError[]> {
   switch (e.type) {
-    case events.ADD_SUBTRACT_INVENTORY_ITEMS: {
+    case gameEvents.ADD_SUBTRACT_INVENTORY_ITEMS: {
       const { itemPatch } = e
       const out = await store.addSubtractInventoryItems(itemPatch)
       return filterOutput(out)
     }
 
-    case events.NEW_EXPEDITION: {
+    case gameEvents.NEW_EXPEDITION: {
       const { current, total } = e
       const out = await store.createExpeditionState({ current, total })
       return filterOutput(out)
     }
 
-    case events.DRAW_ENCOUNTER_CARD: {
+    case gameEvents.DRAW_ENCOUNTER_CARD: {
       const { cardId } = e
       const out1 = await store.setActiveEncounterCard(cardId)
       const out2 = await store.setGameMode(ACTIVE_ENCOUNTER)
       return filterOutput(out1, out2)
     }
 
-    case events.ADVANCE_EXPEDITION_PROGRESS: {
+    case gameEvents.ADVANCE_EXPEDITION_PROGRESS: {
       const { increment } = e
       const out = await store.incrementExpeditionProgress(increment)
       return filterOutput(out)
     }
 
-    case events.END_EXPEDITION: {
+    case gameEvents.END_EXPEDITION: {
       const out1 = await store.setGameMode(LOADOUT)
       const out2 = await store.clearExpeditionState()
       return filterOutput(out1, out2)
     }
 
-    case events.ENCOUNTER_RESULT: {
+    case gameEvents.ENCOUNTER_RESULT: {
       const out1 = await store.clearActiveEncounterCard()
       const out2 = await store.setGameMode(BETWEEN_ENCOUNTERS)
       return filterOutput(out1, out2)

@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals'
 import { generateClientEvents } from '.'
-import * as gameEvents from '../gameLogicLayer/events'
+import * as gameEvents from '../gameLogicLayer/gameEvents'
 import {
   CLIENT_EVENT_ENCOUNTER_RESULT,
   type ClientEvent,
