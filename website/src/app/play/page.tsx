@@ -96,6 +96,9 @@ export default function PlayPage(): React.ReactNode {
 
     default: {
       gameMode satisfies never
+      console.error(
+        `PlayPage got unexpected gameMode ${JSON.stringify(gameMode)}`
+      )
     }
   }
 

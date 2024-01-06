@@ -71,8 +71,10 @@ export default async function persistGameEventEffects(
     }
 
     default:
-      throw new Error(
+      e satisfies never
+      console.error(
         `persistGameEventEffects got unexpected GameEvent: ${JSON.stringify(e)}`
       )
+      return []
   }
 }

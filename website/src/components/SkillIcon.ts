@@ -11,5 +11,7 @@ export default function SkillIcon(props: { skill: Skill }): React.ReactNode {
       return '🕊'
     case 'luck':
       return '🃏'
+    default:
+      props.skill satisfies never
   }
 }
