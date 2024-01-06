@@ -1,20 +1,37 @@
-import { getUserGameStore } from '../queries/gameState'
+import {
+  ACTIVE_ENCOUNTER,
+  getRandomND6,
+  type ExpeditionUpdate,
+  type EncounterOutcome
+} from '@solarpunk-drifters/common'
 import * as expeditionMoves from '../gameLogicLayer/expeditionMoves'
+import {
+  type DrifterAndConsequenceCardGameEvents,
+  getDrifterAndConsequenceCards,
+  postProcessGameEvents
+} from '../gameLogicLayer/postProcessGameEvents'
+import type { GameEventsOrError } from '../gameLogicLayer/gameEvents'
 import runPersistence from '../gamePersistenceLayer'
-import type { GameMoveOutcome } from '../gameLogicLayer/gameEvents'
+import persistGameEventEffects from '../gamePersistenceLayer/utils/persistGameEventEffects'
 import type {
   GameEventPersistor,
   GameStore
 } from '../gamePersistenceLayer/types'
-import { encounterCardDeck, getEncounterCard } from '../queries/encounterCards'
-import { getDrifterCard } from '../queries/drifterCards'
-import {
-  ACTIVE_ENCOUNTER,
-  getRandomND6,
-  type ExpeditionUpdate
-} from '@solarpunk-drifters/common'
-import persistGameEventEffects from '../gamePersistenceLayer/utils/persistGameEventEffects'
 import { generateClientEvents } from '../gameTransportLayer'
+import { consequenceCardDeck } from '../queries/consequenceCards'
+import { drifterCardDeck, getDrifterCard } from '../queries/drifterCards'
+import { encounterCardDeck, getEncounterCard } from '../queries/encounterCards'
+import { getUserGameStore } from '../queries/gameState'
+
+const outcomeToCardGameEventsFn = async (
+  outcome: EncounterOutcome
+): Promise<DrifterAndConsequenceCardGameEvents> => {
+  return await getDrifterAndConsequenceCards({
+    consequenceCardDeck,
+    drifterCardDeck,
+    outcome
+  })
+}
 
 /**
  * This is the "imperative shell" of "functional core, imperative shell."
@@ -22,10 +39,13 @@ import { generateClientEvents } from '../gameTransportLayer'
 // TODO: Needs test coverage, maybe TDD the error handling when implemented
 export async function processOutcome(
   store: GameStore,
-  gameOutcome: GameMoveOutcome
+  gameEventsOrError: GameEventsOrError
 ): Promise<ExpeditionUpdate> {
-  if (Array.isArray(gameOutcome)) {
-    const gameEvents = gameOutcome
+  if (Array.isArray(gameEventsOrError)) {
+    const gameEvents = await postProcessGameEvents({
+      preGameEvents: gameEventsOrError,
+      outcomeToCardGameEventsFn
+    })
 
     // Run persistence layer effects
     const persistor: GameEventPersistor = async (gameEvent) =>
@@ -39,6 +59,10 @@ export async function processOutcome(
     if (Array.isArray(persistenceResult)) {
       const gameStatePatch = persistenceResult
       const clientEvents = generateClientEvents(gameEvents)
+
+      // TODO: toggle this logging with a flag, and use a better log than console.log
+      console.log(`GAME EVENTS:\n${JSON.stringify(gameEvents, null, 4)}`)
+
       return { update: gameStatePatch, clientEvents }
     } else {
       throw new Error(
@@ -50,7 +74,7 @@ export async function processOutcome(
   } else {
     throw new Error(
       `NOT IMPLEMENTED -- processOutcome got GameErrorEvent:  ${JSON.stringify(
-        gameOutcome
+        gameEventsOrError
       )}`
     )
   }
@@ -62,12 +86,12 @@ export async function beginExpeditionController(
   const store = await getUserGameStore(uid)
   const gameState = await store.getGameState()
   const { gameMode } = gameState
-  const gameOutcome = await expeditionMoves.beginExpedition(
+  const gameEventsOrError = await expeditionMoves.beginExpedition(
     gameMode,
     encounterCardDeck
   )
 
-  return await processOutcome(store, gameOutcome)
+  return await processOutcome(store, gameEventsOrError)
 }
 
 export async function nextEncounterController(
@@ -76,12 +100,12 @@ export async function nextEncounterController(
   const store = await getUserGameStore(uid)
   const gameState = await store.getGameState()
   const { gameMode } = gameState
-  const gameOutcome = await expeditionMoves.nextEncounter(
+  const gameEventsOrError = await expeditionMoves.nextEncounter(
     gameMode,
     encounterCardDeck
   )
 
-  return await processOutcome(store, gameOutcome)
+  return await processOutcome(store, gameEventsOrError)
 }
 
 export async function turnBackController(
@@ -90,9 +114,9 @@ export async function turnBackController(
   const store = await getUserGameStore(uid)
   const gameState = await store.getGameState()
   const { gameMode } = gameState
-  const gameOutcome = await expeditionMoves.turnBack(gameMode)
+  const gameEventsOrError = await expeditionMoves.turnBack(gameMode)
 
-  return await processOutcome(store, gameOutcome)
+  return await processOutcome(store, gameEventsOrError)
 }
 
 export async function encounterCardChoiceController(args: {
@@ -117,7 +141,7 @@ export async function encounterCardChoiceController(args: {
       )
     }
 
-    const gameOutcome = await expeditionMoves.encounterCardChoice({
+    const gameEventsOrError = await expeditionMoves.encounterCardChoice({
       gameMode,
       characterStats: gameState.characterStats,
       choice: encounterCard.choices[choiceIndex],
@@ -125,7 +149,7 @@ export async function encounterCardChoiceController(args: {
       inventory: gameState.inventory
     })
 
-    return await processOutcome(store, gameOutcome)
+    return await processOutcome(store, gameEventsOrError)
   } else {
     throw new Error(
       `NOT IMPLEMENTED: cannot get activeEncounterCardId when gameMode is ${gameState.gameMode}`
@@ -147,10 +171,10 @@ export async function playDrifterCardController(args: {
     throw new Error('NOT IMPLEMENTED: user specified invalid Drifter Card id')
   }
 
-  const gameOutcome = await expeditionMoves.playDrifterCard({
+  const gameEventsOrError = await expeditionMoves.playDrifterCard({
     gameMode,
     drifterCard
   })
 
-  return await processOutcome(store, gameOutcome)
+  return await processOutcome(store, gameEventsOrError)
 }

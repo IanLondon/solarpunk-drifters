@@ -11,7 +11,7 @@ import {
 } from '@solarpunk-drifters/common'
 import { EXPEDITION_DISTANCE, INITIAL_EXPEDITION_PROGRESS } from './constants'
 import * as gameEvents from './gameEvents'
-import type { GameMoveOutcome } from './gameEvents'
+import type { GameEventsOrError } from './gameEvents'
 import type { DiceFn, EncounterCardDeckFn } from './types'
 import {
   skillCheckRollToEncounterOutcome,
@@ -23,7 +23,7 @@ import { mapValues } from 'lodash'
 export async function beginExpedition(
   gameMode: GameMode,
   encounterCardDeck: EncounterCardDeckFn
-): Promise<GameMoveOutcome> {
+): Promise<GameEventsOrError> {
   if (gameMode !== LOADOUT) {
     return gameEvents.moveNotAllowedError()
   }
@@ -41,7 +41,7 @@ export async function beginExpedition(
 export async function nextEncounter(
   gameMode: GameMode,
   encounterCardDeck: EncounterCardDeckFn
-): Promise<GameMoveOutcome> {
+): Promise<GameEventsOrError> {
   if (gameMode !== BETWEEN_ENCOUNTERS) {
     return gameEvents.moveNotAllowedError()
   }
@@ -50,7 +50,7 @@ export async function nextEncounter(
   return [gameEvents.drawEncounterCard(newEncounterCardId)]
 }
 
-export async function turnBack(gameMode: GameMode): Promise<GameMoveOutcome> {
+export async function turnBack(gameMode: GameMode): Promise<GameEventsOrError> {
   if (gameMode !== BETWEEN_ENCOUNTERS) {
     return gameEvents.moveNotAllowedError()
   }
@@ -64,7 +64,7 @@ export async function encounterCardChoice(args: {
   choice: EncounterChoice
   dice: DiceFn
   inventory: Readonly<GameState['inventory']> // TODO cleaner type
-}): Promise<GameMoveOutcome> {
+}): Promise<GameEventsOrError> {
   const { gameMode, characterStats, choice, dice, inventory } = args
 
   if (gameMode !== ACTIVE_ENCOUNTER) {
@@ -116,6 +116,6 @@ export async function encounterCardChoice(args: {
 export async function playDrifterCard(args: {
   gameMode: GameMode
   drifterCard: DrifterCard
-}): Promise<GameMoveOutcome> {
+}): Promise<GameEventsOrError> {
   throw new Error('NOT IMPLEMENTED: playDrifterCard')
 }

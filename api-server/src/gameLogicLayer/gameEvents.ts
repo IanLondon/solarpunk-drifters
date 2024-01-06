@@ -15,12 +15,21 @@ export type ExpeditionOutcome =
 
 // GAME EVENTS
 
+export const ADD_DRIFTER_CARDS = 'ADD_DRIFTER_CARDS'
+export interface AddDrifterCards {
+  type: typeof ADD_DRIFTER_CARDS
+  drifterCardIds: string[]
+}
+export const addDrifterCards = (drifterCardIds: string[]): AddDrifterCards => ({
+  type: ADD_DRIFTER_CARDS,
+  drifterCardIds
+})
+
 export const ADD_SUBTRACT_INVENTORY_ITEMS = 'ADD_SUBTRACT_INVENTORY_ITEMS'
 export interface AddSubstractInventoryItems {
   type: typeof ADD_SUBTRACT_INVENTORY_ITEMS
   itemPatch: Readonly<Record<string, number>>
 }
-// TODO IMMEDIATELY rename addSubtractInventoryItems
 export const addSubtractInventoryItems = (
   itemPatch: AddSubstractInventoryItems['itemPatch']
 ): AddSubstractInventoryItems => ({
@@ -37,6 +46,18 @@ export const newExpedition = (
 ): NewExpeditionEvent => ({
   ...distances,
   type: NEW_EXPEDITION
+})
+
+export const PLAY_CONSEQUENCE_CARDS = 'PLAY_CONSEQUENCE_CARDS'
+export interface PlayConsequenceCardsEvent {
+  type: typeof PLAY_CONSEQUENCE_CARDS
+  consequenceCardIds: string[]
+}
+export const playConsequenceCards = (
+  consequenceCardIds: string[]
+): PlayConsequenceCardsEvent => ({
+  type: PLAY_CONSEQUENCE_CARDS,
+  consequenceCardIds
 })
 
 export const DRAW_ENCOUNTER_CARD = 'DRAW_ENCOUNTER_CARD'
@@ -127,11 +148,13 @@ export type GameErrorEvent =
   | NotEnoughConsumablesErrorEvent
 
 export type GameEvent =
-  | AddSubstractInventoryItems
-  | NewExpeditionEvent
-  | DrawEncounterCardEvent
+  | AddDrifterCards // TODO IMMEDIATELY: postfix type name with "Event" !
+  | AddSubstractInventoryItems // TODO IMMEDIATELY: postfix type name with "Event" !
   | AdvanceExpeditionProgressEvent
-  | EndExpeditionEvent
+  | DrawEncounterCardEvent
   | EncounterResultEvent
+  | EndExpeditionEvent
+  | NewExpeditionEvent
+  | PlayConsequenceCardsEvent
 
-export type GameMoveOutcome = GameEvent[] | GameErrorEvent
+export type GameEventsOrError = GameEvent[] | GameErrorEvent

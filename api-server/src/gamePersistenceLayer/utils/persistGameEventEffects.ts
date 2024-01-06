@@ -17,6 +17,14 @@ export default async function persistGameEventEffects(
   e: GameEvent
 ): Promise<StoreError[]> {
   switch (e.type) {
+    case gameEvents.ADD_DRIFTER_CARDS: {
+      console.warn(
+        'persistGameEventEffects: ADD_DRIFTER_CARDS is NOT IMPLEMENTED'
+      )
+      // NOT IMPLEMENTED
+      return []
+    }
+
     case gameEvents.ADD_SUBTRACT_INVENTORY_ITEMS: {
       const { itemPatch } = e
       const out = await store.addSubtractInventoryItems(itemPatch)
@@ -52,6 +60,14 @@ export default async function persistGameEventEffects(
       const out1 = await store.clearActiveEncounterCard()
       const out2 = await store.setGameMode(BETWEEN_ENCOUNTERS)
       return filterOutput(out1, out2)
+    }
+
+    case gameEvents.PLAY_CONSEQUENCE_CARDS: {
+      console.warn(
+        'persistGameEventEffects: PLAY_CONSEQUENCE_CARDS is NOT IMPLEMENTED'
+      )
+      // NOT IMPLEMENTED
+      return []
     }
 
     default:
