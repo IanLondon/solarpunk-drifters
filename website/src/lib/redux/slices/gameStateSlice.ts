@@ -45,9 +45,14 @@ export const gameStateSlice = createSlice({
     selectActiveEncounterCardId: (state): string | null =>
       state?.gameMode === ACTIVE_ENCOUNTER ? state.activeEncounterCardId : null,
     selectCharacterStats: (state) => state?.characterStats ?? null,
+    selectDrifterCardInventory: (
+      state
+    ): Readonly<Record<string, number>> | null =>
+      state?.drifterCardInventory ?? null,
     selectGameMode: (state): GameState['gameMode'] | null =>
       state?.gameMode ?? null,
-    selectInventory: (state) => state?.inventory ?? null,
+    selectInventory: (state): Readonly<Record<string, number>> | null =>
+      state?.inventory ?? null,
     selectResources: (state) => state?.resources ?? null,
     selectExpeditionProgress: (state): ExpeditionProgress | null =>
       state?.gameMode === ACTIVE_ENCOUNTER ||
@@ -60,6 +65,7 @@ export const gameStateSlice = createSlice({
 export const {
   selectActiveEncounterCardId,
   selectCharacterStats,
+  selectDrifterCardInventory,
   selectGameMode,
   selectInventory,
   selectResources,

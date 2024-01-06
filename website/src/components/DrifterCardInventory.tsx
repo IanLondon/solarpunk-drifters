@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { ConnectedMiniDrifterCard } from './MiniDrifterCard'
-import { DEMO_MAKE_PROGRESS_DRIFTER_CARD } from '@solarpunk-drifters/common'
+import { selectDrifterCardInventory, useSelector } from '../lib/redux'
 
 /** Shows all the Drifter Cards in your hand */
 export function DrifterCardInventory(props: {
@@ -14,12 +14,19 @@ export function DrifterCardInventory(props: {
 }
 
 export function ConnectedDrifterCardInventory(): React.ReactNode {
-  // TODO: not implemented, we should be able to select this from gameState
-  const drifterCardInventory = [DEMO_MAKE_PROGRESS_DRIFTER_CARD.id]
+  const drifterCardInventory = useSelector(selectDrifterCardInventory)
+  const drifterCardArray = useMemo((): readonly string[] => {
+    if (drifterCardInventory === null) {
+      return []
+    }
+    return Object.entries(drifterCardInventory).flatMap(([id, quantity]) => {
+      return Array(quantity).fill(id)
+    })
+  }, [drifterCardInventory])
   return (
     <DrifterCardInventory>
       {/* NOTE: need to key by index bc multiples of the same card can exist */}
-      {drifterCardInventory.map((drifterCardId, index) => (
+      {drifterCardArray.map((drifterCardId, index) => (
         <ConnectedMiniDrifterCard key={index} drifterCardId={drifterCardId} />
       ))}
     </DrifterCardInventory>
