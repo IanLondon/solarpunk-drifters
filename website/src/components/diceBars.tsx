@@ -21,8 +21,8 @@ export function DiceRollResultBar(props: {
   const { rolls, disadvantage } = props.rollResult.skillCheckRoll
   return (
     <DiceBar>
-      {rolls.map((i) => (
-        <DieD6 key={i} n={i} />
+      {rolls.map((i, index) => (
+        <DieD6 key={index} n={i} />
       ))}
       {/* TODO presentation is not implemented, need design */}
       {disadvantage ? <div>WITH DISADVANTAGE</div> : false}
