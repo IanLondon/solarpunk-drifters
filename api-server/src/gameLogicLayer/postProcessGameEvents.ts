@@ -6,8 +6,8 @@ import {
 } from '@solarpunk-drifters/common'
 import { EXPEDITION_PROGRESS_AFTER_ENCOUNTER } from './constants'
 import {
+  GameEventTypes,
   type AddDrifterCards,
-  ENCOUNTER_RESULT,
   type PlayConsequenceCardsEvent,
   type GameEvent
 } from './gameEvents'
@@ -64,7 +64,7 @@ export async function postProcessGameEvents(args: {
     // the game events that trigger them.
     result.push(gameEvent)
 
-    if (gameEvent.type === ENCOUNTER_RESULT) {
+    if (gameEvent.type === GameEventTypes.ENCOUNTER_RESULT) {
       const drifterAndConsequencesCards = await outcomeToCardGameEventsFn(
         gameEvent.encounterResult.outcome
       )
