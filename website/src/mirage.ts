@@ -7,9 +7,9 @@ import {
   ENCOUNTER_OUTCOME_MIXED_SUCCESS,
   DEMO_MAKE_PROGRESS_DRIFTER_CARD,
   BETWEEN_ENCOUNTERS,
-  clientEventCreators
+  clientEventCreators,
+  type GameState
 } from '@solarpunk-drifters/common'
-import { type ServerGameState } from './types/gameState'
 import {
   BEGIN_EXPEDITION,
   NEXT_ENCOUNTER,
@@ -18,12 +18,15 @@ import {
   PLAY_DRIFTER_CARD
 } from './lib/redux'
 
-const loadoutGameState: ServerGameState = {
+const loadoutGameState: GameState = {
   characterStats: {
     agility: 0,
     harmony: 1,
     diy: -1,
     luck: 0
+  },
+  drifterCardInventory: {
+    [DEMO_MAKE_PROGRESS_DRIFTER_CARD.id]: 2
   },
   inventory: {
     rations: 3

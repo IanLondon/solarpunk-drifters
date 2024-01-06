@@ -1,8 +1,11 @@
 import { createAction, type Dispatch } from '@reduxjs/toolkit'
 import { EXPEDITIONS_URL, GAME_STATE_URL } from '@/app/serverRoutes'
 import { encounterUpdate, setGameState } from '.'
-import type { PendingEncounterResult, ServerGameState } from '@/types'
-import { type ExpeditionUpdate } from '@solarpunk-drifters/common'
+import type { PendingEncounterResult } from '@/types'
+import {
+  type GameState,
+  type ExpeditionUpdate
+} from '@solarpunk-drifters/common'
 
 export function fetchInitialGameState() {
   return async function fetchInitialGameStateThunk(dispatch: Dispatch) {
@@ -12,7 +15,7 @@ export function fetchInitialGameState() {
       })
       const text = await response.text()
       // TODO: validate input with JSON Schema
-      const json: ServerGameState | null = text === '' ? null : JSON.parse(text)
+      const json: GameState | null = text === '' ? null : JSON.parse(text)
       if (response.status !== 200) {
         console.error(
           `Server did not give 200 response, got ${response.status}`

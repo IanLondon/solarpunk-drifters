@@ -253,6 +253,9 @@ export interface components {
     };
     CoreGameState: {
       characterStats?: components["schemas"]["CharacterStats"];
+      drifterCardInventory?: {
+        [key: string]: number;
+      };
       inventory?: {
         [key: string]: number;
       };

@@ -17,6 +17,7 @@ export type InMemoryDb = Record<string, InMemoryGameStoreForUser>
 // to exclude invalid states.
 export interface InMemoryGameStoreForUser {
   characterStats: CharacterStats
+  drifterCardInventory: Record<string, number>
   gameMode: GameMode
   inventory: Record<string, number>
   resources: Record<string, never> // NOT IMPLEMENTED
@@ -32,6 +33,7 @@ export function createInitialStoreState(): InMemoryGameStoreForUser {
       diy: -1,
       luck: 0
     },
+    drifterCardInventory: {},
     gameMode: 'LOADOUT',
     inventory: { rations: 10 },
     resources: {},
@@ -48,6 +50,7 @@ export function rawStoreStateToGameState(
 ): DeepReadonly<GameState> {
   const {
     characterStats,
+    drifterCardInventory,
     gameMode,
     inventory,
     resources,
@@ -67,6 +70,7 @@ export function rawStoreStateToGameState(
       return {
         gameMode,
         characterStats,
+        drifterCardInventory,
         inventory,
         resources,
         activeEncounterCardId,
@@ -82,6 +86,7 @@ export function rawStoreStateToGameState(
       return {
         gameMode,
         characterStats,
+        drifterCardInventory,
         inventory,
         resources,
         expeditionProgress
@@ -91,6 +96,7 @@ export function rawStoreStateToGameState(
     return {
       gameMode,
       characterStats,
+      drifterCardInventory,
       inventory,
       resources
     }

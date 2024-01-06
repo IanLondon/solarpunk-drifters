@@ -299,6 +299,10 @@ components:
       properties:
         characterStats:
           $ref: '#/components/schemas/CharacterStats'
+        drifterCardInventory:
+          type: object
+          additionalProperties:
+            type: integer
         inventory:
           type: object
           additionalProperties:

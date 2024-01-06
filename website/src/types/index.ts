@@ -1,8 +1,6 @@
 import type { MarkRequired } from 'ts-essentials'
 import type { EncounterResult } from '@solarpunk-drifters/common'
 
-export * from './gameState'
-
 /** Represents a pending EncounterResult
  * (we made a player move and are waiting for the server to give us the result) */
 export interface PendingEncounterResult {

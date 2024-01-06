@@ -1,18 +1,16 @@
 import { createAction, createSlice } from '@reduxjs/toolkit'
-import { type ServerGameState } from '@/types/gameState'
 import {
   ACTIVE_ENCOUNTER,
   BETWEEN_ENCOUNTERS,
+  type GameState,
   type ExpeditionProgress,
   type ExpeditionUpdate
 } from '@solarpunk-drifters/common'
 import { applyPatch } from 'rfc6902'
 
-type GameState = ServerGameState | null
+const initialState = null as GameState | null
 
-const initialState = null as GameState
-
-export const setGameState = createAction<ServerGameState, 'SET_GAME_STATE'>(
+export const setGameState = createAction<GameState, 'SET_GAME_STATE'>(
   'SET_GAME_STATE'
 )
 
@@ -47,7 +45,7 @@ export const gameStateSlice = createSlice({
     selectActiveEncounterCardId: (state): string | null =>
       state?.gameMode === ACTIVE_ENCOUNTER ? state.activeEncounterCardId : null,
     selectCharacterStats: (state) => state?.characterStats ?? null,
-    selectGameMode: (state): ServerGameState['gameMode'] | null =>
+    selectGameMode: (state): GameState['gameMode'] | null =>
       state?.gameMode ?? null,
     selectInventory: (state) => state?.inventory ?? null,
     selectResources: (state) => state?.resources ?? null,
