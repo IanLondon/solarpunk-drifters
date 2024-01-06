@@ -1,4 +1,4 @@
-import type { EncounterCard } from '..'
+import type { EncounterCard } from '../openapiTypes'
 
 export const DEMO_BUFFALO_ENCOUNTER_CARD: EncounterCard = {
   id: 'buffalo-demo-123456',

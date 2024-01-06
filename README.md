@@ -44,3 +44,17 @@ The `local-dev-reverse-proxy` has a Dockerfile for the Nginx reverse proxy (and 
 Webpack HMR uses a websocket at `ws://localhost:8081`, Nginx passes it through.
 
 Storybook runs by default on `localhost:6006`. It doesn't need to be proxied.
+
+## "In the Weeds" Coding Convention Notes
+
+### Nominal Typing with `_brand` convention
+
+TypeScript is structurally typed, so with `interface A {type: string}` and `interface B {type: string}`, these `A` and `B` are just different names for the same structure. For things like `ClientEvent` and `GameEvent` types, structural typing doesn't allow us to reliably and explicitly discriminate between these types.
+
+Languages with nominal typing would take `A` and `B` as different types, because though they're structurally the same, they have different names. How can we get TypeScript to give us compile-time errors when we put `A` somewhere meant exclusively for `B`?
+
+One approach is to use Symbols instead of strings for the discriminant property's value, but `ClientEvent` in particular is meant to be serialized and sent to the client.
+
+Instead, we take the "brand" approach. In `common/`, `ClientEvent` is given `_clientEventBrand: any`. This is following a (somewhat obscure) TypeScript convention [used by the TS team](https://github.com/Microsoft/TypeScript/blob/7b48a182c05ea4dea81bab73ecbbe9e013a79e99/src/compiler/types.ts#L693-L698). The brands are never given values, it's just a TS trick to get nominal.
+
+(This does require disabling `@typescript-eslint/consistent-type-assertions` in the functions that create these "branded" objects, bc they rely on `return {...blah} as SomeEventType`.)

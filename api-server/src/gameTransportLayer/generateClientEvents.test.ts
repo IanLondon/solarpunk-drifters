@@ -2,10 +2,10 @@ import { describe, expect, it } from '@jest/globals'
 import { generateClientEvents } from '.'
 import * as gameEvents from '../gameLogicLayer/gameEvents'
 import {
-  CLIENT_EVENT_ENCOUNTER_RESULT,
   type ClientEvent,
   ENCOUNTER_OUTCOME_MIXED_SUCCESS,
-  type EncounterResult
+  type EncounterResult,
+  clientEventCreators
 } from '@solarpunk-drifters/common'
 
 describe('generateClientEvents', () => {
@@ -27,7 +27,7 @@ describe('generateClientEvents', () => {
     }
     const input = [gameEvents.encounterResult(someEncounterResult)]
     const expectedClientEvents: ClientEvent[] = [
-      { type: CLIENT_EVENT_ENCOUNTER_RESULT, payload: someEncounterResult }
+      clientEventCreators.encounterResult(someEncounterResult)
     ]
 
     const output = generateClientEvents(input)

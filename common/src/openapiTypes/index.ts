@@ -1,6 +1,9 @@
-import type { components, paths } from './openapi-api'
+import type { ClientEvent } from '.'
+import type { components, paths } from '../openapi-api'
 
-export { paths }
+export type { paths }
+
+export * from '../clientEvents'
 
 // Turn messy auto-generated types into nicer named types
 export type ActiveEncounterGameState =
@@ -10,13 +13,6 @@ export type BetweenEncountersGameState =
   components['schemas']['BetweenEncountersGameState']
 
 export type CharacterStats = components['schemas']['CharacterStats']
-
-export type ClientEvent = components['schemas']['ClientEvent']
-
-export type ClientEventEncounterResult =
-  components['schemas']['ClientEventEncounterResult']
-export const CLIENT_EVENT_ENCOUNTER_RESULT: ClientEventEncounterResult['type'] =
-  'CLIENT_EVENT_ENCOUNTER_RESULT'
 
 export type CoreGameState = components['schemas']['CoreGameState']
 
@@ -32,7 +28,10 @@ export type EncounterRisk = components['schemas']['EncounterRisk']
 
 export type ExpeditionProgress = components['schemas']['ExpeditionProgress']
 
-export type ExpeditionUpdate = components['schemas']['ExpeditionUpdate']
+export type ExpeditionUpdate = Omit<
+  components['schemas']['ExpeditionUpdate'],
+  'clientEvents'
+> & { clientEvents?: ClientEvent[] }
 
 export type GameState = Required<components['schemas']['GameState']>
 

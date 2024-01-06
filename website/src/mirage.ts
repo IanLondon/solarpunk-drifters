@@ -1,13 +1,13 @@
 import { type Server, createServer, Response } from 'miragejs'
 import {
   ACTIVE_ENCOUNTER,
-  CLIENT_EVENT_ENCOUNTER_RESULT,
   DEMO_BUFFALO_ENCOUNTER_CARD,
   type ExpeditionUpdate,
   LOADOUT,
   ENCOUNTER_OUTCOME_MIXED_SUCCESS,
   DEMO_MAKE_PROGRESS_DRIFTER_CARD,
-  BETWEEN_ENCOUNTERS
+  BETWEEN_ENCOUNTERS,
+  clientEventCreators
 } from '@solarpunk-drifters/common'
 import { type ServerGameState } from './types/gameState'
 import {
@@ -130,13 +130,10 @@ export function makeMirageServer({ environment = 'test' }): Server {
             }
           ]
           clientEvents = [
-            {
-              type: CLIENT_EVENT_ENCOUNTER_RESULT,
-              payload: {
-                skillCheckRoll: { rolls: [2, 3, 4], disadvantage: false },
-                outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS
-              }
-            }
+            clientEventCreators.encounterResult({
+              skillCheckRoll: { rolls: [2, 3, 4], disadvantage: false },
+              outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS
+            })
           ]
         } else if (action === PLAY_DRIFTER_CARD) {
           console.log('Got a play card choice:', request.requestBody)

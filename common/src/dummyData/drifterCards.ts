@@ -1,4 +1,4 @@
-import type { DrifterCard } from '..'
+import type { DrifterCard } from '../openapiTypes'
 
 export const DEMO_MAKE_PROGRESS_DRIFTER_CARD: DrifterCard = {
   id: 'make-progress-123',

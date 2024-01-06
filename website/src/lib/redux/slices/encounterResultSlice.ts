@@ -1,8 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { encounterUpdate } from '.'
 import {
-  filterClientEventEncounterResult,
-  type EncounterResult
+  type EncounterResult,
+  clientEventFilters
 } from '@solarpunk-drifters/common'
 import type { PendingEncounterResult } from '@/types'
 import { ENCOUNTER_CARD_CHOICE, expeditionPlayerMoveSentAction } from '..'
@@ -35,7 +35,7 @@ export const encounterResultSlice = createSlice({
       })
       .addCase(encounterUpdate, (state, action) => {
         if (action.payload.clientEvents !== undefined) {
-          const rollResultEvents = filterClientEventEncounterResult(
+          const rollResultEvents = clientEventFilters.encounterResult(
             action.payload.clientEvents
           )
           if (rollResultEvents.length === 0) {
