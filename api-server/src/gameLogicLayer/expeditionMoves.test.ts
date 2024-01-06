@@ -1,5 +1,9 @@
 import { describe, expect, it } from '@jest/globals'
-import * as gameEvents from './gameEvents'
+import {
+  TURNED_BACK,
+  gameEventCreators,
+  gameEventErrorCreators
+} from './gameEvents'
 import {
   beginExpedition,
   encounterCardChoice,
@@ -37,8 +41,8 @@ describe('expedition moves', () => {
       const output = await beginExpedition(LOADOUT, encounterCardDeckMocker)
 
       expect(output).toEqual([
-        gameEvents.drawEncounterCard(MOCK_ENCOUNTER_CARD_ID),
-        gameEvents.newExpedition({
+        gameEventCreators.drawEncounterCard(MOCK_ENCOUNTER_CARD_ID),
+        gameEventCreators.newExpedition({
           current: INITIAL_EXPEDITION_PROGRESS,
           total: EXPEDITION_DISTANCE
         })
@@ -48,7 +52,7 @@ describe('expedition moves', () => {
     NOT_LOADOUT.forEach((gameMode) => {
       it(`should give an error when in any mode but loadout (${gameMode})`, async () => {
         const output = await beginExpedition(gameMode, encounterCardDeckMocker)
-        expect(output).toEqual(gameEvents.moveNotAllowedError())
+        expect(output).toEqual(gameEventErrorCreators.moveNotAllowedError())
       })
     })
   })
@@ -61,7 +65,7 @@ describe('expedition moves', () => {
       )
 
       expect(output).toEqual([
-        gameEvents.drawEncounterCard(MOCK_ENCOUNTER_CARD_ID)
+        gameEventCreators.drawEncounterCard(MOCK_ENCOUNTER_CARD_ID)
       ])
     })
 
@@ -69,7 +73,7 @@ describe('expedition moves', () => {
       it(`should give an error when in any mode but "between encounters" (${gameMode})`, async () => {
         const output = await nextEncounter(gameMode, encounterCardDeckMocker)
 
-        expect(output).toEqual(gameEvents.moveNotAllowedError())
+        expect(output).toEqual(gameEventErrorCreators.moveNotAllowedError())
       })
     })
   })
@@ -79,13 +83,13 @@ describe('turn back', () => {
   it('should end the expedition', async () => {
     const output = await turnBack(BETWEEN_ENCOUNTERS)
 
-    expect(output).toEqual([gameEvents.endExpedition(gameEvents.TURNED_BACK)])
+    expect(output).toEqual([gameEventCreators.endExpedition(TURNED_BACK)])
   })
 
   NOT_BETWEEN_ENCOUNTERS.forEach((gameMode) => {
     it(`should give an error when in any mode but "between encounters" (${gameMode})`, async () => {
       const output = await turnBack(gameMode)
-      expect(output).toEqual(gameEvents.moveNotAllowedError())
+      expect(output).toEqual(gameEventErrorCreators.moveNotAllowedError())
     })
   })
 })
@@ -119,7 +123,7 @@ describe('encounter card choice', () => {
     })
 
     expect(output).toEqual([
-      gameEvents.encounterResult({
+      gameEventCreators.encounterResult({
         skillCheckRoll: { rolls, disadvantage: false },
         outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS
       })
@@ -158,10 +162,12 @@ describe('encounter card choice', () => {
     })
 
     expect(output).toEqual([
-      gameEvents.addSubtractInventoryItems(
+      gameEventCreators.addSubtractInventoryItems(
         toInventoryPatch({ rations: -2, testItem: -42 })
       ),
-      gameEvents.encounterResult({ outcome: ENCOUNTER_OUTCOME_STRONG_SUCCESS })
+      gameEventCreators.encounterResult({
+        outcome: ENCOUNTER_OUTCOME_STRONG_SUCCESS
+      })
     ])
   })
 
@@ -197,7 +203,7 @@ describe('encounter card choice', () => {
     })
 
     expect(output).toEqual(
-      gameEvents.notEnoughConsumablesError({
+      gameEventErrorCreators.notEnoughConsumablesError({
         items: ['rations'],
         resources: []
       })
@@ -213,7 +219,7 @@ describe('encounter card choice', () => {
       inventory: {}
     })
 
-    expect(output).toEqual(gameEvents.moveNotAllowedError())
+    expect(output).toEqual(gameEventErrorCreators.moveNotAllowedError())
   })
 })
 

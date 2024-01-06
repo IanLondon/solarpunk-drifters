@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals'
 import { generateClientEvents } from '.'
-import * as gameEvents from '../gameLogicLayer/gameEvents'
+import { gameEventCreators } from '../gameLogicLayer/gameEvents'
 import {
   type ClientEvent,
   ENCOUNTER_OUTCOME_MIXED_SUCCESS,
@@ -12,9 +12,9 @@ import { toInventoryPatch } from '../utils/getInvalidItems'
 describe('generateClientEvents', () => {
   it('should not generate anything given irrelevant GameEvents', () => {
     const input = [
-      gameEvents.addSubtractInventoryItems(toInventoryPatch({})),
-      gameEvents.drawEncounterCard('some-id'),
-      gameEvents.advanceExpeditionProgress(42)
+      gameEventCreators.addSubtractInventoryItems(toInventoryPatch({})),
+      gameEventCreators.drawEncounterCard('some-id'),
+      gameEventCreators.advanceExpeditionProgress(42)
     ]
 
     const output = generateClientEvents(input)
@@ -26,7 +26,7 @@ describe('generateClientEvents', () => {
     const someEncounterResult: EncounterResult = {
       outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS
     }
-    const input = [gameEvents.encounterResult(someEncounterResult)]
+    const input = [gameEventCreators.encounterResult(someEncounterResult)]
     const expectedClientEvents: ClientEvent[] = [
       clientEventCreators.encounterResult(someEncounterResult)
     ]

@@ -5,12 +5,17 @@ import {
   type EncounterOutcome
 } from '@solarpunk-drifters/common'
 import { EXPEDITION_PROGRESS_AFTER_ENCOUNTER } from './constants'
-import { type GameEvent } from './gameEvents'
-import * as gameEvents from './gameEvents'
+import {
+  type AddDrifterCards,
+  ENCOUNTER_RESULT,
+  type PlayConsequenceCardsEvent,
+  type GameEvent
+} from './gameEvents'
+import { gameEventCreators } from './gameEvents'
 import { type ConsequenceCardDeckFn, type DrifterCardDeckFn } from './types'
 
 export type DrifterAndConsequenceCardGameEvents = Array<
-  gameEvents.AddDrifterCards | gameEvents.PlayConsequenceCardsEvent
+  AddDrifterCards | PlayConsequenceCardsEvent
 >
 
 export const getDrifterAndConsequenceCards = async (args: {
@@ -24,20 +29,20 @@ export const getDrifterAndConsequenceCards = async (args: {
       drifterCardDeck(),
       drifterCardDeck()
     ])
-    return [gameEvents.addDrifterCards(drifterCards)]
+    return [gameEventCreators.addDrifterCards(drifterCards)]
   } else if (outcome === ENCOUNTER_OUTCOME_MIXED_SUCCESS) {
     const consequenceCard = await consequenceCardDeck()
     const drifterCard = await drifterCardDeck()
     return [
-      gameEvents.playConsequenceCards([consequenceCard]),
-      gameEvents.addDrifterCards([drifterCard])
+      gameEventCreators.playConsequenceCards([consequenceCard]),
+      gameEventCreators.addDrifterCards([drifterCard])
     ]
   } else if (outcome === ENCOUNTER_OUTCOME_FAILURE) {
     const consequenceCards = await Promise.all([
       consequenceCardDeck(),
       consequenceCardDeck()
     ])
-    return [gameEvents.playConsequenceCards(consequenceCards)]
+    return [gameEventCreators.playConsequenceCards(consequenceCards)]
   }
   console.error(
     `getDrifterAndConsequenceCards got unexpected outcome ${outcome}`
@@ -59,13 +64,13 @@ export async function postProcessGameEvents(args: {
     // the game events that trigger them.
     result.push(gameEvent)
 
-    if (gameEvent.type === gameEvents.ENCOUNTER_RESULT) {
+    if (gameEvent.type === ENCOUNTER_RESULT) {
       const drifterAndConsequencesCards = await outcomeToCardGameEventsFn(
         gameEvent.encounterResult.outcome
       )
 
       result.push(
-        gameEvents.advanceExpeditionProgress(
+        gameEventCreators.advanceExpeditionProgress(
           EXPEDITION_PROGRESS_AFTER_ENCOUNTER
         )
       )

@@ -2,7 +2,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { describe, expect, it, jest } from '@jest/globals'
 import persistGameEventEffects from './persistGameEventEffects'
-import * as gameEvents from '../../gameLogicLayer/gameEvents'
+import {
+  OUT_OF_RATIONS,
+  REACHED_DESTINATION,
+  TURNED_BACK,
+  gameEventCreators
+} from '../../gameLogicLayer/gameEvents'
 import {
   ACTIVE_ENCOUNTER,
   BETWEEN_ENCOUNTERS,
@@ -24,7 +29,7 @@ describe('persistGameEventEffects', () => {
     it('should add item to inventory', async () => {
       const store = { addSubtractInventoryItems: jest.fn(() => null) }
       const itemPatch = toInventoryPatch({ rations: 3, testItem: -5 })
-      const e = gameEvents.addSubtractInventoryItems(itemPatch)
+      const e = gameEventCreators.addSubtractInventoryItems(itemPatch)
 
       const out = await persistGameEventEffects(store as any, e)
 
@@ -43,7 +48,7 @@ describe('persistGameEventEffects', () => {
         addSubtractInventoryItems: jest.fn(() => testStoreError)
       }
       const itemPatch = toInventoryPatch({ rations: 3 })
-      const e = gameEvents.addSubtractInventoryItems(itemPatch)
+      const e = gameEventCreators.addSubtractInventoryItems(itemPatch)
 
       const out = await persistGameEventEffects(store as any, e)
 
@@ -61,7 +66,7 @@ describe('persistGameEventEffects', () => {
         total: 1234
       }
 
-      const e = gameEvents.newExpedition(expeditionDistances)
+      const e = gameEventCreators.newExpedition(expeditionDistances)
       const out = await persistGameEventEffects(store as any, e)
 
       expect(store.createExpeditionState.mock.calls).toEqual([
@@ -78,7 +83,7 @@ describe('persistGameEventEffects', () => {
         setGameMode: jest.fn(() => null)
       }
       const cardId = '123-fake-card-id'
-      const e = gameEvents.drawEncounterCard(cardId)
+      const e = gameEventCreators.drawEncounterCard(cardId)
       const out = await persistGameEventEffects(store as any, e)
 
       expect(store.setActiveEncounterCard.mock.calls).toEqual([[cardId]])
@@ -93,7 +98,7 @@ describe('persistGameEventEffects', () => {
         incrementExpeditionProgress: jest.fn(() => null)
       }
       const increment = 5
-      const e = gameEvents.advanceExpeditionProgress(increment)
+      const e = gameEventCreators.advanceExpeditionProgress(increment)
       const out = await persistGameEventEffects(store as any, e)
 
       expect(store.incrementExpeditionProgress.mock.calls).toEqual([
@@ -104,11 +109,7 @@ describe('persistGameEventEffects', () => {
   })
 
   describe('EndExpeditionEvent', () => {
-    const outcomes = [
-      gameEvents.REACHED_DESTINATION,
-      gameEvents.OUT_OF_RATIONS,
-      gameEvents.TURNED_BACK
-    ] as const
+    const outcomes = [REACHED_DESTINATION, OUT_OF_RATIONS, TURNED_BACK] as const
     outcomes.forEach((outcome) => {
       describe(`Outcome: ${outcome}`, () => {
         it('should clear the expedition state and set the game mode to LOADOUT', async () => {
@@ -116,7 +117,7 @@ describe('persistGameEventEffects', () => {
             setGameMode: jest.fn(() => null),
             clearExpeditionState: jest.fn(() => null)
           }
-          const e = gameEvents.endExpedition(outcome)
+          const e = gameEventCreators.endExpedition(outcome)
 
           const out = await persistGameEventEffects(store as any, e)
 
@@ -134,7 +135,7 @@ describe('persistGameEventEffects', () => {
         setGameMode: jest.fn(() => null),
         clearActiveEncounterCard: jest.fn(() => null)
       }
-      const e = gameEvents.encounterResult({
+      const e = gameEventCreators.encounterResult({
         outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS
       })
 

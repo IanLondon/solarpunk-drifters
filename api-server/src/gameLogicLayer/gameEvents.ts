@@ -1,4 +1,3 @@
-// TODO: rename this file gameEvents.ts and import like: `* as gameEvents` (find all)
 import {
   type EncounterResult,
   type ExpeditionProgress
@@ -21,7 +20,7 @@ export interface AddDrifterCards {
   type: typeof ADD_DRIFTER_CARDS
   drifterCardIds: string[]
 }
-export const addDrifterCards = (drifterCardIds: string[]): AddDrifterCards => ({
+const addDrifterCards = (drifterCardIds: string[]): AddDrifterCards => ({
   type: ADD_DRIFTER_CARDS,
   drifterCardIds
 })
@@ -31,7 +30,7 @@ export interface AddSubstractInventoryItems {
   type: typeof ADD_SUBTRACT_INVENTORY_ITEMS
   itemPatch: InventoryPatch
 }
-export const addSubtractInventoryItems = (
+const addSubtractInventoryItems = (
   itemPatch: AddSubstractInventoryItems['itemPatch']
 ): AddSubstractInventoryItems => ({
   type: ADD_SUBTRACT_INVENTORY_ITEMS,
@@ -42,9 +41,7 @@ export const NEW_EXPEDITION = 'NEW_EXPEDITION'
 export interface NewExpeditionEvent extends ExpeditionProgress {
   type: typeof NEW_EXPEDITION
 }
-export const newExpedition = (
-  distances: ExpeditionProgress
-): NewExpeditionEvent => ({
+const newExpedition = (distances: ExpeditionProgress): NewExpeditionEvent => ({
   ...distances,
   type: NEW_EXPEDITION
 })
@@ -54,7 +51,7 @@ export interface PlayConsequenceCardsEvent {
   type: typeof PLAY_CONSEQUENCE_CARDS
   consequenceCardIds: string[]
 }
-export const playConsequenceCards = (
+const playConsequenceCards = (
   consequenceCardIds: string[]
 ): PlayConsequenceCardsEvent => ({
   type: PLAY_CONSEQUENCE_CARDS,
@@ -66,7 +63,7 @@ export interface DrawEncounterCardEvent {
   type: typeof DRAW_ENCOUNTER_CARD
   cardId: string
 }
-export const drawEncounterCard = (cardId: string): DrawEncounterCardEvent => ({
+const drawEncounterCard = (cardId: string): DrawEncounterCardEvent => ({
   type: DRAW_ENCOUNTER_CARD,
   cardId
 })
@@ -79,7 +76,7 @@ export interface AdvanceExpeditionProgressEvent {
 /**
  * Add the given increment to the current expedition progress
  */
-export const advanceExpeditionProgress = (
+const advanceExpeditionProgress = (
   increment: number
 ): AdvanceExpeditionProgressEvent => ({
   type: ADVANCE_EXPEDITION_PROGRESS,
@@ -91,9 +88,7 @@ export interface EndExpeditionEvent {
   type: typeof END_EXPEDITION
   outcome: ExpeditionOutcome
 }
-export const endExpedition = (
-  outcome: ExpeditionOutcome
-): EndExpeditionEvent => ({
+const endExpedition = (outcome: ExpeditionOutcome): EndExpeditionEvent => ({
   type: END_EXPEDITION,
   outcome
 })
@@ -104,7 +99,7 @@ export interface EncounterResultEvent {
   encounterResult: EncounterResult
 }
 
-export const encounterResult = (
+const encounterResult = (
   encounterResult: EncounterResult
 ): EncounterResultEvent => ({
   type: ENCOUNTER_RESULT,
@@ -122,7 +117,7 @@ export const MOVE_NOT_ALLOWED = 'MOVE_NOT_ALLOWED'
 export interface MoveNotAllowedErrorEvent extends ErrorEvent {
   type: typeof MOVE_NOT_ALLOWED
 }
-export const moveNotAllowedError = (): MoveNotAllowedErrorEvent => ({
+const moveNotAllowedError = (): MoveNotAllowedErrorEvent => ({
   error: true,
   type: MOVE_NOT_ALLOWED
 })
@@ -133,7 +128,7 @@ export interface NotEnoughConsumablesErrorEvent extends ErrorEvent {
   items: string[]
   resources: string[]
 }
-export const notEnoughConsumablesError = (args: {
+const notEnoughConsumablesError = (args: {
   items: string[]
   resources: []
 }): NotEnoughConsumablesErrorEvent => ({
@@ -159,3 +154,21 @@ export type GameEvent =
   | PlayConsequenceCardsEvent
 
 export type GameEventsOrError = GameEvent[] | GameErrorEvent
+
+// CREATORS EXPORTS
+
+export const gameEventCreators = {
+  addDrifterCards,
+  addSubtractInventoryItems,
+  newExpedition,
+  playConsequenceCards,
+  drawEncounterCard,
+  advanceExpeditionProgress,
+  endExpedition,
+  encounterResult
+}
+
+export const gameEventErrorCreators = {
+  moveNotAllowedError,
+  notEnoughConsumablesError
+}

@@ -4,7 +4,7 @@ import {
   getDrifterAndConsequenceCards,
   postProcessGameEvents
 } from './postProcessGameEvents'
-import * as gameEvents from './gameEvents'
+import { gameEventCreators } from './gameEvents'
 import { EXPEDITION_PROGRESS_AFTER_ENCOUNTER } from './constants'
 import {
   ENCOUNTER_OUTCOME_FAILURE,
@@ -47,15 +47,17 @@ describe('postProcessGameEvents', () => {
       const someEncounterResult: EncounterResult = {
         outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS
       }
-      const preGameEvents = [gameEvents.encounterResult(someEncounterResult)]
+      const preGameEvents = [
+        gameEventCreators.encounterResult(someEncounterResult)
+      ]
       const output = await postProcessGameEvents({
         preGameEvents,
         outcomeToCardGameEventsFn: consequencesMock
       })
 
       expect(output).toEqual([
-        gameEvents.encounterResult(someEncounterResult),
-        gameEvents.advanceExpeditionProgress(
+        gameEventCreators.encounterResult(someEncounterResult),
+        gameEventCreators.advanceExpeditionProgress(
           EXPEDITION_PROGRESS_AFTER_ENCOUNTER
         ),
         'fake-consequences-and-drifter-card-events'
@@ -88,7 +90,7 @@ describe('getDrifterAndConsequenceCards', () => {
     })
 
     expect(output).toEqual([
-      gameEvents.playConsequenceCards([
+      gameEventCreators.playConsequenceCards([
         'consequence-card-a',
         'consequence-card-b'
       ])
@@ -105,11 +107,13 @@ describe('getDrifterAndConsequenceCards', () => {
     })
 
     expect(output).toEqual(
-      expect.arrayContaining([gameEvents.addDrifterCards(['drifter-card-a'])])
+      expect.arrayContaining([
+        gameEventCreators.addDrifterCards(['drifter-card-a'])
+      ])
     )
     expect(output).toEqual(
       expect.arrayContaining([
-        gameEvents.playConsequenceCards(['consequence-card-a'])
+        gameEventCreators.playConsequenceCards(['consequence-card-a'])
       ])
     )
     expect(output).toHaveLength(2)
@@ -125,7 +129,7 @@ describe('getDrifterAndConsequenceCards', () => {
     })
 
     expect(output).toEqual([
-      gameEvents.addDrifterCards(['drifter-card-a', 'drifter-card-b'])
+      gameEventCreators.addDrifterCards(['drifter-card-a', 'drifter-card-b'])
     ])
   })
 })
