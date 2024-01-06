@@ -11,6 +11,7 @@ import {
   type ExpeditionProgress
 } from '@solarpunk-drifters/common'
 import { type StoreError } from '../types'
+import { toInventoryPatch } from '../../utils/getInvalidItems'
 
 // In these tests, we construct a fake store containing only the methods we
 // expect to be called.
@@ -22,7 +23,7 @@ describe('persistGameEventEffects', () => {
   describe('AddSubstractInventoryItems', () => {
     it('should add item to inventory', async () => {
       const store = { addSubtractInventoryItems: jest.fn(() => null) }
-      const itemPatch = { rations: 3, testItem: -5 }
+      const itemPatch = toInventoryPatch({ rations: 3, testItem: -5 })
       const e = gameEvents.addSubtractInventoryItems(itemPatch)
 
       const out = await persistGameEventEffects(store as any, e)
@@ -41,8 +42,8 @@ describe('persistGameEventEffects', () => {
       const store = {
         addSubtractInventoryItems: jest.fn(() => testStoreError)
       }
-      const items = { rations: 3 }
-      const e = gameEvents.addSubtractInventoryItems(items)
+      const itemPatch = toInventoryPatch({ rations: 3 })
+      const e = gameEvents.addSubtractInventoryItems(itemPatch)
 
       const out = await persistGameEventEffects(store as any, e)
 

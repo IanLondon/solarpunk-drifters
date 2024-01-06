@@ -3,8 +3,9 @@ import type {
   GameMode,
   GameState
 } from '@solarpunk-drifters/common'
-import { type DeepReadonly } from 'ts-essentials'
-import { type GameEvent } from '../gameLogicLayer/gameEvents'
+import type { DeepReadonly } from 'ts-essentials'
+import type { GameEvent } from '../gameLogicLayer/gameEvents'
+import type { InventoryPatch } from '../types'
 
 export interface StoreError {
   method: keyof GameStore
@@ -14,9 +15,7 @@ export type StoreOut = null | StoreError
 
 export interface GameStore {
   // Write methods
-  addSubtractInventoryItems: (
-    itemPatch: Readonly<Record<string, number>>
-  ) => Promise<StoreOut>
+  addSubtractInventoryItems: (itemPatch: InventoryPatch) => Promise<StoreOut>
   setGameMode: (gameMode: GameMode) => Promise<StoreOut>
   setActiveEncounterCard: (cardId: string) => Promise<StoreOut>
   clearActiveEncounterCard: () => Promise<StoreOut>

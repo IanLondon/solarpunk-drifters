@@ -17,7 +17,7 @@ import {
   skillCheckRollToEncounterOutcome,
   skillCheckRoller
 } from './encounterCardChecks'
-import { getInvalidItems } from '../utils/getInvalidItems'
+import { getInvalidItems, toInventoryPatch } from '../utils/getInvalidItems'
 import { mapValues } from 'lodash'
 
 export async function beginExpedition(
@@ -85,9 +85,13 @@ export async function encounterCardChoice(args: {
   }
 
   if (skill === undefined && items !== undefined) {
+    // NOTE: our `items` is all positive, and addSubtractInventoryItems takes
+    // a patch where negative values subtract from the inventory,
+    // so we invert them.
+    const removeItemsPatch = toInventoryPatch(mapValues(items, (n) => -1 * n))
     const invalidItems = getInvalidItems({
       inventory,
-      itemsToRemove: items
+      inventoryPatch: removeItemsPatch
     })
 
     if (invalidItems.length > 0) {
@@ -97,10 +101,7 @@ export async function encounterCardChoice(args: {
       })
     } else {
       return [
-        // NOTE: our `items` is all positive, and addSubtractInventoryItems takes
-        // a patch where negative values subtract from the inventory,
-        // so we invert them
-        gameEvents.addSubtractInventoryItems(mapValues(items, (n) => -1 * n)),
+        gameEvents.addSubtractInventoryItems(removeItemsPatch),
         gameEvents.encounterResult({
           outcome: ENCOUNTER_OUTCOME_STRONG_SUCCESS
         })

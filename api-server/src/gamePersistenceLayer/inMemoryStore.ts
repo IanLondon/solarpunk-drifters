@@ -10,7 +10,6 @@ import {
   type GameState
 } from '@solarpunk-drifters/common'
 import { getInvalidItems } from '../utils/getInvalidItems'
-import { mapValues, pickBy } from 'lodash'
 
 export type InMemoryDb = Record<string, InMemoryGameStoreForUser>
 
@@ -121,10 +120,7 @@ export function createInMemoryGameStoreForUser(
       // the itemPatch's negative values)
       const invalidItems = getInvalidItems({
         inventory: store.inventory,
-        itemsToRemove: mapValues(
-          pickBy(itemPatch, (quantity) => quantity < 0),
-          (n) => -1 * n
-        )
+        inventoryPatch: itemPatch
       })
 
       if (invalidItems.length > 0) {

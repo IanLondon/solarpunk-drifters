@@ -3,6 +3,7 @@ import {
   type EncounterResult,
   type ExpeditionProgress
 } from '@solarpunk-drifters/common'
+import type { InventoryPatch } from '../types'
 
 // TODO: factor out new types! This should become a ClientEvent in the OpenAPI def
 export const REACHED_DESTINATION = 'REACHED_DESTINATION'
@@ -28,7 +29,7 @@ export const addDrifterCards = (drifterCardIds: string[]): AddDrifterCards => ({
 export const ADD_SUBTRACT_INVENTORY_ITEMS = 'ADD_SUBTRACT_INVENTORY_ITEMS'
 export interface AddSubstractInventoryItems {
   type: typeof ADD_SUBTRACT_INVENTORY_ITEMS
-  itemPatch: Readonly<Record<string, number>>
+  itemPatch: InventoryPatch
 }
 export const addSubtractInventoryItems = (
   itemPatch: AddSubstractInventoryItems['itemPatch']

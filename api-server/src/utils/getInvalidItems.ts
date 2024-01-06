@@ -1,18 +1,21 @@
+import type { InventoryPatch } from '../types'
+
+export function toInventoryPatch(
+  inventoryPatch: Record<string, number>
+): InventoryPatch {
+  return inventoryPatch as InventoryPatch
+}
+
 /** Returns names of any items that have insufficent quanitities to be removed. */
 export function getInvalidItems(args: {
   inventory: Readonly<Record<string, number>>
-  itemsToRemove: Readonly<Record<string, number>>
+  inventoryPatch: InventoryPatch
 }): string[] {
-  const { inventory, itemsToRemove } = args
-  const invalidItems = Object.entries(itemsToRemove).flatMap(
-    ([item, quantity]) => {
-      if (quantity < 0) {
-        throw new Error(
-          'getInvalidItems did not expect negative requiredItems value'
-        )
-      }
-      const inventoryCount = inventory[item] ?? 0
-      return inventoryCount >= quantity ? [] : item
+  const { inventory, inventoryPatch } = args
+  const invalidItems = Object.entries(inventoryPatch).flatMap(
+    ([item, diff]) => {
+      const inventoryQuantity = inventory[item] ?? 0
+      return inventoryQuantity + diff >= 0 ? [] : item
     }
   )
 

@@ -11,6 +11,7 @@ import {
   LOADOUT
 } from '@solarpunk-drifters/common'
 import type { GameStore } from './types'
+import { toInventoryPatch } from '../utils/getInvalidItems'
 
 const uid = 'some-user-id-123' as const
 
@@ -57,7 +58,9 @@ describe('createInMemoryGameStoreForUser', () => {
           inventory: { fooItem: 3 }
         })
 
-        const output = await store.addSubtractInventoryItems({ fooItem: 2 })
+        const output = await store.addSubtractInventoryItems(
+          toInventoryPatch({ fooItem: 2 })
+        )
         const gameState = await store.getGameState()
 
         expect(gameState.inventory).toEqual({ fooItem: 3 + 2 })
@@ -67,7 +70,9 @@ describe('createInMemoryGameStoreForUser', () => {
       it("should create a new entry for an item that didn't exist", async () => {
         const { store } = createMemoryGameStoreHelper()
 
-        const output = await store.addSubtractInventoryItems({ fooItem: 2 })
+        const output = await store.addSubtractInventoryItems(
+          toInventoryPatch({ fooItem: 2 })
+        )
 
         expect(await store.getGameState()).toHaveProperty(
           'inventory.fooItem',
@@ -83,7 +88,9 @@ describe('createInMemoryGameStoreForUser', () => {
           inventory: { fooItem: 3 }
         })
 
-        const output = await store.addSubtractInventoryItems({ fooItem: -2 })
+        const output = await store.addSubtractInventoryItems(
+          toInventoryPatch({ fooItem: -2 })
+        )
 
         expect(await store.getGameState()).toHaveProperty(
           'inventory.fooItem',
@@ -96,7 +103,9 @@ describe('createInMemoryGameStoreForUser', () => {
           inventory: { fooItem: 3 }
         })
 
-        const output = await store.addSubtractInventoryItems({ fooItem: -3 })
+        const output = await store.addSubtractInventoryItems(
+          toInventoryPatch({ fooItem: -3 })
+        )
 
         expect(await store.getGameState()).toHaveProperty(
           'inventory.fooItem',
@@ -109,7 +118,9 @@ describe('createInMemoryGameStoreForUser', () => {
           inventory: { fooItem: 2 }
         })
 
-        const output = await store.addSubtractInventoryItems({ fooItem: -3 })
+        const output = await store.addSubtractInventoryItems(
+          toInventoryPatch({ fooItem: -3 })
+        )
 
         expect(await store.getGameState()).toHaveProperty(
           'inventory.fooItem',
@@ -128,10 +139,12 @@ describe('createInMemoryGameStoreForUser', () => {
           inventory: { rations: 4, fooItem: 3 }
         })
 
-        const output = await store.addSubtractInventoryItems({
-          rations: -1,
-          fooItem: 2
-        })
+        const output = await store.addSubtractInventoryItems(
+          toInventoryPatch({
+            rations: -1,
+            fooItem: 2
+          })
+        )
         const gameState = await store.getGameState()
 
         expect(gameState).toHaveProperty('inventory.rations', 4 - 1)
@@ -144,10 +157,12 @@ describe('createInMemoryGameStoreForUser', () => {
           inventory: { rations: 4, fooItem: 3 }
         })
 
-        const output = await store.addSubtractInventoryItems({
-          rations: -100,
-          fooItem: 2
-        })
+        const output = await store.addSubtractInventoryItems(
+          toInventoryPatch({
+            rations: -100,
+            fooItem: 2
+          })
+        )
         const gameState = await store.getGameState()
 
         // unchanged

@@ -7,11 +7,12 @@ import {
   type EncounterResult,
   clientEventCreators
 } from '@solarpunk-drifters/common'
+import { toInventoryPatch } from '../utils/getInvalidItems'
 
 describe('generateClientEvents', () => {
   it('should not generate anything given irrelevant GameEvents', () => {
     const input = [
-      gameEvents.addSubtractInventoryItems({}),
+      gameEvents.addSubtractInventoryItems(toInventoryPatch({})),
       gameEvents.drawEncounterCard('some-id'),
       gameEvents.advanceExpeditionProgress(42)
     ]

@@ -1,27 +1,25 @@
 import { describe, expect, it } from '@jest/globals'
-import { getInvalidItems } from './getInvalidItems'
+import { getInvalidItems, toInventoryPatch } from './getInvalidItems'
 
 describe('getInvalidItems', () => {
-  it('should throw an error if any itemsToRemove are negative', () => {
+  it('should ignore any positive values in the patch', () => {
     const inventory = { rations: 3 }
-    const itemsToRemove = { rations: -1 }
+    const inventoryPatch = toInventoryPatch({ rations: 6, otherItem: 42 })
 
-    expect(() => getInvalidItems({ inventory, itemsToRemove })).toThrow(
-      /negative requiredItems value/
-    )
+    expect(getInvalidItems({ inventory, inventoryPatch })).toHaveLength(0)
   })
 
-  it('should return true if required items are sufficient', () => {
+  it('should return no invalid items if required items are sufficient', () => {
     const inventory = {
       rations: 3,
       testItem: 42
     }
-    const itemsToRemove = {
-      rations: 2,
-      testItem: 5
-    }
+    const inventoryPatch = toInventoryPatch({
+      rations: -2,
+      testItem: -5
+    })
 
-    const result = getInvalidItems({ inventory, itemsToRemove })
+    const result = getInvalidItems({ inventory, inventoryPatch })
 
     expect(result).toHaveLength(0)
   })
@@ -31,13 +29,13 @@ describe('getInvalidItems', () => {
       rations: 3,
       testItem: 42
     }
-    const itemsToRemove = {
-      rations: 2,
-      testItem: 999,
-      itemYouDoNotHave: 5
-    }
+    const inventoryPatch = toInventoryPatch({
+      rations: -2,
+      testItem: -999,
+      itemYouDoNotHave: -5
+    })
 
-    const result = getInvalidItems({ inventory, itemsToRemove })
+    const result = getInvalidItems({ inventory, inventoryPatch })
 
     expect(result).toEqual(
       expect.arrayContaining(['testItem', 'itemYouDoNotHave'])

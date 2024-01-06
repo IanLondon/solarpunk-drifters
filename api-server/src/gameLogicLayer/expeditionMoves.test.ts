@@ -18,6 +18,7 @@ import {
   LOADOUT
 } from '@solarpunk-drifters/common'
 import { diceMockerFactory, noDice } from './__fixtures__/diceFnFakes'
+import { toInventoryPatch } from '../utils/getInvalidItems'
 
 // TODO LATER import these too
 export const NOT_LOADOUT = [BETWEEN_ENCOUNTERS, ACTIVE_ENCOUNTER] as const
@@ -157,7 +158,9 @@ describe('encounter card choice', () => {
     })
 
     expect(output).toEqual([
-      gameEvents.addSubtractInventoryItems({ rations: -2, testItem: -42 }),
+      gameEvents.addSubtractInventoryItems(
+        toInventoryPatch({ rations: -2, testItem: -42 })
+      ),
       gameEvents.encounterResult({ outcome: ENCOUNTER_OUTCOME_STRONG_SUCCESS })
     ])
   })
