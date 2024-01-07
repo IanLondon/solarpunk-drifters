@@ -200,7 +200,7 @@ export interface components {
       luck: components["schemas"]["StatNumber"];
     };
     /** @description Describes an event that happened in the game, relevant to the client */
-    ClientEvent: components["schemas"]["ClientEventEncounterResult"];
+    ClientEvent: components["schemas"]["ClientEventEncounterResult"] | components["schemas"]["ClientEventConsequenceCards"];
     ClientEventEncounterResult: {
       /** @enum {string} */
       type: "CLIENT_EVENT_ENCOUNTER_RESULT";
@@ -287,6 +287,8 @@ export interface components {
     };
     /** @description The result of a an encounter card choice player move */
     EncounterResult: {
+      /** @description Consequence Cards (by id) which were drawn and played as part of this Encounter outcome */
+      consequenceCardIds: string[];
       skillCheckRoll?: components["schemas"]["SkillCheckRoll"];
       outcome: components["schemas"]["EncounterOutcome"];
     };

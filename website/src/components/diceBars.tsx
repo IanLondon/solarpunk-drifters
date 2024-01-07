@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import DieD6 from './DieD6'
 import { useInterval } from 'react-use'
-import type { RollResult } from '../types'
-import { getRandomND6 } from '@solarpunk-drifters/common'
+import { type EncounterOutcome, getRandomND6 } from '@solarpunk-drifters/common'
 
 const ROLL_DELAY = 100
 
@@ -15,10 +14,11 @@ function DiceBar(props: { children: React.ReactNode }): React.ReactNode {
 }
 
 export function DiceRollResultBar(props: {
-  rollResult: RollResult
+  disadvantage: boolean
+  outcome: EncounterOutcome
+  rolls: number[]
 }): React.ReactNode {
-  const { outcome } = props.rollResult
-  const { rolls, disadvantage } = props.rollResult.skillCheckRoll
+  const { disadvantage, outcome, rolls } = props
   return (
     <DiceBar>
       {rolls.map((i, index) => (

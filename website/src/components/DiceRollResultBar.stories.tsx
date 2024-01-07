@@ -20,36 +20,32 @@ type Story = StoryObj<typeof meta>
 
 export const TwoThreeFourMixedSuccess: Story = {
   args: {
-    rollResult: {
-      skillCheckRoll: { rolls: [2, 3, 4], disadvantage: false },
-      outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS
-    }
+    rolls: [2, 3, 4],
+    disadvantage: false,
+    outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS
   }
 }
 
 export const NaturalOneFailure: Story = {
   args: {
-    rollResult: {
-      skillCheckRoll: { rolls: [1], disadvantage: false },
-      outcome: ENCOUNTER_OUTCOME_FAILURE
-    }
+    rolls: [1],
+    disadvantage: false,
+    outcome: ENCOUNTER_OUTCOME_FAILURE
   }
 }
 
 export const DisadvantageFailure: Story = {
   args: {
-    rollResult: {
-      skillCheckRoll: { rolls: [1, 6], disadvantage: true },
-      outcome: ENCOUNTER_OUTCOME_FAILURE
-    }
+    rolls: [1, 6],
+    disadvantage: true,
+    outcome: ENCOUNTER_OUTCOME_FAILURE
   }
 }
 
 export const SixStrongSuccess: Story = {
   args: {
-    rollResult: {
-      skillCheckRoll: { rolls: [6], disadvantage: false },
-      outcome: ENCOUNTER_OUTCOME_STRONG_SUCCESS
-    }
+    rolls: [6],
+    disadvantage: false,
+    outcome: ENCOUNTER_OUTCOME_STRONG_SUCCESS
   }
 }

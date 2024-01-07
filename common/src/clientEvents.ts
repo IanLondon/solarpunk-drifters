@@ -1,6 +1,6 @@
+import type { MarkOptional } from 'ts-essentials'
 import type { EncounterResult } from './openapiTypes'
 import type { components } from './openapi-api'
-
 interface clientEventBrand {
   _clientEventBrand: any
 }
@@ -13,12 +13,16 @@ export type ClientEventEncounterResult =
 export const CLIENT_EVENT_ENCOUNTER_RESULT: ClientEventEncounterResult['type'] =
   'CLIENT_EVENT_ENCOUNTER_RESULT'
 function encounterResult(
-  encounterResult: EncounterResult
+  encounterResult: MarkOptional<EncounterResult, 'consequenceCardIds'>
 ): ClientEventEncounterResult {
+  const payload: ClientEventEncounterResult['payload'] = {
+    ...encounterResult,
+    consequenceCardIds: encounterResult.consequenceCardIds ?? []
+  }
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   return {
     type: CLIENT_EVENT_ENCOUNTER_RESULT,
-    payload: encounterResult
+    payload
   } as ClientEventEncounterResult
 }
 export function filterEncounterResult(

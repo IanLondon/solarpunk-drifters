@@ -4,6 +4,7 @@ import {
 } from '@solarpunk-drifters/common'
 import type { InventoryPatch } from '../../types'
 import type { GameErrorEvent } from './gameErrorEvents'
+import { type MarkOptional } from 'ts-essentials'
 
 export * from './gameErrorEvents'
 
@@ -107,10 +108,13 @@ export const gameEventCreators = {
   }),
 
   encounterResult: (
-    encounterResult: EncounterResult
+    encounterResult: MarkOptional<EncounterResult, 'consequenceCardIds'>
   ): EncounterResultEvent => ({
     type: GameEventTypes.ENCOUNTER_RESULT,
-    encounterResult
+    encounterResult: {
+      ...encounterResult,
+      consequenceCardIds: encounterResult.consequenceCardIds ?? []
+    }
   })
 }
 

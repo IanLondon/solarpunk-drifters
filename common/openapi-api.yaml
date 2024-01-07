@@ -188,6 +188,7 @@ components:
       description: Describes an event that happened in the game, relevant to the client
       oneOf:
         - $ref: '#/components/schemas/ClientEventEncounterResult'
+        - $ref: '#/components/schemas/ClientEventConsequenceCards'
     ClientEventEncounterResult:
       type: object
       properties:
@@ -362,11 +363,16 @@ components:
       description: The result of a an encounter card choice player move
       type: object
       properties:
+        consequenceCardIds:
+          description: Consequence Cards (by id) which were drawn and played as part of this Encounter outcome
+          type: array
+          items:
+            type: string
         skillCheckRoll:
           $ref: '#/components/schemas/SkillCheckRoll'
         outcome:
           $ref: '#/components/schemas/EncounterOutcome'
-      required: [outcome]
+      required: [consequenceCardIds, outcome]
     EncounterOutcome:
       description: The outcome of the Encounter (failure / mixed success / strong success)
       type: string

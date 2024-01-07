@@ -14,7 +14,7 @@
     "lint": "next lint",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "test": "jest"
+    "test": "jest --passWithNoTests && echo '\n\n***************\nTODO: add tests to website\n***************'"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.0.1",

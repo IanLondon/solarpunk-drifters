@@ -4,8 +4,8 @@ import { gameEventCreators } from '../gameLogicLayer/gameEvents'
 import {
   type ClientEvent,
   ENCOUNTER_OUTCOME_MIXED_SUCCESS,
-  type EncounterResult,
-  clientEventCreators
+  clientEventCreators,
+  type EncounterResult
 } from '@solarpunk-drifters/common'
 import { toInventoryPatch } from '../utils/getInvalidItems'
 
@@ -24,6 +24,7 @@ describe('generateClientEvents', () => {
 
   it('should generate Encounter Result ClientEvent from Encounter Result GameEvent', () => {
     const someEncounterResult: EncounterResult = {
+      consequenceCardIds: [],
       outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS
     }
     const input = [gameEventCreators.encounterResult(someEncounterResult)]

@@ -10,8 +10,7 @@ import {
   ENCOUNTER_OUTCOME_FAILURE,
   ENCOUNTER_OUTCOME_MIXED_SUCCESS,
   ENCOUNTER_OUTCOME_STRONG_SUCCESS,
-  type EncounterOutcome,
-  type EncounterResult
+  type EncounterOutcome
 } from '@solarpunk-drifters/common'
 
 const consequencesMock = async (
@@ -44,7 +43,7 @@ describe('postProcessGameEvents', () => {
     `should add ${EXPEDITION_PROGRESS_AFTER_ENCOUNTER}km expedition progress after` +
       'any encounter result event, and add Consequence Card and Drifter Card events',
     async () => {
-      const someEncounterResult: EncounterResult = {
+      const someEncounterResult = {
         outcome: ENCOUNTER_OUTCOME_MIXED_SUCCESS
       }
       const preGameEvents = [

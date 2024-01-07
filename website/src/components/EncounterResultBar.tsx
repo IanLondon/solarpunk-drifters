@@ -1,6 +1,5 @@
 import React from 'react'
 import { DiceRollResultBar, RandomRollingDiceBar } from '@/components/diceBars'
-import { isRollResult } from '@/types'
 import { type EncounterResult } from '@solarpunk-drifters/common'
 
 interface EncounterResultBarProps {
@@ -20,8 +19,16 @@ export default function EncounterResultBar(
   } else if (encounterResult !== null) {
     let component: React.ReactNode
 
-    if (isRollResult(encounterResult)) {
-      component = <DiceRollResultBar rollResult={encounterResult} />
+    if (encounterResult.skillCheckRoll !== undefined) {
+      const { outcome } = encounterResult
+      const { disadvantage, rolls } = encounterResult.skillCheckRoll
+      component = (
+        <DiceRollResultBar
+          disadvantage={disadvantage}
+          rolls={rolls}
+          outcome={outcome}
+        />
+      )
     } else {
       // TODO: not implemented, this is a dummy component. Needs design.
       // We have an outcome but the Encounter Card choice didn't use a dice roll.
