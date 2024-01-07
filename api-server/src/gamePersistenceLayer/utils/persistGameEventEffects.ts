@@ -6,6 +6,7 @@ import {
 import { GameEventTypes } from '../../gameLogicLayer/gameEvents'
 import type { GameEvent } from '../../gameLogicLayer/gameEvents'
 import type { GameStore, StoreError, StoreOut } from '../types'
+import { arrayToAdditionInventoryPatch } from '../../utils/getInvalidItems'
 
 function filterOutput(...so: StoreOut[]): StoreError[] {
   return so.filter((item): item is StoreError => item !== null)
@@ -18,11 +19,10 @@ export default async function persistGameEventEffects(
 ): Promise<StoreError[]> {
   switch (e.type) {
     case GameEventTypes.ADD_DRIFTER_CARDS: {
-      console.warn(
-        'persistGameEventEffects: ADD_DRIFTER_CARDS is NOT IMPLEMENTED'
-      )
-      // NOT IMPLEMENTED
-      return []
+      const { drifterCardIds } = e
+      const drifterCardPatch = arrayToAdditionInventoryPatch(drifterCardIds)
+      const out = await store.addSubtractDrifterCards(drifterCardPatch)
+      return filterOutput(out)
     }
 
     case GameEventTypes.ADD_SUBTRACT_INVENTORY_ITEMS: {

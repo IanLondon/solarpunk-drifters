@@ -1,5 +1,22 @@
 import { describe, expect, it } from '@jest/globals'
-import { getInvalidItems, toInventoryPatch } from './getInvalidItems'
+import {
+  arrayToAdditionInventoryPatch,
+  getInvalidItems,
+  toInventoryPatch
+} from './getInvalidItems'
+
+describe('arrayToAdditionInventoryPatch', () => {
+  it('should convert an array of ids to a patch', () => {
+    const ids = ['a', 'b', 'c', 'c', 'c', 'x', 'a']
+    const result = arrayToAdditionInventoryPatch(ids)
+    expect(result).toEqual({
+      a: 2,
+      b: 1,
+      c: 3,
+      x: 1
+    })
+  })
+})
 
 describe('getInvalidItems', () => {
   it('should ignore any positive values in the patch', () => {

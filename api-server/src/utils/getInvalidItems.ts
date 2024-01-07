@@ -1,5 +1,17 @@
 import type { InventoryPatch } from '../types'
 
+export function arrayToAdditionInventoryPatch(ids: string[]): InventoryPatch {
+  return toInventoryPatch(
+    ids.reduce<Record<string, number>>(
+      (acc, id) => ({
+        ...acc,
+        [id]: (acc[id] ?? 0) + 1
+      }),
+      {}
+    )
+  )
+}
+
 export function toInventoryPatch(
   inventoryPatch: Record<string, number>
 ): InventoryPatch {

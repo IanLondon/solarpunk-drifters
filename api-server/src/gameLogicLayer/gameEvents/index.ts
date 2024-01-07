@@ -108,12 +108,12 @@ export const gameEventCreators = {
   }),
 
   encounterResult: (
-    encounterResult: MarkOptional<EncounterResult, 'consequenceCardIds'>
+    args: MarkOptional<EncounterResult, 'consequenceCardIds'>
   ): EncounterResultEvent => ({
     type: GameEventTypes.ENCOUNTER_RESULT,
     encounterResult: {
-      ...encounterResult,
-      consequenceCardIds: encounterResult.consequenceCardIds ?? []
+      ...args,
+      consequenceCardIds: args.consequenceCardIds ?? []
     }
   })
 }

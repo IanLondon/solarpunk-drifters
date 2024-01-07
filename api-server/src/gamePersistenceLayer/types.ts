@@ -16,6 +16,9 @@ export type StoreOut = null | StoreError
 export interface GameStore {
   // Write methods
   addSubtractInventoryItems: (itemPatch: InventoryPatch) => Promise<StoreOut>
+  addSubtractDrifterCards: (
+    drifterCardPatch: InventoryPatch
+  ) => Promise<StoreOut>
   setGameMode: (gameMode: GameMode) => Promise<StoreOut>
   setActiveEncounterCard: (cardId: string) => Promise<StoreOut>
   clearActiveEncounterCard: () => Promise<StoreOut>

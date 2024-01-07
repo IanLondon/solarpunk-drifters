@@ -176,6 +176,25 @@ describe('createInMemoryGameStoreForUser', () => {
     })
   })
 
+  describe('addSubtractDrifterCards', () => {
+    it('should apply the drifter card patch', async () => {
+      const { store } = createMemoryGameStoreHelper({
+        drifterCardInventory: { 'some-card-id': 5, 'other-card-id': 10 }
+      })
+
+      const output = await store.addSubtractDrifterCards(
+        toInventoryPatch({ 'some-card-id': 1, 'other-card-id': -1 })
+      )
+      const gameState = await store.getGameState()
+
+      expect(gameState.drifterCardInventory).toEqual({
+        'some-card-id': 5 + 1,
+        'other-card-id': 10 - 1
+      })
+      expect(output).toBe(null)
+    })
+  })
+
   describe('setGameMode', () => {
     it('should set the gameMode', async () => {
       const { store } = createMemoryGameStoreHelper({

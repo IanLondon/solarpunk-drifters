@@ -62,6 +62,9 @@ export async function processOutcome(
 
       // TODO: toggle this logging with a flag, and use a better log than console.log
       console.log(`GAME EVENTS:\n${JSON.stringify(gameEvents, null, 4)}`)
+      console.log(
+        `GAME STATE PATCH:\n${JSON.stringify(gameStatePatch, null, 4)}`
+      )
 
       return { update: gameStatePatch, clientEvents }
     } else {

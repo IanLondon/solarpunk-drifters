@@ -1,4 +1,4 @@
-import type { GameStore } from './types'
+import type { GameStore, StoreOut } from './types'
 import type { DeepReadonly } from 'ts-essentials'
 import {
   ACTIVE_ENCOUNTER,
@@ -10,6 +10,7 @@ import {
   type GameState
 } from '@solarpunk-drifters/common'
 import { getInvalidItems } from '../utils/getInvalidItems'
+import { type InventoryPatch } from '../types'
 
 export type InMemoryDb = Record<string, InMemoryGameStoreForUser>
 
@@ -105,6 +106,37 @@ export function rawStoreStateToGameState(
   }
 }
 
+function applyInventoryPatch(args: {
+  inventory: Record<string, number>
+  inventoryPatch: InventoryPatch
+}): StoreOut {
+  const { inventory, inventoryPatch } = args
+  // Pick the negative values and then invert them for getInvalidItems
+  // (we're only checking validity of items that will be removed, which are
+  // the itemPatch's negative values)
+  const invalidItems = getInvalidItems({
+    inventory,
+    inventoryPatch
+  })
+
+  if (invalidItems.length > 0) {
+    return {
+      method: 'addSubtractInventoryItems',
+      error: 'insufficientQuantity'
+    }
+  }
+
+  Object.entries(inventoryPatch).forEach(([item, diff]) => {
+    if (item in inventory) {
+      inventory[item] += diff
+    } else {
+      inventory[item] = diff
+    }
+  })
+
+  return null
+}
+
 export function createInMemoryGameStoreForUser(
   uid: string,
   inMemoryDb: InMemoryDb
@@ -120,31 +152,17 @@ export function createInMemoryGameStoreForUser(
   const store = inMemoryDb[uid]
 
   return {
+    addSubtractDrifterCards: async (drifterCardPatch) => {
+      return applyInventoryPatch({
+        inventory: store.drifterCardInventory,
+        inventoryPatch: drifterCardPatch
+      })
+    },
     addSubtractInventoryItems: async (itemPatch) => {
-      // Pick the negative values and then invert them for getInvalidItems
-      // (we're only checking validity of items that will be removed, which are
-      // the itemPatch's negative values)
-      const invalidItems = getInvalidItems({
+      return applyInventoryPatch({
         inventory: store.inventory,
         inventoryPatch: itemPatch
       })
-
-      if (invalidItems.length > 0) {
-        return {
-          method: 'addSubtractInventoryItems',
-          error: 'insufficientQuantity'
-        }
-      }
-
-      Object.entries(itemPatch).forEach(([item, diff]) => {
-        if (item in store.inventory) {
-          store.inventory[item] += diff
-        } else {
-          store.inventory[item] = diff
-        }
-      })
-
-      return null
     },
     setGameMode: async (gameMode) => {
       store.gameMode = gameMode

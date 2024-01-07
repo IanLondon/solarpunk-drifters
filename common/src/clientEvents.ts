@@ -13,11 +13,11 @@ export type ClientEventEncounterResult =
 export const CLIENT_EVENT_ENCOUNTER_RESULT: ClientEventEncounterResult['type'] =
   'CLIENT_EVENT_ENCOUNTER_RESULT'
 function encounterResult(
-  encounterResult: MarkOptional<EncounterResult, 'consequenceCardIds'>
+  args: MarkOptional<EncounterResult, 'consequenceCardIds'>
 ): ClientEventEncounterResult {
   const payload: ClientEventEncounterResult['payload'] = {
-    ...encounterResult,
-    consequenceCardIds: encounterResult.consequenceCardIds ?? []
+    ...args,
+    consequenceCardIds: args.consequenceCardIds ?? []
   }
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   return {

@@ -25,6 +25,27 @@ import { toInventoryPatch } from '../../utils/getInvalidItems'
 // that only those methods were called and no other methods were.
 
 describe('persistGameEventEffects', () => {
+  describe('AddDrifterCards', () => {
+    it('should add drifter cards to drifterCardInventory', async () => {
+      const store = { addSubtractDrifterCards: jest.fn(() => null) }
+      const e = gameEventCreators.addDrifterCards([
+        'some-card-id',
+        'other-card-id'
+      ])
+      const expectedDrifterCardPatch = toInventoryPatch({
+        'some-card-id': 1,
+        'other-card-id': 1
+      })
+
+      const out = await persistGameEventEffects(store as any, e)
+
+      expect(store.addSubtractDrifterCards.mock.calls).toEqual([
+        [expectedDrifterCardPatch]
+      ])
+      expect(out).toEqual([])
+    })
+  })
+
   describe('AddSubstractInventoryItems', () => {
     it('should add item to inventory', async () => {
       const store = { addSubtractInventoryItems: jest.fn(() => null) }
