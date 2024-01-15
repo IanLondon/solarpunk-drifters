@@ -1,0 +1,221 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Solarpunk Drifters - Bucket for static website
+# Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  DomainName:
+    Description: Domain name (must be registered on Route53 before deploying this stack)
+    Type: String
+  HostedZoneId:
+    Description: HostedZoneId for the domain e.g. Z23ABC4XYZL05B
+    Type: String
+
+Resources:
+  StaticWebsiteS3BucketLogs:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  StaticWebsiteS3BucketRoot:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LoggingConfiguration:
+        DestinationBucketName: !Ref StaticWebsiteS3BucketLogs
+        LogFilePrefix: "static-website-bucket/"
+
+  StaticWebsiteS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StaticWebsiteS3BucketRoot
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: s3:GetObject
+            Principal:
+              Service: "cloudfront.amazonaws.com"
+            Effect: Allow
+            Resource: !Sub
+              - "${BucketArn}/*"
+              - BucketArn: !GetAtt StaticWebsiteS3BucketRoot.Arn
+            Condition:
+              StringEquals:
+                "AWS:SourceArn": !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+          # ListBucket needs its own statement because the resource must not have trailing "/*"
+          # TODO: DRY vs above?
+          - Action: s3:ListBucket
+            Principal:
+              Service: "cloudfront.amazonaws.com"
+            Effect: Allow
+            Resource: !GetAtt StaticWebsiteS3BucketRoot.Arn
+            Condition:
+              StringEquals:
+                "AWS:SourceArn": !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref DomainName
+        DefaultCacheBehavior:
+          Compress: true
+          DefaultTTL: 86400
+          FunctionAssociations:
+            - EventType: "viewer-request"
+              FunctionARN: !Ref RewriteWebsiteUrisCloudFrontFn
+          ForwardedValues:
+            QueryString: true
+          MaxTTL: 31536000
+          TargetOriginId: !Sub "S3-${AWS::StackName}-root"
+          ViewerProtocolPolicy: "redirect-to-https"
+          ResponseHeadersPolicyId: !Ref ResponseHeadersPolicy
+        CustomErrorResponses:
+          - ErrorCachingMinTTL: 60
+            ErrorCode: 404
+            ResponseCode: 200
+            # Redirect 404s to index.html
+            # (TODO: If you redirect to 404.html, then trailing slash
+            # like /somepage/ 404s instead of going to the rewrite uris fn)
+            ResponsePagePath: "/index.html"
+        #   - ErrorCachingMinTTL: 60
+        #     ErrorCode: 403
+        #     ResponseCode: 403
+        #     ResponsePagePath: "/403.html"
+        Enabled: true
+        HttpVersion: "http2"
+        DefaultRootObject: "index.html"
+        IPV6Enabled: true
+        Logging:
+          Bucket: !GetAtt StaticWebsiteS3BucketLogs.DomainName
+          IncludeCookies: false
+          Prefix: "cloudfront-cdn/"
+        Origins:
+          - DomainName: !GetAtt StaticWebsiteS3BucketRoot.DomainName
+            Id: !Sub "S3-${AWS::StackName}-root"
+            OriginAccessControlId: !Ref OriginAccessControl
+            S3OriginConfig: {}
+        PriceClass: "PriceClass_All"
+        ViewerCertificate:
+          AcmCertificateArn: !Ref Certificate
+          MinimumProtocolVersion: "TLSv1.1_2016"
+          SslSupportMethod: "sni-only"
+
+  RewriteWebsiteUrisCloudFrontFn:
+    Type: AWS::CloudFront::Function
+    Properties:
+      AutoPublish: true
+      FunctionCode: |
+        function handler(event) {
+          const request = event.request;
+          if (request.uri === "/") {
+            // root
+            request.uri = "/index.html";
+          } else if (!request.uri.includes(".")) {
+            // no file extension, eg "/somepage/otherpage" -> /somepage/otherpage.html
+            request.uri += ".html";
+          } else if (request.uri.endsWith(".html")) {
+            // redirect to non-html URL
+            const nonHtmlUrl = request.uri.slice(0, -5);
+            return {
+              statusCode: 301,
+              headers: { location: { value: nonHtmlUrl } },
+            };
+          }
+
+          return request;
+        }
+      FunctionConfig:
+        Comment: Rewrite routes to S3 objects for the S3 static site
+        Runtime: cloudfront-js-2.0
+      Name: !Sub "${AWS::StackName}-rewrite-website-uris"
+
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        # Get a unique ID for the OAC Config name.
+        # Name must be unique within account
+        Name: !Sub
+          - amzn-secure-static-site-${guid}
+          - guid: !Select [2, !Split ["/", !Ref "AWS::StackId"]]
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  Route53RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneName: !Sub "${DomainName}."
+      RecordSets:
+        - Name: !Ref DomainName
+          Type: "A"
+          AliasTarget:
+            DNSName: !GetAtt "CloudFrontDistribution.DomainName"
+            EvaluateTargetHealth: false
+            # The following HosteZoneId is always used for alias records pointing to CloudFront.
+            HostedZoneId: "Z2FDTNDATAQYW2"
+
+  Certificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName
+      DomainValidationOptions:
+        - DomainName: !Ref DomainName
+          HostedZoneId: !Ref HostedZoneId
+      ValidationMethod: DNS
+
+  ResponseHeadersPolicy:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub "${AWS::StackName}-static-site-security-headers"
+        SecurityHeadersConfig:
+          StrictTransportSecurity:
+            AccessControlMaxAgeSec: 63072000
+            IncludeSubdomains: true
+            Override: true
+            Preload: true
+          # ContentSecurityPolicy:
+          #   ContentSecurityPolicy: "default-src 'none'; img-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'"
+          #   Override: true
+          ContentTypeOptions:
+            Override: true
+          FrameOptions:
+            FrameOption: DENY
+            Override: true
+          ReferrerPolicy:
+            ReferrerPolicy: "same-origin"
+            Override: true
+          XSSProtection:
+            ModeBlock: true
+            Override: true
+            Protection: true
+
+Outputs:
+  CloudFrontDistributionDomain:
+    Description: CloudFront distribution domain
+    Value: !GetAtt CloudFrontDistribution.DomainName
+  StaticWebsiteS3BucketRoot:
+    Description: Static website S3 bucket
+    Value: !Ref StaticWebsiteS3BucketRoot
+  StaticWebsiteS3BucketRootArn:
+    Description: Website bucket locator
+    Value: !GetAtt StaticWebsiteS3BucketRoot.Arn
+  StaticWebsiteS3BucketLogs:
+    Description: Logging bucket
+    Value: !Ref StaticWebsiteS3BucketLogs
+  StaticWebsiteS3BucketLogsName:
+    Description: Logging bucket Name
+    Value: !GetAtt StaticWebsiteS3BucketLogs.DomainName
