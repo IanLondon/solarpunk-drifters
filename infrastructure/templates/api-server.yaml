@@ -1,0 +1,284 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Solarpunk Drifters - API Server on ECS
+
+Parameters:
+  ContainerImageUrl:
+    Type: String
+    Description: The url of a container image for the instances to run, eg "012345678910.dkr.ecr.<region-name>.amazonaws.com/<repository-name>@sha256:94afd1f2e64d908bc90dbca0035a5b567EXAMPLE"
+  ApiContainerName:
+    Type: String
+    Default: api-server
+    Description: The container name of the api-server container
+  ApiContainerPort:
+    Type: Number
+    Default: 8080
+  ApiServiceLogGroupName:
+    Type: String
+    # TODO: make this an export of the root template file
+    # with ${AWS:StackName} sub'd in, to ensure uniqueness
+    Default: ecs/solarpunk-drifters/api-service
+    Description: A regionally-unique log group name for the API Service task
+  ContainerCpu:
+    Type: Number
+    Default: 256
+    Description: Number of CPU units for the service task instances (1024 is 1 vCPU, 256 is .25 vCPU).
+  ContainerMemory:
+    Type: Number
+    Default: 512
+    Description: Container memory in MiB.
+  DesiredCount:
+    Type: Number
+    Default: 1
+    Description: How many instances of the service task to place and keep running.
+  HealthCheckPath:
+    Type: String
+    Default: /health
+    Description: Path to perform the healthcheck on each instance.
+
+Resources:
+  ApiServiceLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      LogGroupName: !Ref ApiServiceLogGroupName
+      RetentionInDays: 7
+
+  ApiServiceTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        - Image: !Ref ContainerImageUrl
+          Name: !Ref ApiContainerName
+          Essential: true
+          PortMappings:
+            - ContainerPort: !Ref ApiContainerPort
+          #  TODO: specify Environment or EnvironmentFiles here
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref ApiServiceLogGroupName
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+      Cpu: !Ref ContainerCpu
+      Family: solarpunk-drifters-api-service
+      Memory: !Ref ContainerMemory
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - "FARGATE"
+      ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
+
+  # A role which is used within Fargate to allow the Fargate agent
+  # to download images and upload logs.
+  ECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ecs-tasks.amazonaws.com]
+            Action: ["sts:AssumeRole"]
+            Condition:
+              ArnLike:
+                aws:SourceArn: !Sub arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:*
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+      Path: /
+      # This role enables basic features of ECS. See reference:
+      # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/security-iam-awsmanpol.html#security-iam-awsmanpol-AmazonECSTaskExecutionRolePolicy
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  ApiServerCluster:
+    Type: AWS::ECS::Cluster
+
+  ApiService:
+    Type: AWS::ECS::Service
+    DependsOn: PublicLoadBalancerListener
+    Properties:
+      LaunchType: FARGATE
+      Cluster: !Ref ApiServerCluster
+      DesiredCount: !Ref DesiredCount
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !Ref ServiceSecurityGroup
+          Subnets:
+            - !Ref PrivateSubnet1
+      TaskDefinition: !Ref ApiServiceTaskDefinition
+      LoadBalancers:
+        - ContainerName: !Ref ApiContainerName
+          ContainerPort: !Ref ApiContainerPort
+          TargetGroupArn: !Ref ServiceTargetGroup
+
+  ServiceTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPath: !Ref HealthCheckPath
+      HealthCheckPort: !Ref ApiContainerPort
+      HealthCheckProtocol: HTTP
+      HealthyThresholdCount: 5
+      Port: !Ref ApiContainerPort
+      Protocol: HTTP
+      # TargetGroupAttributes:
+      #   - Key: deregistration_delay.timeout_seconds
+      #     Value: 300
+      TargetType: ip
+      UnhealthyThresholdCount: 2
+      VpcId: !Ref VPC
+
+  PublicLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      LoadBalancerAttributes:
+        - Key: idle_timeout.timeout_seconds
+          Value: "30"
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      SecurityGroups:
+        - !Ref PublicLoadBalancerSecurityGroup
+  PublicLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: "forward"
+          ForwardConfig:
+            TargetGroups:
+              - TargetGroupArn: !Ref ServiceTargetGroup
+                Weight: 100
+      LoadBalancerArn: !Ref PublicLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  # === NETWORKING ====================================================
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+
+  # TODO: do this in a more programmatic way
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: { Ref: "AWS::Region" }
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.0.0/24
+      MapPublicIpOnLaunch: true
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: { Ref: "AWS::Region" }
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: true
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: { Ref: "AWS::Region" }
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment # TODO idk if this dependency needs to be explicit
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  PublicSubnet1RouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+  PublicSubnet2RouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+
+  PrivateRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+  PrivateRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+  PrivateSubnet1RouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      SubnetId: !Ref PrivateSubnet1
+
+  # NAT Gateway in PublicSubnet1 so containers can talk to the internet
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayEIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+  NatGatewayEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  # === SECURITY GROUPS ===============================================
+
+  ServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the api-server ECS containers
+      VpcId: !Ref VPC
+  # Open up the ECS service's security group to traffic originating
+  # from the security group of the load balancer.
+  ServiceIngressfromLoadBalancer:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Ingress from the public ALB
+      GroupId: !Ref ServiceSecurityGroup
+      IpProtocol: -1 # all protocols. TODO: restrict
+      SourceSecurityGroupId: !Ref PublicLoadBalancerSecurityGroup
+
+  PublicLoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the public-facing load balancer
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        # Allow access to public facing ALB from any IP address
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: -1 # all protocols. TODO: HTTP(S) only?
+
+Outputs:
+  ApiLoadBalancerDnsName:
+    Description: DNS name of public-facing load balancer
+    Value: !GetAtt PublicLoadBalancer.DNSName

@@ -1,6 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Solarpunk Drifters - Bucket for static website
-# Transform: AWS::Serverless-2016-10-31
+Description: Solarpunk Drifters - Secure static website on S3 served by CloudFormation
 
 Parameters:
   DomainName:
@@ -8,6 +7,22 @@ Parameters:
     Type: String
   HostedZoneId:
     Description: HostedZoneId for the domain e.g. Z23ABC4XYZL05B
+    Type: String
+  ApiOriginNameForCF:
+    Description: Origin name in CloudFront for API origin
+    Type: String
+    # TODO: import from root of nested stack, so you can do:
+    # Value: !Sub "${AWS::StackName}-api"
+    Default: solarpunk-drifters-website-api
+  S3StaticWebsiteOriginNameForCF:
+    Description: Origin name in CloudFront for S3 static website
+    Type: String
+    # TODO: import from root of nested stack, so you can do:
+    # Value: !Sub "S3-${AWS::StackName}-root"
+    Default: S3-solarpunk-drifters-website-root
+  # TODO IMMEDIATELY use nested stacks, don't use this parameter
+  ApiLoadBalancerDnsName:
+    Description: DNS Name for API's public-facing load balancer
     Type: String
 
 Resources:
@@ -73,14 +88,24 @@ Resources:
           Compress: true
           DefaultTTL: 86400
           FunctionAssociations:
-            - EventType: "viewer-request"
+            - EventType: viewer-request
               FunctionARN: !Ref RewriteWebsiteUrisCloudFrontFn
-          ForwardedValues:
+          ForwardedValues: # TODO use CachePolicy. DEPRECATED.
             QueryString: true
           MaxTTL: 31536000
-          TargetOriginId: !Sub "S3-${AWS::StackName}-root"
-          ViewerProtocolPolicy: "redirect-to-https"
+          TargetOriginId: !Ref S3StaticWebsiteOriginNameForCF
+          ViewerProtocolPolicy: redirect-to-https
           ResponseHeadersPolicyId: !Ref ResponseHeadersPolicy
+        CacheBehaviors:
+          - AllowedMethods: [GET, HEAD, OPTIONS, PUT, PATCH, POST, DELETE]
+            CachePolicyId: !Ref ApiBehaviorCachePolicy
+            Compress: true
+            FunctionAssociations:
+              - EventType: viewer-request
+                FunctionARN: !Ref RewriteApiUrisCloudFrontFn
+            PathPattern: /api/*
+            TargetOriginId: !Ref ApiOriginNameForCF
+            ViewerProtocolPolicy: redirect-to-https
         CustomErrorResponses:
           - ErrorCachingMinTTL: 60
             ErrorCode: 404
@@ -88,7 +113,8 @@ Resources:
             # Redirect 404s to index.html
             # (TODO: If you redirect to 404.html, then trailing slash
             # like /somepage/ 404s instead of going to the rewrite uris fn)
-            ResponsePagePath: "/index.html"
+            ResponsePagePath: "/404.html"
+        # TODO: delete? never used
         #   - ErrorCachingMinTTL: 60
         #     ErrorCode: 403
         #     ResponseCode: 403
@@ -103,14 +129,36 @@ Resources:
           Prefix: "cloudfront-cdn/"
         Origins:
           - DomainName: !GetAtt StaticWebsiteS3BucketRoot.DomainName
-            Id: !Sub "S3-${AWS::StackName}-root"
+            Id: !Ref S3StaticWebsiteOriginNameForCF
             OriginAccessControlId: !Ref OriginAccessControl
             S3OriginConfig: {}
+          - DomainName: !Ref ApiLoadBalancerDnsName
+            Id: !Ref ApiOriginNameForCF
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
         PriceClass: "PriceClass_All"
         ViewerCertificate:
           AcmCertificateArn: !Ref Certificate
           MinimumProtocolVersion: "TLSv1.1_2016"
           SslSupportMethod: "sni-only"
+
+  ApiBehaviorCachePolicy:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Comment: Cache policy for api/*
+        Name: !Sub "${AWS::StackName}-api-cachepolicy"
+        DefaultTTL: 86400
+        MaxTTL: 31536000
+        MinTTL: 0
+        ParametersInCacheKeyAndForwardedToOrigin:
+          CookiesConfig:
+            CookieBehavior: all
+          EnableAcceptEncodingGzip: true
+          HeadersConfig:
+            HeaderBehavior: none
+          QueryStringsConfig:
+            QueryStringBehavior: all
 
   RewriteWebsiteUrisCloudFrontFn:
     Type: AWS::CloudFront::Function
@@ -140,6 +188,25 @@ Resources:
         Comment: Rewrite routes to S3 objects for the S3 static site
         Runtime: cloudfront-js-2.0
       Name: !Sub "${AWS::StackName}-rewrite-website-uris"
+
+  RewriteApiUrisCloudFrontFn:
+    Type: AWS::CloudFront::Function
+    Properties:
+      AutoPublish: true
+      FunctionCode: |
+        function handler(event) {
+          const request = event.request;
+          if (request.uri.startsWith("/api/")) {
+            // strip off "/api" so "/api/something" -> "/something"
+            request.uri = request.uri.slice(4);
+          }
+
+          return request;
+        }
+      FunctionConfig:
+        Comment: Rewrite routes to API from /api to /
+        Runtime: cloudfront-js-2.0
+      Name: !Sub "${AWS::StackName}-rewrite-api-uris"
 
   OriginAccessControl:
     Type: AWS::CloudFront::OriginAccessControl
