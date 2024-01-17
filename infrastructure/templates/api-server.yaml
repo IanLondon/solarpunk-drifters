@@ -2,9 +2,25 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: Solarpunk Drifters - API Server on ECS
 
 Parameters:
+  # ====== Required ======
   ContainerImageUrl:
     Type: String
     Description: The url of a container image for the instances to run, eg "012345678910.dkr.ecr.<region-name>.amazonaws.com/<repository-name>@sha256:94afd1f2e64d908bc90dbca0035a5b567EXAMPLE"
+  EnvironmentPrefix:
+    Type: String
+    Description: String prefixed on various resource names to make them unique
+  PublicSubnet1Id:
+    Type: AWS::EC2::Subnet::Id
+  PublicSubnet2Id:
+    Type: AWS::EC2::Subnet::Id
+  # TODO: consider
+  # ALBSubnetIds:
+  #   Type: List<AWS::EC2::Subnet::Id>
+  PrivateSubnet1Id:
+    Type: AWS::EC2::Subnet::Id
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  # ====== Optional ======
   ApiContainerName:
     Type: String
     Default: api-server
@@ -14,10 +30,8 @@ Parameters:
     Default: 8080
   ApiServiceLogGroupName:
     Type: String
-    # TODO: make this an export of the root template file
-    # with ${AWS:StackName} sub'd in, to ensure uniqueness
-    Default: ecs/solarpunk-drifters/api-service
-    Description: A regionally-unique log group name for the API Service task
+    Default: solarpunk-drifters/api-service
+    Description: A log group name for the API Service task
   ContainerCpu:
     Type: Number
     Default: 256
@@ -61,7 +75,7 @@ Resources:
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: ecs
       Cpu: !Ref ContainerCpu
-      Family: solarpunk-drifters-api-service
+      Family: !Sub "${EnvironmentPrefix}-solarpunk-drifters-api-service"
       Memory: !Ref ContainerMemory
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -106,7 +120,7 @@ Resources:
           SecurityGroups:
             - !Ref ServiceSecurityGroup
           Subnets:
-            - !Ref PrivateSubnet1
+            - !Ref PrivateSubnet1Id
       TaskDefinition: !Ref ApiServiceTaskDefinition
       LoadBalancers:
         - ContainerName: !Ref ApiContainerName
@@ -127,7 +141,7 @@ Resources:
       #     Value: 300
       TargetType: ip
       UnhealthyThresholdCount: 2
-      VpcId: !Ref VPC
+      VpcId: !Ref VpcId
 
   PublicLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -137,8 +151,8 @@ Resources:
         - Key: idle_timeout.timeout_seconds
           Value: "30"
       Subnets:
-        - !Ref PublicSubnet1
-        - !Ref PublicSubnet2
+        - !Ref PublicSubnet1Id
+        - !Ref PublicSubnet2Id
       SecurityGroups:
         - !Ref PublicLoadBalancerSecurityGroup
   PublicLoadBalancerListener:
@@ -154,110 +168,13 @@ Resources:
       Port: 80
       Protocol: HTTP
 
-  # === NETWORKING ====================================================
-
-  VPC:
-    Type: AWS::EC2::VPC
-    Properties:
-      CidrBlock: 10.0.0.0/16
-
-  # TODO: do this in a more programmatic way
-  PublicSubnet1:
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone:
-        Fn::Select:
-          - 0
-          - Fn::GetAZs: { Ref: "AWS::Region" }
-      VpcId: !Ref VPC
-      CidrBlock: 10.0.0.0/24
-      MapPublicIpOnLaunch: true
-
-  PublicSubnet2:
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone:
-        Fn::Select:
-          - 1
-          - Fn::GetAZs: { Ref: "AWS::Region" }
-      VpcId: !Ref VPC
-      CidrBlock: 10.0.2.0/24
-      MapPublicIpOnLaunch: true
-
-  PrivateSubnet1:
-    Type: AWS::EC2::Subnet
-    Properties:
-      AvailabilityZone:
-        Fn::Select:
-          - 0
-          - Fn::GetAZs: { Ref: "AWS::Region" }
-      VpcId: !Ref VPC
-      CidrBlock: 10.0.1.0/24
-
-  InternetGateway:
-    Type: AWS::EC2::InternetGateway
-  GatewayAttachment:
-    Type: AWS::EC2::VPCGatewayAttachment
-    Properties:
-      VpcId: !Ref VPC
-      InternetGatewayId: !Ref InternetGateway
-
-  PublicRouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPC
-  PublicRoute:
-    Type: AWS::EC2::Route
-    DependsOn: GatewayAttachment # TODO idk if this dependency needs to be explicit
-    Properties:
-      RouteTableId: !Ref PublicRouteTable
-      DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref InternetGateway
-  PublicSubnet1RouteAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref PublicRouteTable
-      SubnetId: !Ref PublicSubnet1
-  PublicSubnet2RouteAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref PublicRouteTable
-      SubnetId: !Ref PublicSubnet2
-
-  PrivateRouteTable1:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPC
-  PrivateRoute1:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId: !Ref PrivateRouteTable1
-      DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref NatGateway
-  PrivateSubnet1RouteAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref PrivateRouteTable1
-      SubnetId: !Ref PrivateSubnet1
-
-  # NAT Gateway in PublicSubnet1 so containers can talk to the internet
-  NatGateway:
-    Type: AWS::EC2::NatGateway
-    Properties:
-      AllocationId: !GetAtt NatGatewayEIP.AllocationId
-      SubnetId: !Ref PublicSubnet1
-  NatGatewayEIP:
-    Type: AWS::EC2::EIP
-    Properties:
-      Domain: vpc
-
   # === SECURITY GROUPS ===============================================
 
   ServiceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Access to the api-server ECS containers
-      VpcId: !Ref VPC
+      VpcId: !Ref VpcId
   # Open up the ECS service's security group to traffic originating
   # from the security group of the load balancer.
   ServiceIngressfromLoadBalancer:
@@ -272,7 +189,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Access to the public-facing load balancer
-      VpcId: !Ref VPC
+      VpcId: !Ref VpcId
       SecurityGroupIngress:
         # Allow access to public facing ALB from any IP address
         - CidrIp: 0.0.0.0/0

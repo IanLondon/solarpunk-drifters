@@ -2,28 +2,27 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: Solarpunk Drifters - Secure static website on S3 served by CloudFormation
 
 Parameters:
-  DomainName:
-    Description: Domain name (must be registered on Route53 before deploying this stack)
-    Type: String
-  HostedZoneId:
-    Description: HostedZoneId for the domain e.g. Z23ABC4XYZL05B
-    Type: String
-  ApiOriginNameForCF:
-    Description: Origin name in CloudFront for API origin
-    Type: String
-    # TODO: import from root of nested stack, so you can do:
-    # Value: !Sub "${AWS::StackName}-api"
-    Default: solarpunk-drifters-website-api
-  S3StaticWebsiteOriginNameForCF:
-    Description: Origin name in CloudFront for S3 static website
-    Type: String
-    # TODO: import from root of nested stack, so you can do:
-    # Value: !Sub "S3-${AWS::StackName}-root"
-    Default: S3-solarpunk-drifters-website-root
-  # TODO IMMEDIATELY use nested stacks, don't use this parameter
+  # ====== Required ======
   ApiLoadBalancerDnsName:
     Description: DNS Name for API's public-facing load balancer
     Type: String
+  CertificateArn:
+    Description: ARN of ACM certificate
+    Type: String
+  DomainName:
+    Description: Domain name (must be registered on Route53 before deploying this stack)
+    Type: String
+  EnvironmentPrefix:
+    Description: String prefixed on various resource names to make them unique
+    Type: String
+  # ====== Optional ======
+  # (All are required)
+
+Mappings:
+  CloudFront:
+    OriginNames:
+      ApiOriginNameForCF: solarpunk-drifters-website-api
+      S3StaticWebsiteOriginNameForCF: S3-solarpunk-drifters-website-root
 
 Resources:
   StaticWebsiteS3BucketLogs:
@@ -93,7 +92,8 @@ Resources:
           ForwardedValues: # TODO use CachePolicy. DEPRECATED.
             QueryString: true
           MaxTTL: 31536000
-          TargetOriginId: !Ref S3StaticWebsiteOriginNameForCF
+          TargetOriginId:
+            !FindInMap [CloudFront, OriginNames, S3StaticWebsiteOriginNameForCF]
           ViewerProtocolPolicy: redirect-to-https
           ResponseHeadersPolicyId: !Ref ResponseHeadersPolicy
         CacheBehaviors:
@@ -104,7 +104,8 @@ Resources:
               - EventType: viewer-request
                 FunctionARN: !Ref RewriteApiUrisCloudFrontFn
             PathPattern: /api/*
-            TargetOriginId: !Ref ApiOriginNameForCF
+            TargetOriginId:
+              !FindInMap [CloudFront, OriginNames, ApiOriginNameForCF]
             ViewerProtocolPolicy: redirect-to-https
         CustomErrorResponses:
           - ErrorCachingMinTTL: 60
@@ -120,34 +121,39 @@ Resources:
         #     ResponseCode: 403
         #     ResponsePagePath: "/403.html"
         Enabled: true
-        HttpVersion: "http2"
-        DefaultRootObject: "index.html"
+        HttpVersion: http2
+        DefaultRootObject: index.html
         IPV6Enabled: true
         Logging:
           Bucket: !GetAtt StaticWebsiteS3BucketLogs.DomainName
           IncludeCookies: false
-          Prefix: "cloudfront-cdn/"
+          Prefix: cloudfront-cdn/
         Origins:
           - DomainName: !GetAtt StaticWebsiteS3BucketRoot.DomainName
-            Id: !Ref S3StaticWebsiteOriginNameForCF
+            Id:
+              !FindInMap [
+                CloudFront,
+                OriginNames,
+                S3StaticWebsiteOriginNameForCF,
+              ]
             OriginAccessControlId: !Ref OriginAccessControl
             S3OriginConfig: {}
           - DomainName: !Ref ApiLoadBalancerDnsName
-            Id: !Ref ApiOriginNameForCF
+            Id: !FindInMap [CloudFront, OriginNames, ApiOriginNameForCF]
             CustomOriginConfig:
               OriginProtocolPolicy: http-only
-        PriceClass: "PriceClass_All"
+        PriceClass: PriceClass_All
         ViewerCertificate:
-          AcmCertificateArn: !Ref Certificate
-          MinimumProtocolVersion: "TLSv1.1_2016"
-          SslSupportMethod: "sni-only"
+          AcmCertificateArn: !Ref CertificateArn
+          MinimumProtocolVersion: TLSv1.1_2016
+          SslSupportMethod: sni-only
 
   ApiBehaviorCachePolicy:
     Type: AWS::CloudFront::CachePolicy
     Properties:
       CachePolicyConfig:
         Comment: Cache policy for api/*
-        Name: !Sub "${AWS::StackName}-api-cachepolicy"
+        Name: !Sub "${EnvironmentPrefix}-api-cachepolicy"
         DefaultTTL: 86400
         MaxTTL: 31536000
         MinTTL: 0
@@ -187,7 +193,7 @@ Resources:
       FunctionConfig:
         Comment: Rewrite routes to S3 objects for the S3 static site
         Runtime: cloudfront-js-2.0
-      Name: !Sub "${AWS::StackName}-rewrite-website-uris"
+      Name: !Sub "${EnvironmentPrefix}-rewrite-website-uris"
 
   RewriteApiUrisCloudFrontFn:
     Type: AWS::CloudFront::Function
@@ -206,7 +212,7 @@ Resources:
       FunctionConfig:
         Comment: Rewrite routes to API from /api to /
         Runtime: cloudfront-js-2.0
-      Name: !Sub "${AWS::StackName}-rewrite-api-uris"
+      Name: !Sub "${EnvironmentPrefix}-rewrite-api-uris"
 
   OriginAccessControl:
     Type: AWS::CloudFront::OriginAccessControl
@@ -234,20 +240,11 @@ Resources:
             # The following HosteZoneId is always used for alias records pointing to CloudFront.
             HostedZoneId: "Z2FDTNDATAQYW2"
 
-  Certificate:
-    Type: AWS::CertificateManager::Certificate
-    Properties:
-      DomainName: !Ref DomainName
-      DomainValidationOptions:
-        - DomainName: !Ref DomainName
-          HostedZoneId: !Ref HostedZoneId
-      ValidationMethod: DNS
-
   ResponseHeadersPolicy:
     Type: AWS::CloudFront::ResponseHeadersPolicy
     Properties:
       ResponseHeadersPolicyConfig:
-        Name: !Sub "${AWS::StackName}-static-site-security-headers"
+        Name: !Sub "${EnvironmentPrefix}-static-site-security-headers"
         SecurityHeadersConfig:
           StrictTransportSecurity:
             AccessControlMaxAgeSec: 63072000
@@ -271,6 +268,9 @@ Resources:
             Protection: true
 
 Outputs:
+  CloudFrontDistributionId:
+    Description: CloudFront distribution ID
+    Value: !GetAtt CloudFrontDistribution.Id
   CloudFrontDistributionDomain:
     Description: CloudFront distribution domain
     Value: !GetAtt CloudFrontDistribution.DomainName

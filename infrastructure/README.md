@@ -10,25 +10,65 @@ CloudFront will route everything else to the static site in S3. A CloudFront Fun
 
 TODO. Listing manual steps here first, then move this into CI/CD as much as possible.
 
-## Website
+## Prerequisites
 
-TODO: the API server has to run first, to get `API_ALB_DNS_NAME`. When I refactor this to a nested stack, that parameter should be populated automatically.
+1. Register a domain name with a Hosted Zone on Route53. Once it's created, make note of the Hosted Zone ID, it is required below.
+2. The CloudFormation template uses nested stacks, so we need to have an S3 bucket for `aws cloudformation package` command to upload to. Create it with `aws --region us-east-1 s3 mb s3://YOUR_CFN_BUCKET_NAME`
 
-1. Register a domain name with a Hosted Zone on Route53
-   - Once it's created, copy the Hosted Zone ID
-2. Manually deploy `website.yaml`
-   - `aws cloudformation deploy --region us-east-1 --stack-name solarpunk-drifters-website --template-file templates/website.yaml --parameter-overrides DomainName=solarpunkdrifters.com HostedZoneId=HOSTEDZONEID12345 ApiLoadBalancerDnsName=API_ALB_DNS_NAME` (using the Hosted Zone ID from above). This will return the bucket name.
-   - NOTE: on subsequent runs, you can omit `--parameter-overrides`. It's only needed for stack creation.
-3. Manually build website
+After the prerequisites are complete, walk through the following steps to deploy initially deploy stacks/website/api-server. When you want to update any of these projects, it's the same process as for the initial deployment of each (ie, just follow the same steps).
+
+## Deploy/Update CloudFormation nested stacks
+
+### Lint the CloudFormation templates
+
+Install [cfn-lint](https://github.com/aws-cloudformation/cfn-lint), then from this directory root do:
+
+`cfn-lint -i W3002 -t templates/*`
+
+(W3002 is ignored, it's a warning about `TemplateURL` as a local file requiring the `package` cli command, which we're using.)
+
+### Package and Deploy with CloudFormation
+
+First package it, uploading dependencies to S3 and creating a new template file in `packaged/main.template` referencing the URLs of those artifacts instead of local paths:
+
+```bash
+aws --region us-east-1 cloudformation package \
+--template-file templates/main.yaml \
+--s3-bucket YOUR_CFN_BUCKET_NAME \
+--s3-prefix YOUR_STACK_NAME
+--output-template-file packaged/main.template
+```
+
+Then deploy the template you just created:
+
+```bash
+aws --region us-east-1 cloudformation deploy \
+--stack-name YOUR_STACK_NAME \
+--template-file packaged/main.template \
+--capabilities CAPABILITY_NAMED_IAM \
+--parameter-overrides ContainerImageUrl=YOUR_IMAGE_URL DomainName=solarpunkdrifters.com Environment=YOUR_ENVIRONMENT_NAME HostedZoneId=YOUR_HOSTED_ZONE_ID
+```
+
+After the initial deploy, you can omit `--parameter-overrides`, but you still need to run `aws cloudformation package` every time you update the stacks.
+
+## Deploy the Website
+
+Once the CloudFormation stacks are up, you can get the website bucket and the CloudFront distribution ID from the main stack's outputs (these are named `StaticWebsiteS3BucketRoot` and `CloudFrontDistributionId` respectively)
+
+1. Manually build website
    - `cd website && npm run build`
-4. Manually upload to S3
+2. Manually upload to S3
    - `aws s3 sync dist/ s3://NAME-OF-WEBSITE-BUCKET --delete`
-5. Manually invalidate CloudFront cache
+3. Manually invalidate CloudFront cache
    - `aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DIST_ID --paths "/*"`
 
-## API Server
+## Deploy the API Server
 
-1. Manually publish a container image to ECR
-2. Manually deploy `api-server.yaml`
-   - `aws cloudformation deploy --region us-east-1 --stack-name solarpunk-drifters-api-server --template-file templates/api-server.yaml --capabilities CAPABILITY_NAMED_IAM --parameter-overrides ContainerImageUrl=YOUR_IMAGE_URL` (using image URL from above)
-   - NOTE: on subsequent runs, you can omit `--parameter-overrides`. It's only needed for stack creation. But you're probably using a new image, so you will probably use it!
+To release a new version of the API Server, publish a new container to ECR and update the ECS Task Definition to use its URL via the `ContainerImageUrl` parameter on the `ApiServerStack`.
+
+1. Manually publish a new verion of your container image to ECR and make note of the URL.
+2. Redeploy the stack following the steps above, with `--parameter-overrides ContainerImageUrl=YOUR_NEW_IMAGE_URL`
+
+# TODO:
+
+Change bucket delete policy, bc CloudFormation cannot delete a non-empty bucket...
