@@ -198,3 +198,6 @@ Outputs:
   ApiLoadBalancerDnsName:
     Description: DNS name of public-facing load balancer
     Value: !GetAtt PublicLoadBalancer.DNSName
+  ApiServiceLogGroupArn:
+    Description: Log group of API service task
+    Value: !GetAtt ApiServiceLogGroup.Arn

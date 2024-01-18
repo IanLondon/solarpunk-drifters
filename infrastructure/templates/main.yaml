@@ -186,28 +186,40 @@ Outputs:
       - AIsProd
       - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRootArn
       - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRootArn
+  TestApiServiceLogGroupArn:
+    Description: Log group of API service task (test environment)
+    Value: !If
+      - AIsProd
+      - !GetAtt ApiServerStackB.Outputs.ApiServiceLogGroupArn
+      - !GetAtt ApiServerStackA.Outputs.ApiServiceLogGroupArn
 
   ProdCloudFrontDistributionId:
-    Description: The ID of the CloudFront distribution of this stack (prod enironment)
+    Description: The ID of the CloudFront distribution of this stack (prod environment)
     Value: !If
       - AIsProd
       - !GetAtt WebsiteStackA.Outputs.CloudFrontDistributionId
       - !GetAtt WebsiteStackB.Outputs.CloudFrontDistributionId
   ProdCloudFrontDistributionDomain:
-    Description: The domain of the CloudFront distribution of this stack (prod enironment)
+    Description: The domain of the CloudFront distribution of this stack (prod environment)
     Value: !If
       - AIsProd
       - !GetAtt WebsiteStackA.Outputs.CloudFrontDistributionDomain
       - !GetAtt WebsiteStackB.Outputs.CloudFrontDistributionDomain
   ProdStaticWebsiteS3BucketRoot:
-    Description: Static website S3 bucket (prod enironment)
+    Description: Static website S3 bucket (prod environment)
     Value: !If
       - AIsProd
       - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRoot
       - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRoot
   ProdStaticWebsiteS3BucketRootArn:
-    Description: Website bucket locator (prod enironment)
+    Description: Website bucket locator (prod environment)
     Value: !If
       - AIsProd
       - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRootArn
       - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRootArn
+  ProdApiServiceLogGroupArn:
+    Description: Log group of API service task (prod environment)
+    Value: !If
+      - AIsProd
+      - !GetAtt ApiServerStackA.Outputs.ApiServiceLogGroupArn
+      - !GetAtt ApiServerStackB.Outputs.ApiServiceLogGroupArn
