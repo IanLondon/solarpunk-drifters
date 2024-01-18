@@ -29,46 +29,68 @@ Install [cfn-lint](https://github.com/aws-cloudformation/cfn-lint), then from th
 
 ### Package and Deploy with CloudFormation
 
-First package it, uploading dependencies to S3 and creating a new template file in `packaged/main.template` referencing the URLs of those artifacts instead of local paths:
+First package the templates, uploading dependencies to S3 and creating a new template file in `packaged/main.template` referencing the URLs of those artifacts instead of local paths:
 
 ```bash
 aws --region us-east-1 cloudformation package \
 --template-file templates/main.yaml \
 --s3-bucket YOUR_CFN_BUCKET_NAME \
---s3-prefix YOUR_STACK_NAME
 --output-template-file packaged/main.template
 ```
 
-Then deploy the template you just created:
+Then deploy the template you just created. Assuming you are creating a new stack, let's set "A" as the production environment, and
 
 ```bash
 aws --region us-east-1 cloudformation deploy \
 --stack-name YOUR_STACK_NAME \
 --template-file packaged/main.template \
 --capabilities CAPABILITY_NAMED_IAM \
---parameter-overrides ContainerImageUrl=YOUR_IMAGE_URL DomainName=solarpunkdrifters.com Environment=YOUR_ENVIRONMENT_NAME HostedZoneId=YOUR_HOSTED_ZONE_ID
+--parameter-overrides DomainName=solarpunkdrifters.com HostedZoneId=YOUR_HOSTED_ZONE_ID ContainerImageUrlA=YOUR_PROD_IMAGE_URL ContainerImageUrlB=YOUR_TEST_IMAGE_URL ProdEnvLetter=A
 ```
 
 After the initial deploy, you can omit `--parameter-overrides`, but you still need to run `aws cloudformation package` every time you update the stacks.
 
-## Deploy the Website
+## Deploy the Website (to testing environment)
 
-Once the CloudFormation stacks are up, you can get the website bucket and the CloudFront distribution ID from the main stack's outputs (these are named `StaticWebsiteS3BucketRoot` and `CloudFrontDistributionId` respectively)
+Once the CloudFormation stacks are up, you can get the testing website bucket and the testing CloudFront distribution ID from the main stack's outputs (these are named `TestStaticWebsiteS3BucketRoot` and `TestCloudFrontDistributionId` respectively.)
 
 1. Manually build website
    - `cd website && npm run build`
 2. Manually upload to S3
-   - `aws s3 sync dist/ s3://NAME-OF-WEBSITE-BUCKET --delete`
+   - `aws s3 sync dist/ s3://TEST_WEBSITE_BUCKET --delete`
 3. Manually invalidate CloudFront cache
-   - `aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DIST_ID --paths "/*"`
+   - `aws cloudfront create-invalidation --distribution-id $TEST_CLOUDFRONT_DIST_ID --paths "/*"`
 
-## Deploy the API Server
+TODO: make a script do this
 
-To release a new version of the API Server, publish a new container to ECR and update the ECS Task Definition to use its URL via the `ContainerImageUrl` parameter on the `ApiServerStack`.
+## Deploy the API Server (to testing environment)
+
+To release a new version of the API Server in the testing environment, publish a new container to ECR and update the ECS Task Definition to use its URL via the `ContainerImageUrlA` or `ContainerImageUrlB` parameter. Normally, you should only update the container image in the testing environment, check the `ProdEnvLetter` parameter.
 
 1. Manually publish a new verion of your container image to ECR and make note of the URL.
-2. Redeploy the stack following the steps above, with `--parameter-overrides ContainerImageUrl=YOUR_NEW_IMAGE_URL`
+2. Check `ProdEnvLetter` to see which environment (A or B) is production. Pick the opposite letter! Eg if `ProdEnvLetter` is "A", we'll use "B" in the next step.
+3. Do `aws cloudfront --stack-name YOUR_STACK_NAME --use-previous-template --parameters ParameterKey=ContainerImageUrlB,ParameterValue=YOUR_NEW_IMAGE_URL` (assuming "B" is the current testing environment. If "A" is currently testing, use the `ContainerImageUrlA` parameter instead).
+
+TODO: make a script do this
+
+# Production vs Testing Environments / Blue-Green Deploy
+
+The CloudFormation stack includes two environments: "A" and "B". One is treated as production and the other as development, and these roles are rotated as part of a blue-green deployment strategy.
+
+The production environment is served by Route53 at `yourdomain.com`
+
+The testing environment is served by Route53 at `testing.yourdomain.com`
+
+To perform a release, "flip" the DNS routes between environments A and B. For example, if the current production environment is "A", we can release "B" as the new production environment with: `aws cloudfront --stack-name YOUR_STACK_NAME --use-previous-template --parameters ParameterKey=ProdEnvLetter,ParameterValue=B`. This will change DNS aliases so the apex domain and `testing` subdomain are flipped. (It will also flip the test vs prod outputs of `main.yaml`)
+
+(If "B" is the current production environment, set `ProdEnvLetter` to `A` instead.)
+
+TODO: a script will do this instead.
 
 # TODO:
 
-Change bucket delete policy, bc CloudFormation cannot delete a non-empty bucket...
+- [ ] Make testing subdomain private
+- [ ] Make a script that reads the CloudFormation `ProdEnvLetter` parameter and flips A/B instead of manually doing it.
+- [ ] Deploy testing container: Make a script which given a container image URL, it reads the CloudFormation `ProdEnvLetter` parameter to find which env is prod, and sets `ContainerImageUrlA` if prod is B or `ContainerImageUrlB` if prod is A
+- [ ] The deploy testing container script should have another step in front of it which builds the container and pushes it to ECR, returning a URL to that image.
+- [ ] Change bucket delete policy, bc CloudFormation cannot delete a non-empty bucket...

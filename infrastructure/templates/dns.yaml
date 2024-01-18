@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Solarpunk Drifters - DNS Config
+
+Parameters:
+  DomainName:
+    Description: Domain name for the production web application
+    Type: String
+  ProdCloudFrontDistroDomainName:
+    Description: Domain name of the production CloudFront distribution
+    Type: String
+  TestCloudFrontDistroDomainName:
+    Description: Domain name of the testing env CloudFront distribution
+    Type: String
+  TestSubdomain:
+    Description: Subdomain for testing environment
+    Type: String
+
+Resources:
+  Route53RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneName: !Sub "${DomainName}."
+      RecordSets:
+        - Name: !Ref DomainName
+          Type: "A"
+          AliasTarget:
+            DNSName: !Ref ProdCloudFrontDistroDomainName
+            EvaluateTargetHealth: false
+            # The following HosteZoneId is always used for alias records pointing to CloudFront.
+            HostedZoneId: "Z2FDTNDATAQYW2"
+        - Name: !Sub "${TestSubdomain}.${DomainName}"
+          Type: "A"
+          AliasTarget:
+            DNSName: !Ref TestCloudFrontDistroDomainName
+            EvaluateTargetHealth: false
+            # The following HosteZoneId is always used for alias records pointing to CloudFront.
+            HostedZoneId: "Z2FDTNDATAQYW2"

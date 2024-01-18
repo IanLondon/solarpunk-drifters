@@ -1,16 +1,30 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Solarpunk Drifters - ACM certificate
 
+Rules:
+  OnlyUsEast1:
+    Assertions:
+      - Assert:
+          Fn::Equals:
+            - !Ref AWS::Region
+            - us-east-1
+        AssertDescription: |
+          This template can only be deployed in the us-east-1 region.
+          This is because the ACM Certificate must be created in us-east-1
+
 Parameters:
   DomainName:
     Description: Domain name (must be registered on Route53 before deploying this stack)
+    Type: String
+  TestingSubdomainDomainName:
+    Description: Subdomain for testing, eg testing.example.com
     Type: String
   HostedZoneId:
     Description: HostedZoneId for the domain e.g. Z23ABC4XYZL05B
     Type: AWS::Route53::HostedZone::Id
 
 Resources:
-  Certificate:
+  ApexCertificate:
     Type: AWS::CertificateManager::Certificate
     Properties:
       DomainName: !Ref DomainName
@@ -19,7 +33,18 @@ Resources:
           HostedZoneId: !Ref HostedZoneId
       ValidationMethod: DNS
 
+  TestingCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref TestingSubdomainDomainName
+      DomainValidationOptions:
+        - DomainName: !Ref TestingSubdomainDomainName
+          HostedZoneId: !Ref HostedZoneId
+      ValidationMethod: DNS
 Outputs:
-  CertificateArn:
+  ApexCertificateArn:
     Description: ACM certificate for domain name
-    Value: !Ref Certificate
+    Value: !Ref ApexCertificate
+  TestingSubdomainCertificateArn:
+    Description: ACM certificate for testing subdomain
+    Value: !Ref TestingCertificate

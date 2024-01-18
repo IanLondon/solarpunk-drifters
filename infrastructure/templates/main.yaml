@@ -1,32 +1,48 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Solarpunk Drifters - Main CFN Stack
 
-Rules:
-  OnlyUsEast1:
-    Assertions:
-      - Assert:
-          Fn::Equals:
-            - !Ref AWS::Region
-            - us-east-1
-        AssertDescription: |
-          This template can only be deployed in the us-east-1 region.
-          This is because the ACM Certificate must be created in us-east-1
-
 Parameters:
-  ContainerImageUrl:
-    Type: String
-    Description: |
-      The url of a container image for the instances to run, eg 
-      "012345678910.dkr.ecr.<region-name>.amazonaws.com/<repository-name>@sha256:94afd1f2e64d908bc90dbca0035a5b567EXAMPLE"
   DomainName:
     Description: Domain name (must be registered on Route53 before deploying this stack)
     Type: String
-  Environment:
-    Type: String
-    Description: Name for the environment.
   HostedZoneId:
     Description: HostedZoneId for the domain e.g. Z23ABC4XYZL05B
     Type: String
+  ContainerImageUrlA:
+    Type: String
+    Description: |
+      The url of a container image for the ECS tasks to run (in environment "A"), eg 
+      "012345678910.dkr.ecr.<region-name>.amazonaws.com/<repository-name>@sha256:someSha"
+  ContainerImageUrlB:
+    Type: String
+    Description: |
+      The url of a container image for the ECS tasks to run (in environment "B"), eg 
+      "012345678910.dkr.ecr.<region-name>.amazonaws.com/<repository-name>@sha256:someSha"
+  ProdEnvLetter:
+    Type: String
+    Description: |
+      Which env is the production one? 
+      Set to either A or B to designate production, the other will implicitly be test
+    AllowedValues: [A, B]
+
+Conditions:
+  AIsProd: !Equals
+    - !Ref ProdEnvLetter
+    - A
+  BIsProd: !Equals
+    - !Ref ProdEnvLetter
+    - B
+
+Mappings:
+  Constants:
+    EnvironmentPrefixes:
+      A: a
+      B: b
+    LogGroupNames:
+      ApiServiceA: solarpunk-drifters/env-a/api-service
+      ApiServiceB: solarpunk-drifters/env-b/api-service
+    Subdomains:
+      Test: testing
 
 Resources:
   # TODO: once stabilized, write more conservative delete/replace policies
@@ -39,21 +55,28 @@ Resources:
       TemplateURL: ./acm-certificate.yaml
       Parameters:
         DomainName: !Ref DomainName
+        TestingSubdomainDomainName: !Sub
+          - "${TestingSubdomain}.${DomainName}"
+          - TestingSubdomain: !FindInMap [Constants, Subdomains, Test]
         HostedZoneId: !Ref HostedZoneId
 
-  ApiServerStack:
+  DnsStack:
     Type: AWS::CloudFormation::Stack
     DeletionPolicy: Delete
     UpdateReplacePolicy: Delete
     Properties:
-      TemplateURL: ./api-server.yaml
+      TemplateURL: ./dns.yaml
       Parameters:
-        ContainerImageUrl: !Ref ContainerImageUrl
-        EnvironmentPrefix: !Ref Environment
-        PublicSubnet1Id: !GetAtt NetworkStack.Outputs.PublicSubnet1Id
-        PublicSubnet2Id: !GetAtt NetworkStack.Outputs.PublicSubnet2Id
-        PrivateSubnet1Id: !GetAtt NetworkStack.Outputs.PrivateSubnet1Id
-        VpcId: !GetAtt NetworkStack.Outputs.VpcId
+        DomainName: !Ref DomainName
+        ProdCloudFrontDistroDomainName: !If
+          - AIsProd
+          - !GetAtt WebsiteStackA.Outputs.CloudFrontDistributionDomain
+          - !GetAtt WebsiteStackB.Outputs.CloudFrontDistributionDomain
+        TestCloudFrontDistroDomainName: !If
+          - AIsProd
+          - !GetAtt WebsiteStackB.Outputs.CloudFrontDistributionDomain
+          - !GetAtt WebsiteStackA.Outputs.CloudFrontDistributionDomain
+        TestSubdomain: !FindInMap [Constants, Subdomains, Test]
 
   NetworkStack:
     Type: AWS::CloudFormation::Stack
@@ -62,28 +85,129 @@ Resources:
     Properties:
       TemplateURL: ./network.yaml
 
-  WebsiteStack:
+  # TODO: can a ForEach make this more DRY?
+
+  # === STACK A =======================================================
+  ApiServerStackA:
+    Type: AWS::CloudFormation::Stack
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      TemplateURL: ./api-server.yaml
+      Parameters:
+        ApiServiceLogGroupName:
+          !FindInMap [Constants, LogGroupNames, ApiServiceA]
+        ContainerImageUrl: !Ref ContainerImageUrlA
+        EnvironmentPrefix: !FindInMap [Constants, EnvironmentPrefixes, A]
+        PublicSubnet1Id: !GetAtt NetworkStack.Outputs.PublicSubnet1Id
+        PublicSubnet2Id: !GetAtt NetworkStack.Outputs.PublicSubnet2Id
+        PrivateSubnet1Id: !GetAtt NetworkStack.Outputs.PrivateSubnet1Id
+        VpcId: !GetAtt NetworkStack.Outputs.VpcId
+
+  WebsiteStackA:
     Type: AWS::CloudFormation::Stack
     DeletionPolicy: Delete
     UpdateReplacePolicy: Delete
     Properties:
       TemplateURL: ./website.yaml
       Parameters:
-        CertificateArn: !GetAtt AcmCertificateStack.Outputs.CertificateArn
-        EnvironmentPrefix: !Ref Environment
-        DomainName: !Ref DomainName
-        ApiLoadBalancerDnsName: !GetAtt ApiServerStack.Outputs.ApiLoadBalancerDnsName
+        CertificateArn: !If
+          - AIsProd
+          - !GetAtt AcmCertificateStack.Outputs.ApexCertificateArn
+          - !GetAtt AcmCertificateStack.Outputs.TestingSubdomainCertificateArn
+        EnvironmentPrefix: !FindInMap [Constants, EnvironmentPrefixes, A]
+        CloudFrontDistroCname: !If
+          - AIsProd
+          - !Ref DomainName
+          - !Sub
+            - "${TestingSubdomain}.${DomainName}"
+            - TestingSubdomain: !FindInMap [Constants, Subdomains, Test]
+        ApiLoadBalancerDnsName: !GetAtt ApiServerStackA.Outputs.ApiLoadBalancerDnsName
+
+  # === STACK B =======================================================
+  ApiServerStackB:
+    Type: AWS::CloudFormation::Stack
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      TemplateURL: ./api-server.yaml
+      Parameters:
+        ApiServiceLogGroupName:
+          !FindInMap [Constants, LogGroupNames, ApiServiceB]
+        ContainerImageUrl: !Ref ContainerImageUrlB
+        EnvironmentPrefix: !FindInMap [Constants, EnvironmentPrefixes, B]
+        PublicSubnet1Id: !GetAtt NetworkStack.Outputs.PublicSubnet1Id
+        PublicSubnet2Id: !GetAtt NetworkStack.Outputs.PublicSubnet2Id
+        PrivateSubnet1Id: !GetAtt NetworkStack.Outputs.PrivateSubnet1Id
+        VpcId: !GetAtt NetworkStack.Outputs.VpcId
+
+  WebsiteStackB:
+    Type: AWS::CloudFormation::Stack
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      TemplateURL: ./website.yaml
+      Parameters:
+        CertificateArn: !If
+          - BIsProd
+          - !GetAtt AcmCertificateStack.Outputs.ApexCertificateArn
+          - !GetAtt AcmCertificateStack.Outputs.TestingSubdomainCertificateArn
+        EnvironmentPrefix: !FindInMap [Constants, EnvironmentPrefixes, B]
+        CloudFrontDistroCname: !If
+          - BIsProd
+          - !Ref DomainName
+          - !Sub
+            - "${TestingSubdomain}.${DomainName}"
+            - TestingSubdomain: !FindInMap [Constants, Subdomains, Test]
+        ApiLoadBalancerDnsName: !GetAtt ApiServerStackB.Outputs.ApiLoadBalancerDnsName
 
 Outputs:
-  CloudFrontDistributionId:
-    Description: The ID of the CloudFront distribution of this stack
-    Value: !GetAtt WebsiteStack.Outputs.CloudFrontDistributionId
-  CloudFrontDistributionDomain:
-    Description: The domain of the CloudFront distribution of this stack
-    Value: !GetAtt WebsiteStack.Outputs.CloudFrontDistributionDomain
-  StaticWebsiteS3BucketRoot:
-    Description: Static website S3 bucket
-    Value: !GetAtt WebsiteStack.Outputs.StaticWebsiteS3BucketRoot
-  StaticWebsiteS3BucketRootArn:
-    Description: Website bucket locator
-    Value: !GetAtt WebsiteStack.Outputs.StaticWebsiteS3BucketRootArn
+  TestCloudFrontDistributionId:
+    Description: The ID of the CloudFront distribution of this stack (test environment)
+    Value: !If
+      - AIsProd
+      - !GetAtt WebsiteStackB.Outputs.CloudFrontDistributionId
+      - !GetAtt WebsiteStackA.Outputs.CloudFrontDistributionId
+  TestCloudFrontDistributionDomain:
+    Description: The domain of the CloudFront distribution of this stack (test environment)
+    Value: !If
+      - AIsProd
+      - !GetAtt WebsiteStackB.Outputs.CloudFrontDistributionDomain
+      - !GetAtt WebsiteStackA.Outputs.CloudFrontDistributionDomain
+  TestStaticWebsiteS3BucketRoot:
+    Description: Static website S3 bucket (test environment)
+    Value: !If
+      - AIsProd
+      - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRoot
+      - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRoot
+  TestStaticWebsiteS3BucketRootArn:
+    Description: Website bucket locator (test environment)
+    Value: !If
+      - AIsProd
+      - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRootArn
+      - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRootArn
+
+  ProdCloudFrontDistributionId:
+    Description: The ID of the CloudFront distribution of this stack (prod enironment)
+    Value: !If
+      - AIsProd
+      - !GetAtt WebsiteStackA.Outputs.CloudFrontDistributionId
+      - !GetAtt WebsiteStackB.Outputs.CloudFrontDistributionId
+  ProdCloudFrontDistributionDomain:
+    Description: The domain of the CloudFront distribution of this stack (prod enironment)
+    Value: !If
+      - AIsProd
+      - !GetAtt WebsiteStackA.Outputs.CloudFrontDistributionDomain
+      - !GetAtt WebsiteStackB.Outputs.CloudFrontDistributionDomain
+  ProdStaticWebsiteS3BucketRoot:
+    Description: Static website S3 bucket (prod enironment)
+    Value: !If
+      - AIsProd
+      - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRoot
+      - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRoot
+  ProdStaticWebsiteS3BucketRootArn:
+    Description: Website bucket locator (prod enironment)
+    Value: !If
+      - AIsProd
+      - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRootArn
+      - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRootArn

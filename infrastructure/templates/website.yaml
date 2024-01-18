@@ -9,8 +9,8 @@ Parameters:
   CertificateArn:
     Description: ARN of ACM certificate
     Type: String
-  DomainName:
-    Description: Domain name (must be registered on Route53 before deploying this stack)
+  CloudFrontDistroCname:
+    Description: CNAME for CloudFront distro's alias (must be registered on Route53 before deploying this stack)
     Type: String
   EnvironmentPrefix:
     Description: String prefixed on various resource names to make them unique
@@ -82,7 +82,7 @@ Resources:
     Properties:
       DistributionConfig:
         Aliases:
-          - !Ref DomainName
+          - !Ref CloudFrontDistroCname
         DefaultCacheBehavior:
           Compress: true
           DefaultTTL: 86400
@@ -226,19 +226,6 @@ Resources:
         OriginAccessControlOriginType: s3
         SigningBehavior: always
         SigningProtocol: sigv4
-
-  Route53RecordSetGroup:
-    Type: AWS::Route53::RecordSetGroup
-    Properties:
-      HostedZoneName: !Sub "${DomainName}."
-      RecordSets:
-        - Name: !Ref DomainName
-          Type: "A"
-          AliasTarget:
-            DNSName: !GetAtt "CloudFrontDistribution.DomainName"
-            EvaluateTargetHealth: false
-            # The following HosteZoneId is always used for alias records pointing to CloudFront.
-            HostedZoneId: "Z2FDTNDATAQYW2"
 
   ResponseHeadersPolicy:
     Type: AWS::CloudFront::ResponseHeadersPolicy
