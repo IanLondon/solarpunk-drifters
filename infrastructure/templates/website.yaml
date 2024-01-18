@@ -173,7 +173,10 @@ Resources:
       FunctionCode: |
         function handler(event) {
           const request = event.request;
-          if (request.uri === "/") {
+          if (request.uri === "/api" || request.uri.startsWith("/api/")) {
+            // pass-thru, ignore API routes in this fn
+            return request
+          } else if (request.uri === "/") {
             // root
             request.uri = "/index.html";
           } else if (!request.uri.includes(".")) {
