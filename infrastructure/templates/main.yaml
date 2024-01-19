@@ -29,9 +29,9 @@ Conditions:
   AIsProd: !Equals
     - !Ref ProdEnvLetter
     - A
-  BIsProd: !Equals
-    - !Ref ProdEnvLetter
-    - B
+  # BIsProd: !Equals
+  #   - !Ref ProdEnvLetter
+  #   - B
 
 Mappings:
   Constants:
@@ -68,14 +68,8 @@ Resources:
       TemplateURL: ./dns.yaml
       Parameters:
         DomainName: !Ref DomainName
-        ProdCloudFrontDistroDomainName: !If
-          - AIsProd
-          - !GetAtt WebsiteStackA.Outputs.CloudFrontDistributionDomain
-          - !GetAtt WebsiteStackB.Outputs.CloudFrontDistributionDomain
-        TestCloudFrontDistroDomainName: !If
-          - AIsProd
-          - !GetAtt WebsiteStackB.Outputs.CloudFrontDistributionDomain
-          - !GetAtt WebsiteStackA.Outputs.CloudFrontDistributionDomain
+        ProdCloudFrontDistroDomainName: !GetAtt ProductionCdn.Outputs.CloudFrontDistributionDomain
+        TestCloudFrontDistroDomainName: !GetAtt TestCdn.Outputs.CloudFrontDistributionDomain
         TestSubdomain: !FindInMap [Constants, Subdomains, Test]
 
   NetworkStack:
@@ -85,8 +79,77 @@ Resources:
     Properties:
       TemplateURL: ./network.yaml
 
-  # TODO: can a ForEach make this more DRY?
+  # === CDN with CloudFront ===========================================
 
+  ProductionCdn:
+    Type: AWS::CloudFormation::Stack
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      TemplateURL: ./cdn.yaml
+      Parameters:
+        # Prod CDN always uses apex
+        CertificateArn: !GetAtt AcmCertificateStack.Outputs.ApexCertificateArn
+        CloudFrontDistroCname: !Ref DomainName
+        EnvironmentPrefix: prod # TODO don't call this "Environment" prefix, CDN prefix??
+
+        ApiLoadBalancerDnsName: !If
+          - AIsProd
+          - !GetAtt ApiServerStackA.Outputs.ApiLoadBalancerDnsName
+          - !GetAtt ApiServerStackB.Outputs.ApiLoadBalancerDnsName
+        StaticWebsiteS3BucketRootName: !If
+          - AIsProd
+          - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRootName
+          - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRootName
+        StaticWebsiteS3BucketRootArn: !If
+          - AIsProd
+          - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRootArn
+          - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRootArn
+        StaticWebsiteS3BucketLogsDomainName: !If
+          - AIsProd
+          - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketLogsDomainName
+          - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketLogsDomainName
+        StaticWebsiteS3BucketRootDomainName: !If
+          - AIsProd
+          - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRootDomainName
+          - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRootDomainName
+
+  TestCdn:
+    Type: AWS::CloudFormation::Stack
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      TemplateURL: ./cdn.yaml
+      Parameters:
+        CertificateArn: !GetAtt AcmCertificateStack.Outputs.TestingSubdomainCertificateArn
+        EnvironmentPrefix: test # TODO don't call this "Environment" prefix, CDN prefix??
+        # Test CDN always uses testing subdomain
+        CloudFrontDistroCname: !Sub
+          - "${TestingSubdomain}.${DomainName}"
+          - TestingSubdomain: !FindInMap [Constants, Subdomains, Test]
+
+        ApiLoadBalancerDnsName: !If
+          - AIsProd
+          - !GetAtt ApiServerStackB.Outputs.ApiLoadBalancerDnsName
+          - !GetAtt ApiServerStackA.Outputs.ApiLoadBalancerDnsName
+        StaticWebsiteS3BucketRootName: !If
+          - AIsProd
+          - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRootName
+          - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRootName
+        StaticWebsiteS3BucketRootArn: !If
+          - AIsProd
+          - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRootArn
+          - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRootArn
+        StaticWebsiteS3BucketLogsDomainName: !If
+          - AIsProd
+          - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketLogsDomainName
+          - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketLogsDomainName
+        StaticWebsiteS3BucketRootDomainName: !If
+          - AIsProd
+          - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRootDomainName
+          - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRootDomainName
+
+  # TODO: can a ForEach make this more DRY?
   # === STACK A =======================================================
   ApiServerStackA:
     Type: AWS::CloudFormation::Stack
@@ -110,19 +173,6 @@ Resources:
     UpdateReplacePolicy: Delete
     Properties:
       TemplateURL: ./website.yaml
-      Parameters:
-        CertificateArn: !If
-          - AIsProd
-          - !GetAtt AcmCertificateStack.Outputs.ApexCertificateArn
-          - !GetAtt AcmCertificateStack.Outputs.TestingSubdomainCertificateArn
-        EnvironmentPrefix: !FindInMap [Constants, EnvironmentPrefixes, A]
-        CloudFrontDistroCname: !If
-          - AIsProd
-          - !Ref DomainName
-          - !Sub
-            - "${TestingSubdomain}.${DomainName}"
-            - TestingSubdomain: !FindInMap [Constants, Subdomains, Test]
-        ApiLoadBalancerDnsName: !GetAtt ApiServerStackA.Outputs.ApiLoadBalancerDnsName
 
   # === STACK B =======================================================
   ApiServerStackB:
@@ -147,39 +197,20 @@ Resources:
     UpdateReplacePolicy: Delete
     Properties:
       TemplateURL: ./website.yaml
-      Parameters:
-        CertificateArn: !If
-          - BIsProd
-          - !GetAtt AcmCertificateStack.Outputs.ApexCertificateArn
-          - !GetAtt AcmCertificateStack.Outputs.TestingSubdomainCertificateArn
-        EnvironmentPrefix: !FindInMap [Constants, EnvironmentPrefixes, B]
-        CloudFrontDistroCname: !If
-          - BIsProd
-          - !Ref DomainName
-          - !Sub
-            - "${TestingSubdomain}.${DomainName}"
-            - TestingSubdomain: !FindInMap [Constants, Subdomains, Test]
-        ApiLoadBalancerDnsName: !GetAtt ApiServerStackB.Outputs.ApiLoadBalancerDnsName
 
 Outputs:
   TestCloudFrontDistributionId:
     Description: The ID of the CloudFront distribution of this stack (test environment)
-    Value: !If
-      - AIsProd
-      - !GetAtt WebsiteStackB.Outputs.CloudFrontDistributionId
-      - !GetAtt WebsiteStackA.Outputs.CloudFrontDistributionId
+    Value: !GetAtt TestCdn.Outputs.CloudFrontDistributionId
   TestCloudFrontDistributionDomain:
     Description: The domain of the CloudFront distribution of this stack (test environment)
+    Value: !GetAtt TestCdn.Outputs.CloudFrontDistributionDomain
+  TestStaticWebsiteS3BucketRootName:
+    Description: Static website S3 bucket name (test environment)
     Value: !If
       - AIsProd
-      - !GetAtt WebsiteStackB.Outputs.CloudFrontDistributionDomain
-      - !GetAtt WebsiteStackA.Outputs.CloudFrontDistributionDomain
-  TestStaticWebsiteS3BucketRoot:
-    Description: Static website S3 bucket (test environment)
-    Value: !If
-      - AIsProd
-      - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRoot
-      - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRoot
+      - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRootName
+      - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRootName
   TestStaticWebsiteS3BucketRootArn:
     Description: Website bucket locator (test environment)
     Value: !If
@@ -195,22 +226,16 @@ Outputs:
 
   ProdCloudFrontDistributionId:
     Description: The ID of the CloudFront distribution of this stack (prod environment)
-    Value: !If
-      - AIsProd
-      - !GetAtt WebsiteStackA.Outputs.CloudFrontDistributionId
-      - !GetAtt WebsiteStackB.Outputs.CloudFrontDistributionId
+    Value: !GetAtt ProductionCdn.Outputs.CloudFrontDistributionId
   ProdCloudFrontDistributionDomain:
     Description: The domain of the CloudFront distribution of this stack (prod environment)
+    Value: !GetAtt ProductionCdn.Outputs.CloudFrontDistributionDomain
+  ProdStaticWebsiteS3BucketRootName:
+    Description: Static website S3 bucket name (prod environment)
     Value: !If
       - AIsProd
-      - !GetAtt WebsiteStackA.Outputs.CloudFrontDistributionDomain
-      - !GetAtt WebsiteStackB.Outputs.CloudFrontDistributionDomain
-  ProdStaticWebsiteS3BucketRoot:
-    Description: Static website S3 bucket (prod environment)
-    Value: !If
-      - AIsProd
-      - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRoot
-      - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRoot
+      - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRootName
+      - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRootName
   ProdStaticWebsiteS3BucketRootArn:
     Description: Website bucket locator (prod environment)
     Value: !If

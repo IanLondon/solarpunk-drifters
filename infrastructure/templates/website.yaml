@@ -1,29 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Solarpunk Drifters - Secure static website on S3 served by CloudFormation
 
-Parameters:
-  # ====== Required ======
-  ApiLoadBalancerDnsName:
-    Description: DNS Name for API's public-facing load balancer
-    Type: String
-  CertificateArn:
-    Description: ARN of ACM certificate
-    Type: String
-  CloudFrontDistroCname:
-    Description: CNAME for CloudFront distro's alias (must be registered on Route53 before deploying this stack)
-    Type: String
-  EnvironmentPrefix:
-    Description: String prefixed on various resource names to make them unique
-    Type: String
-  # ====== Optional ======
-  # (All are required)
-
-Mappings:
-  CloudFront:
-    OriginNames:
-      ApiOriginNameForCF: solarpunk-drifters-website-api
-      S3StaticWebsiteOriginNameForCF: S3-solarpunk-drifters-website-root
-
 Resources:
   StaticWebsiteS3BucketLogs:
     Type: AWS::S3::Bucket
@@ -49,230 +26,19 @@ Resources:
         DestinationBucketName: !Ref StaticWebsiteS3BucketLogs
         LogFilePrefix: "static-website-bucket/"
 
-  StaticWebsiteS3BucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref StaticWebsiteS3BucketRoot
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Action: s3:GetObject
-            Principal:
-              Service: "cloudfront.amazonaws.com"
-            Effect: Allow
-            Resource: !Sub
-              - "${BucketArn}/*"
-              - BucketArn: !GetAtt StaticWebsiteS3BucketRoot.Arn
-            Condition:
-              StringEquals:
-                "AWS:SourceArn": !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
-          # ListBucket needs its own statement because the resource must not have trailing "/*"
-          # TODO: DRY vs above?
-          - Action: s3:ListBucket
-            Principal:
-              Service: "cloudfront.amazonaws.com"
-            Effect: Allow
-            Resource: !GetAtt StaticWebsiteS3BucketRoot.Arn
-            Condition:
-              StringEquals:
-                "AWS:SourceArn": !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
-
-  CloudFrontDistribution:
-    Type: AWS::CloudFront::Distribution
-    Properties:
-      DistributionConfig:
-        Aliases:
-          - !Ref CloudFrontDistroCname
-        DefaultCacheBehavior:
-          Compress: true
-          DefaultTTL: 86400
-          FunctionAssociations:
-            - EventType: viewer-request
-              FunctionARN: !Ref RewriteWebsiteUrisCloudFrontFn
-          ForwardedValues: # TODO use CachePolicy. DEPRECATED.
-            QueryString: true
-          MaxTTL: 31536000
-          TargetOriginId:
-            !FindInMap [CloudFront, OriginNames, S3StaticWebsiteOriginNameForCF]
-          ViewerProtocolPolicy: redirect-to-https
-          ResponseHeadersPolicyId: !Ref ResponseHeadersPolicy
-        CacheBehaviors:
-          - AllowedMethods: [GET, HEAD, OPTIONS, PUT, PATCH, POST, DELETE]
-            CachePolicyId: !Ref ApiBehaviorCachePolicy
-            Compress: true
-            FunctionAssociations:
-              - EventType: viewer-request
-                FunctionARN: !Ref RewriteApiUrisCloudFrontFn
-            PathPattern: /api/*
-            TargetOriginId:
-              !FindInMap [CloudFront, OriginNames, ApiOriginNameForCF]
-            ViewerProtocolPolicy: redirect-to-https
-        CustomErrorResponses:
-          - ErrorCachingMinTTL: 60
-            ErrorCode: 404
-            ResponseCode: 200
-            # Redirect 404s to index.html
-            # (TODO: If you redirect to 404.html, then trailing slash
-            # like /somepage/ 404s instead of going to the rewrite uris fn)
-            ResponsePagePath: "/404.html"
-        # TODO: delete? never used
-        #   - ErrorCachingMinTTL: 60
-        #     ErrorCode: 403
-        #     ResponseCode: 403
-        #     ResponsePagePath: "/403.html"
-        Enabled: true
-        HttpVersion: http2
-        DefaultRootObject: index.html
-        IPV6Enabled: true
-        Logging:
-          Bucket: !GetAtt StaticWebsiteS3BucketLogs.DomainName
-          IncludeCookies: false
-          Prefix: cloudfront-cdn/
-        Origins:
-          - DomainName: !GetAtt StaticWebsiteS3BucketRoot.DomainName
-            Id:
-              !FindInMap [
-                CloudFront,
-                OriginNames,
-                S3StaticWebsiteOriginNameForCF,
-              ]
-            OriginAccessControlId: !Ref OriginAccessControl
-            S3OriginConfig: {}
-          - DomainName: !Ref ApiLoadBalancerDnsName
-            Id: !FindInMap [CloudFront, OriginNames, ApiOriginNameForCF]
-            CustomOriginConfig:
-              OriginProtocolPolicy: http-only
-        PriceClass: PriceClass_All
-        ViewerCertificate:
-          AcmCertificateArn: !Ref CertificateArn
-          MinimumProtocolVersion: TLSv1.1_2016
-          SslSupportMethod: sni-only
-
-  ApiBehaviorCachePolicy:
-    Type: AWS::CloudFront::CachePolicy
-    Properties:
-      CachePolicyConfig:
-        Comment: Cache policy for api/*
-        Name: !Sub "${EnvironmentPrefix}-api-cachepolicy"
-        DefaultTTL: 86400
-        MaxTTL: 31536000
-        MinTTL: 0
-        ParametersInCacheKeyAndForwardedToOrigin:
-          CookiesConfig:
-            CookieBehavior: all
-          EnableAcceptEncodingGzip: true
-          HeadersConfig:
-            HeaderBehavior: none
-          QueryStringsConfig:
-            QueryStringBehavior: all
-
-  RewriteWebsiteUrisCloudFrontFn:
-    Type: AWS::CloudFront::Function
-    Properties:
-      AutoPublish: true
-      FunctionCode: |
-        function handler(event) {
-          const request = event.request;
-          if (request.uri === "/api" || request.uri.startsWith("/api/")) {
-            // pass-thru, ignore API routes in this fn
-            return request
-          } else if (request.uri === "/") {
-            // root
-            request.uri = "/index.html";
-          } else if (!request.uri.includes(".")) {
-            // no file extension, eg "/somepage/otherpage" -> /somepage/otherpage.html
-            request.uri += ".html";
-          } else if (request.uri.endsWith(".html")) {
-            // redirect to non-html URL
-            const nonHtmlUrl = request.uri.slice(0, -5);
-            return {
-              statusCode: 301,
-              headers: { location: { value: nonHtmlUrl } },
-            };
-          }
-
-          return request;
-        }
-      FunctionConfig:
-        Comment: Rewrite routes to S3 objects for the S3 static site
-        Runtime: cloudfront-js-2.0
-      Name: !Sub "${EnvironmentPrefix}-rewrite-website-uris"
-
-  RewriteApiUrisCloudFrontFn:
-    Type: AWS::CloudFront::Function
-    Properties:
-      AutoPublish: true
-      FunctionCode: |
-        function handler(event) {
-          const request = event.request;
-          if (request.uri.startsWith("/api/")) {
-            // strip off "/api" so "/api/something" -> "/something"
-            request.uri = request.uri.slice(4);
-          }
-
-          return request;
-        }
-      FunctionConfig:
-        Comment: Rewrite routes to API from /api to /
-        Runtime: cloudfront-js-2.0
-      Name: !Sub "${EnvironmentPrefix}-rewrite-api-uris"
-
-  OriginAccessControl:
-    Type: AWS::CloudFront::OriginAccessControl
-    Properties:
-      OriginAccessControlConfig:
-        # Get a unique ID for the OAC Config name.
-        # Name must be unique within account
-        Name: !Sub
-          - amzn-secure-static-site-${guid}
-          - guid: !Select [2, !Split ["/", !Ref "AWS::StackId"]]
-        OriginAccessControlOriginType: s3
-        SigningBehavior: always
-        SigningProtocol: sigv4
-
-  ResponseHeadersPolicy:
-    Type: AWS::CloudFront::ResponseHeadersPolicy
-    Properties:
-      ResponseHeadersPolicyConfig:
-        Name: !Sub "${EnvironmentPrefix}-static-site-security-headers"
-        SecurityHeadersConfig:
-          StrictTransportSecurity:
-            AccessControlMaxAgeSec: 63072000
-            IncludeSubdomains: true
-            Override: true
-            Preload: true
-          # ContentSecurityPolicy:
-          #   ContentSecurityPolicy: "default-src 'none'; img-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'"
-          #   Override: true
-          ContentTypeOptions:
-            Override: true
-          FrameOptions:
-            FrameOption: DENY
-            Override: true
-          ReferrerPolicy:
-            ReferrerPolicy: "same-origin"
-            Override: true
-          XSSProtection:
-            ModeBlock: true
-            Override: true
-            Protection: true
-
 Outputs:
-  CloudFrontDistributionId:
-    Description: CloudFront distribution ID
-    Value: !GetAtt CloudFrontDistribution.Id
-  CloudFrontDistributionDomain:
-    Description: CloudFront distribution domain
-    Value: !GetAtt CloudFrontDistribution.DomainName
-  StaticWebsiteS3BucketRoot:
+  StaticWebsiteS3BucketRootName:
     Description: Static website S3 bucket
     Value: !Ref StaticWebsiteS3BucketRoot
+  StaticWebsiteS3BucketRootDomainName:
+    Description: Domain name of root bucket
+    Value: !GetAtt StaticWebsiteS3BucketRoot.DomainName
   StaticWebsiteS3BucketRootArn:
     Description: Website bucket locator
     Value: !GetAtt StaticWebsiteS3BucketRoot.Arn
   StaticWebsiteS3BucketLogs:
     Description: Logging bucket
     Value: !Ref StaticWebsiteS3BucketLogs
-  StaticWebsiteS3BucketLogsName:
+  StaticWebsiteS3BucketLogsDomainName:
     Description: Logging bucket Name
     Value: !GetAtt StaticWebsiteS3BucketLogs.DomainName

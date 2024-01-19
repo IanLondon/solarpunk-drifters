@@ -45,7 +45,7 @@ aws --region us-east-1 cloudformation deploy \
 --stack-name YOUR_STACK_NAME \
 --template-file packaged/main.template \
 --capabilities CAPABILITY_NAMED_IAM \
---parameter-overrides DomainName=solarpunkdrifters.com HostedZoneId=YOUR_HOSTED_ZONE_ID ContainerImageUrlA=YOUR_PROD_IMAGE_URL ContainerImageUrlB=YOUR_TEST_IMAGE_URL ProdEnvLetter=A
+--parameter-overrides ContainerImageUrlA=YOUR_PROD_IMAGE_URL ContainerImageUrlB=YOUR_TEST_IMAGE_URL DomainName=solarpunkdrifters.com HostedZoneId=YOUR_HOSTED_ZONE_ID ProdEnvLetter=A
 ```
 
 After the initial deploy, you can omit `--parameter-overrides`, but you still need to run `aws cloudformation package` every time you update the stacks.
@@ -69,7 +69,7 @@ To release a new version of the API Server in the testing environment, publish a
 
 1. Manually publish a new verion of your container image to ECR and make note of the URL.
 2. Check `ProdEnvLetter` to see which environment (A or B) is production. Pick the opposite letter! Eg if `ProdEnvLetter` is "A", we'll use "B" in the next step.
-3. Do `aws cloudfront --stack-name YOUR_STACK_NAME --use-previous-template --parameters ParameterKey=ContainerImageUrlB,ParameterValue=YOUR_NEW_IMAGE_URL` (assuming "B" is the current testing environment. If "A" is currently testing, use the `ContainerImageUrlA` parameter instead).
+3. Do `aws cloudformation update-stack --stack-name YOUR_STACK_NAME --use-previous-template --parameters ParameterKey=ContainerImageUrlB,ParameterValue=YOUR_NEW_IMAGE_URL` (assuming "B" is the current testing environment. If "A" is currently testing, use the `ContainerImageUrlA` parameter instead).
 
 TODO: make a script do this
 
@@ -81,16 +81,30 @@ The production environment is served by Route53 at `yourdomain.com`
 
 The testing environment is served by Route53 at `testing.yourdomain.com`
 
-To perform a release, "flip" the DNS routes between environments A and B. For example, if the current production environment is "A", we can release "B" as the new production environment with: `aws cloudfront --stack-name YOUR_STACK_NAME --use-previous-template --parameters ParameterKey=ProdEnvLetter,ParameterValue=B`. This will change DNS aliases so the apex domain and `testing` subdomain are flipped. (It will also flip the test vs prod outputs of `main.yaml`)
+To perform a release, "flip" the DNS routes between environments A and B. For example, if the current production environment is "A", we can release "B" as the new production environment with: `aws cloudformation update-stack --stack-name YOUR_STACK_NAME --use-previous-template --parameters ParameterKey=ProdEnvLetter,ParameterValue=B`. This will change DNS aliases so the apex domain and `testing` subdomain are flipped. (It will also flip the test vs prod outputs of `main.yaml`)
 
 (If "B" is the current production environment, set `ProdEnvLetter` to `A` instead.)
 
 TODO: a script will do this instead.
 
+## More significant infrastructure changes
+
+Since environments A and B reuse the same template files (`website.yaml` and `api-server.yaml`), if you want to make changes you need to refactor strategically. For example, let's say A is active/green and B is latent/blue. Make a `website2.yaml` and use that for the B website stack instead of `website.yaml`, and deploy the updated `main.yaml`, ensuring that no changes were made to the active website stack. Once you're satisfied that B is working, deploy it as described above. Now that B is active, you can switch A over to `website2.yaml` and remove the now-unused `website.yaml`. (Don't take the file versioning literally, this is just a simple example.)
+
 # TODO:
 
+- [ ] It's confusing how there's prod vs test CFN distros, but they log to bucket a or b. Give CFN its own buckets??
+
+  - https://stackoverflow.com/questions/63964233/receiving-get-400-when-trying-to-implement-socket-io-communication-node-js-elb
+  - https://repost.aws/knowledge-center/configure-cloudfront-to-forward-headers
+
+- [ ] CloudFront should connect to api origin with `https-only` (not http only...) but that ALB needs to have SSL/TLS support added to it.
+
 - [ ] Make testing subdomain private
+- [ ] Carefully write caching rules for `/api/*` CF behavior (what's there is just placeholder)
 - [ ] Make a script that reads the CloudFormation `ProdEnvLetter` parameter and flips A/B instead of manually doing it.
 - [ ] Deploy testing container: Make a script which given a container image URL, it reads the CloudFormation `ProdEnvLetter` parameter to find which env is prod, and sets `ContainerImageUrlA` if prod is B or `ContainerImageUrlB` if prod is A
 - [ ] The deploy testing container script should have another step in front of it which builds the container and pushes it to ECR, returning a URL to that image.
 - [ ] Change bucket delete policy, bc CloudFormation cannot delete a non-empty bucket...
+- [ ] Add Tags to make AWS Console experience more explicit (eg via `--tags` on `aws cloudformation deploy`)
+- [ ] ECS Namespaces?? Should I use for A vs B??
