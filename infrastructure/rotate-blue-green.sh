@@ -24,6 +24,7 @@ fi
 STACK_NAME=$1
 TEMPLATE_FILE=$2
 
+# TODO: rely on get-prod-env-letter.sh instead!
 PROD_ENV_LETTER=$(
     aws cloudformation describe-stacks \
         --stack-name $STACK_NAME \
