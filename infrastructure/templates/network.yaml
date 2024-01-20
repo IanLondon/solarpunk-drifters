@@ -8,6 +8,7 @@ Mappings:
       PublicSubnet1: 10.0.0.0/24
       PublicSubnet2: 10.0.1.0/24
       PrivateSubnet1: 10.0.2.0/24
+      PrivateSubnet2: 10.0.3.0/24
 
 Resources:
   VPC:
@@ -47,6 +48,16 @@ Resources:
           - Fn::GetAZs: { Ref: "AWS::Region" }
       VpcId: !Ref VPC
       CidrBlock: !FindInMap [Network, Blocks, PrivateSubnet1]
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: { Ref: "AWS::Region" }
+      VpcId: !Ref VPC
+      CidrBlock: !FindInMap [Network, Blocks, PrivateSubnet2]
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -94,6 +105,22 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable1
       SubnetId: !Ref PrivateSubnet1
 
+  PrivateRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+  PrivateRoute2:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+  PrivateSubnet2RouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      SubnetId: !Ref PrivateSubnet2
+
   # NAT Gateway in PublicSubnet1 so containers can talk to the internet
   NatGateway:
     Type: AWS::EC2::NatGateway
@@ -112,5 +139,7 @@ Outputs:
     Value: !GetAtt PublicSubnet2.SubnetId
   PrivateSubnet1Id:
     Value: !GetAtt PrivateSubnet1.SubnetId
+  PrivateSubnet2Id:
+    Value: !GetAtt PrivateSubnet2.SubnetId
   VpcId:
     Value: !GetAtt VPC.VpcId

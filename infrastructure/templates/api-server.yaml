@@ -201,3 +201,6 @@ Outputs:
   ApiServiceLogGroupArn:
     Description: Log group of API service task
     Value: !GetAtt ApiServiceLogGroup.Arn
+  ServiceSecurityGroup:
+    Description: Security group for ECS containers
+    Value: !Ref ServiceSecurityGroup

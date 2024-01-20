@@ -79,6 +79,73 @@ Resources:
     Properties:
       TemplateURL: ./network.yaml
 
+  # TODO: factor out into nested stack
+  Postgres:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      AllocatedStorage: "20" # Minimum is 20GiB for SSD
+      BackupRetentionPeriod: 0 # TODO: set to number of days to enable automatic backups
+      DBInstanceClass: db.t4g.micro
+      DBSubnetGroupName: !Ref PostgresDBSubnetGroup
+      Engine: postgres
+      ManageMasterUserPassword: true
+      MasterUsername: postgres # TODO
+      MasterUserSecret:
+        KmsKeyId: !Ref PostgresKMSKey
+      VPCSecurityGroups:
+        - !Ref PostgresSecurityGroup
+  PostgresKMSKey:
+    Type: AWS::KMS::Key
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      Description: MasterUserSecret for Postgres
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: !Sub "${AWS::StackName}-pg-key"
+        Statement:
+          - Sid: Allow administration of the key
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+            Action:
+              - "kms:*"
+            Resource: "*"
+  PostgresDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for Postgres DB
+      SubnetIds:
+        - !GetAtt NetworkStack.Outputs.PrivateSubnet1Id
+        - !GetAtt NetworkStack.Outputs.PrivateSubnet2Id
+  PostgresSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to Postgres DB
+      VpcId: !GetAtt NetworkStack.Outputs.VpcId
+  # TODO: factor out security groups from this and api.yaml
+  # so we don't have complex dependencies
+  PostgresIngressfromAPIServiceA:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Ingress from ECS service A security group
+      FromPort: 5432
+      GroupId: !Ref PostgresSecurityGroup
+      IpProtocol: tcp
+      SourceSecurityGroupId: !GetAtt ApiServerStackA.Outputs.ServiceSecurityGroup
+      ToPort: 5432
+  PostgresIngressfromAPIServiceB:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Ingress from ECS service B security group
+      FromPort: 5432
+      GroupId: !Ref PostgresSecurityGroup
+      IpProtocol: tcp
+      SourceSecurityGroupId: !GetAtt ApiServerStackB.Outputs.ServiceSecurityGroup
+      ToPort: 5432
+
   # === CDN with CloudFront ===========================================
 
   ProductionCdn:

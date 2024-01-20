@@ -95,14 +95,9 @@ Since environments A and B reuse the same template files (`website.yaml` and `ap
 
 - [ ] It's confusing how there's prod vs test CFN distros, but they log to bucket a or b. Give CFN its own buckets??
 
-  - https://stackoverflow.com/questions/63964233/receiving-get-400-when-trying-to-implement-socket-io-communication-node-js-elb
-  - https://repost.aws/knowledge-center/configure-cloudfront-to-forward-headers
-
-- [ ] CloudFront should connect to api origin with `https-only` (not http only...) but that ALB needs to have SSL/TLS support added to it.
-
 - [ ] Make testing subdomain private
+- [ ] CloudFront should connect to api origin with `https-only` (not http only...) but that ALB needs to have SSL/TLS support added to it (which requires using an A record for the ALB so you can get a certificate for it).
 - [ ] Carefully write caching rules for `/api/*` CF behavior (what's there is just placeholder)
-- [ ] Make a script that reads the CloudFormation `ProdEnvLetter` parameter and flips A/B instead of manually doing it.
 - [ ] Deploy testing container: Make a script which given a container image URL, it reads the CloudFormation `ProdEnvLetter` parameter to find which env is prod, and sets `ContainerImageUrlA` if prod is B or `ContainerImageUrlB` if prod is A
 - [ ] The deploy testing container script should have another step in front of it which builds the container and pushes it to ECR, returning a URL to that image.
 - [ ] Change bucket delete policy, bc CloudFormation cannot delete a non-empty bucket...
