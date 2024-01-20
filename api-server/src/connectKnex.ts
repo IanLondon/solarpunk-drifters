@@ -9,10 +9,27 @@ export default function connectKnex(): Knex {
   }
 
   if (knex === null) {
+    // TODO IMMEDIATELY: remove
+    const PGPORT = process.env.PGPORT
+    const PGDATABASE = process.env.PGDATABASE
+    const PGUSER = process.env.PGUSER
+    const PGHOST = process.env.PGHOST
+    const PGSSLMODE = process.env.PGSSLMODE
+    console.log({
+      PGPORT,
+      PGSSLMODE,
+      PGDATABASE,
+      PGUSER,
+      PGHOST
+    })
+    // ^^^^^^^^^^^^^^^
+
     console.log('Connecting to database')
     knex = knexConfig({
       client: 'pg',
-      connection: process.env.PG_CONNECTION_STRING,
+      connection: {
+        ssl: false
+      },
       pool: { min: 0 }
     })
   }

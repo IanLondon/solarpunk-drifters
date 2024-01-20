@@ -10,7 +10,7 @@ PORT=8080
 SESSION_SECRET=sessionSecretHere123
 
 # used to connect to postgres database
-PG_CONNECTION_STRING=postgres://user:secret@host:5432/mydatabasename
+docker run --init --network host -e SESSION_SECRET=session-secret-123 -e PGDATABASE=postgres -e PGUSER=postgres -e PGHOST=localhost -e PGPASSWORD=tacocat -e PORT=8080 api-server-dev-test
 
 # Prohibits knex from connecting to the DB via `connectKnex()` if set to 1.
 # Useful to ensure that unit tests aren't using the DB, see README for more details
@@ -41,7 +41,35 @@ See `docker-compose.yml` for the recommended postgres image and the `knex` comma
 
 With no database. As long as `connectKnex()` is never called, no DB connection will be made. This is only suitable for running unit tests where anything that touches the DB is mocked. Use `ENSURE_NO_DB=1` to prevent connection to the DB and throw an error if `connectKnex()` is called. If set, `express-session` will use `MemoryStore` instead of persisting to a database.
 
+## Building api-server as a Docker container
+
+Due to the barebones npm-workspaces monorepo structure, we need to build the Dockerfile from the monorepo root in order to get the root-level `package-lock.json` and `node_modules/`.
+
+From the monorepo root: `docker build . -f api-server/Dockerfile -t api-server-dev-test` (or whatever tag you want)
+
+## Docker container local dev testing
+
+Assuming a local postgres server is running, accessible at `postgres://postgres:$dbPasswordHere@localhost:5432/postgres`, run the container with env vars needed to make the connection as below.
+
+(NOTE: This is only tested on linux, mac/win might require different host network config but I think this is cross-compatible?)
+
+```bash
+docker run --init \
+--add-host=host.docker.internal:host-gateway \
+-p 8080:8080 \
+-e PORT=8080 \
+-e PGDATABASE=postgres \
+-e PGHOST=host.docker.internal \
+-e PGPASSWORD=dbPasswordHere \
+-e PGPORT=5432 \
+-e PGUSER=postgres \
+-e SESSION_SECRET=session-secret-123 \
+api-server-dev-test # or whatever tag you want
+```
+
 ## Inside Docker Compose, with an included ephemeral DB
+
+TODO: might need updating!!
 
 In Docker Compose. Connected to the DB created alongside it. This database intentionally has no volume attached to it, its contents are ephemeral. When started up in Docker Compose, all Knex migrations are seeds are applied to the DB as soon as the `app` container starts, and the Express server starts immediately after that process.
 

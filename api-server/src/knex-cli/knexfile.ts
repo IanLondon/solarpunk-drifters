@@ -24,9 +24,10 @@ const config: Record<string, Knex.Config> = {
     client: 'postgresql',
     connection: {
       host: 'localhost',
-      ssl: {
-        rejectUnauthorized: false
-      }
+      ssl: false
+      // ssl: {
+      //   rejectUnauthorized: false
+      // }
     },
     pool: {
       min: 2,

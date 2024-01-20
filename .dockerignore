@@ -1,0 +1,19 @@
+**/.aws
+**/.DS_Store
+**/.env
+**/.git
+**/.vscode
+**/*.md
+**/coverage
+**/node_modules
+dist
+Dockerfile
+docker-compose.yml
+npm-debug.log
+
+NOTES*.md
+
+# non-Docker projects
+infrastructure/*
+local-dev-reverse-proxy/*
+website/*
