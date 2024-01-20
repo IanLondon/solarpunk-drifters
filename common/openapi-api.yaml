@@ -5,7 +5,7 @@ info:
 servers:
   - url: http://localhost:3000/api
     description: Local dev server (with local reverse proxy)
-  - url: https://solarpunkdrifters.bond/api
+  - url: https://solarpunkdrifters.com/api
     description: Production server (uses live data)
 paths:
   /game-state:
