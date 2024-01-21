@@ -4,6 +4,7 @@
 **/.git
 **/.vscode
 **/*.md
+**/.env
 **/coverage
 **/node_modules
 dist

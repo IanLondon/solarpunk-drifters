@@ -3,7 +3,8 @@ import express from 'express'
 const router = express.Router()
 
 router.get('/', (req, res) => {
-  res.send('API is running! This is the root, try /api')
+  console.log('Health check.')
+  res.sendStatus(200)
 })
 
 export default router

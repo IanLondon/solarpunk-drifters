@@ -10,7 +10,11 @@ PORT=8080
 SESSION_SECRET=sessionSecretHere123
 
 # used to connect to postgres database
-docker run --init --network host -e SESSION_SECRET=session-secret-123 -e PGDATABASE=postgres -e PGUSER=postgres -e PGHOST=localhost -e PGPASSWORD=tacocat -e PORT=8080 api-server-dev-test
+PGDATABASE=postgres
+PGHOST=localhost
+PGPASSWORD=localDbPasswordHere
+PGPORT=5432
+PGUSER=postgres
 
 # Prohibits knex from connecting to the DB via `connectKnex()` if set to 1.
 # Useful to ensure that unit tests aren't using the DB, see README for more details
@@ -26,6 +30,20 @@ docker run --init --network host -e SESSION_SECRET=session-secret-123 -e PGDATAB
 `npm run test` runs all unit tests.
 
 `npm run test-db-integration` runs all unit tests, as well as all database integation tests. **Do not run the database integration tests when connected to a database you care about.** All database integration tests are inside `src/db-integration-tests`. They clear, read, and write to the connected database specified in `PG_CONNECTION_STRING`. (The environment variable `RUN_DB_TESTS=1` is set by this npm script, if it is unset the tests would fail as a safeguard against accidental use, eg by running `jest` outside of the npm scripts.) The integration tests use Supertest, and run the Express app on an ephemeral port.
+
+# Seeding and migrating the database
+
+Seeds are intended only for local development. Start a local Postgres server and do:
+
+`npx knex seed:run --knexfile src/knex-cli/knexfile.ts`
+
+Migrations must be applied to local Postgres server as well as the the production database.
+
+`NODE_ENV=development npx knex migrate:latest --knexfile src/knex-cli/knexfile.ts` (you can omit `NODE_ENV` for development.)
+
+`NODE_ENV=production npx knex migrate:latest --knexfile src/knex-cli/knexfile.ts`
+
+NOTE: Do not use knex CLI's `--env` parameter, set the `NODE_ENV`.
 
 # Database connection
 

@@ -1,9 +1,25 @@
+import dotenv from 'dotenv'
+import { checkEnvVarsForDb } from '../connectKnex'
 import type { Knex } from 'knex'
+
+if (process.env.NODE_ENV !== 'production') {
+  console.log('loading env vars from .env')
+  dotenv.config({
+    // NOTE: running knex commands like "npx knex seed:run" will
+    // cd to this file's parent directory. So to get the .env file,
+    // we need to move up to api-server/ from api-server/src/knex-cli
+    path: '../../.env'
+  })
+}
+
+checkEnvVarsForDb()
 
 const config: Record<string, Knex.Config> = {
   development: {
     client: 'postgresql',
-    connection: process.env.PG_CONNECTION_STRING,
+    connection: {
+      ssl: false
+    },
     pool: {
       min: 2,
       max: 10

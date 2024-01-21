@@ -23,7 +23,7 @@ RUN npm run build
 
 # prod
 FROM node:${NODE_VERSION}-alpine as prod
-ENV NODE_ENV $NODE_ENV
+ENV NODE_ENV production
 
 WORKDIR /usr/src
 COPY --from=base usr/src/node_modules ./node_modules
