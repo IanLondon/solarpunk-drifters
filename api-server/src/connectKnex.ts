@@ -30,7 +30,7 @@ export function checkEnvVarsForDb(): void {
     database: process.env.PGDATABASE,
     host: process.env.PGHOST,
     port: process.env.PGPORT,
-    user: '(hidden)', // expect a warning if it's unset, pg defaults it to "postgres"
+    user: process.env.PGUSER, // expect a warning if it's unset, pg defaults it to "postgres"
     password: '(hidden)' // expect an error if it's unset
   })
 }
