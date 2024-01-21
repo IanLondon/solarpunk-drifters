@@ -90,16 +90,3 @@ TODO: a script will do this instead.
 ## More significant infrastructure changes
 
 Since environments A and B reuse the same template files (`website.yaml` and `api-server.yaml`), if you want to make changes you need to refactor strategically. For example, let's say A is active/green and B is latent/blue. Make a `website2.yaml` and use that for the B website stack instead of `website.yaml`, and deploy the updated `main.yaml`, ensuring that no changes were made to the active website stack. Once you're satisfied that B is working, deploy it as described above. Now that B is active, you can switch A over to `website2.yaml` and remove the now-unused `website.yaml`. (Don't take the file versioning literally, this is just a simple example.)
-
-# TODO:
-
-- [ ] It's confusing how there's prod vs test CFN distros, but they log to bucket a or b. Give CFN its own buckets??
-
-- [ ] Make testing subdomain private
-- [ ] CloudFront should connect to api origin with `https-only` (not http only...) but that ALB needs to have SSL/TLS support added to it (which requires using an A record for the ALB so you can get a certificate for it).
-- [ ] Carefully write caching rules for `/api/*` CF behavior (what's there is just placeholder)
-- [ ] Deploy testing container: Make a script which given a container image URL, it reads the CloudFormation `ProdEnvLetter` parameter to find which env is prod, and sets `ContainerImageUrlA` if prod is B or `ContainerImageUrlB` if prod is A
-- [ ] The deploy testing container script should have another step in front of it which builds the container and pushes it to ECR, returning a URL to that image.
-- [ ] Change bucket delete policy, bc CloudFormation cannot delete a non-empty bucket...
-- [ ] Add Tags to make AWS Console experience more explicit (eg via `--tags` on `aws cloudformation deploy`)
-- [ ] ECS Namespaces?? Should I use for A vs B??

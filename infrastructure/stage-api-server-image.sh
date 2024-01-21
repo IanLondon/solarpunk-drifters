@@ -58,3 +58,5 @@ aws cloudformation update-stack \
     --stack-name $STACK_NAME \
     --use-previous-template \
     --parameters $PARAMS_LIST
+
+echo "Set parameter $TEST_CONTAINERIMGURL_PARAM_KEY to $IMAGE_URI"

@@ -4,11 +4,13 @@
 # (TODO EC2 creation, save in BASTION_INSTANCE_ID)
 
 # Locally, forward your RDS's 5432 port to some LOCAL_PORT
-ssh -N -L $LOCAL_PORT:$RDS_URL:5432 -i ~/.ssh/my-key.pem ec2-user@$BASTION_PUBLIC_IP
+ssh -N -L \
+$LOCAL_PORT:$RDS_URL:5432 \
+-i ~/.ssh/my-key.pem ec2-user@$BASTION_PUBLIC_IP
 
 # Get the secret from Secrets Manager, and use it to fill in password
 # in ~/.pgpass -- make sure to chmod this file.
-echo "localhost:$LOCAL_PORT:$DB_NAME:$POSTGRES_USER:$PGPASSWORD" >> ~/.pgpass
+echo 'localhost:$LOCAL_PORT:$DB_NAME:$POSTGRES_USER:$PGPASSWORD' >> ~/.pgpass
 chmod 0600 ~/.pgpass
 
 # If you want to log in to psql:
@@ -18,8 +20,10 @@ psql -h localhost -p $LOCAL_PORT -U $POSTGRES_USER $DB_NAME
 
 # Do migrations, etc
 # NOTE: need to have env vars PGPORT, PGDATABASE, and PGUSER set for knex bc knex production config intentionally doesn't define them
+# TODO: knexfile.ts throws an error if PGPASSWORD isn't set, this is intentional,
+# but doesn't support this use of .pgpass file.
 cd path/to/api-server
-PGPORT=$LOCAL_PORT PGDATABASE=$DB_NAME PGUSER=$POSTGRES_USER npx knex migrate:latest --knexfile src/knex-cli/knexfile.ts --env production
+NODE_ENV=production PGPORT=$LOCAL_PORT PGDATABASE=$DB_NAME PGUSER=$POSTGRES_USER npx knex migrate:latest --knexfile src/knex-cli/knexfile.ts
 
 # Terminate bastion
 aws ec2 terminate-instances --instance-ids $BASTION_INSTANCE_ID

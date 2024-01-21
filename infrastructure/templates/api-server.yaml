@@ -8,6 +8,15 @@ Parameters:
   ContainerImageUrl:
     Type: String
     Description: The url of a container image for the instances to run, eg "012345678910.dkr.ecr.<region-name>.amazonaws.com/<repository-name>@sha256:94afd1f2e64d908bc90dbca0035a5b567EXAMPLE"
+  DbEndpointAddress:
+    Type: String
+    Description: Endpoint address of DB
+  DbSecretArn:
+    Type: String
+    Description: ARN for DB credentials secret
+  DbSecretKmsArn:
+    Type: String
+    Description: ARN for KMS key for DB credentials secret
   EnvironmentPrefix:
     Type: String
     Description: String prefixed on various resource names to make them unique
@@ -66,7 +75,24 @@ Resources:
           Essential: true
           PortMappings:
             - ContainerPort: !Ref ApiContainerPort
-          #  TODO: specify Environment or EnvironmentFiles here
+          Environment:
+            - Name: DB_USE_SSL
+              Value: "1"
+            - Name: PORT
+              Value: "8080"
+            - Name: PGDATABASE
+              Value: postgres
+            - Name: PGHOST
+              Value: !Ref DbEndpointAddress
+            - Name: PGPORT
+              Value: "5432"
+            - Name: SESSION_SECRET
+              Value: session-secret-123 # TODO use real secret with SM
+          Secrets:
+            - ValueFrom: !Sub "${DbSecretArn}:password::"
+              Name: PGPASSWORD
+            - ValueFrom: !Sub "${DbSecretArn}:username::"
+              Name: PGUSER
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -81,13 +107,12 @@ Resources:
         - "FARGATE"
       ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
 
-  # A role which is used within Fargate to allow the Fargate agent
-  # to download images and upload logs.
   ECSTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Statement:
+          # Allow the Fargate agent to download images and upload logs.
           - Effect: Allow
             Principal:
               Service: [ecs-tasks.amazonaws.com]
@@ -102,6 +127,22 @@ Resources:
       # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/security-iam-awsmanpol.html#security-iam-awsmanpol-AmazonECSTaskExecutionRolePolicy
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: !Sub "${AWS::StackName}-${EnvironmentPrefix}-inline"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  # - "ssm:GetParameters"
+                  - "secretsmanager:GetSecretValue"
+                  - "kms:Decrypt"
+                Resource:
+                  # - !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/parameter_name"
+                  # - !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${DbSecretName}"
+                  - !Ref DbSecretArn
+                  # - !Sub "arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:key/${DbSecretKmsKey}"
+                  - !Ref DbSecretKmsArn
 
   ApiServerCluster:
     Type: AWS::ECS::Cluster

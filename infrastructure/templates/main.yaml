@@ -79,6 +79,15 @@ Resources:
     Properties:
       TemplateURL: ./network.yaml
 
+  ApiServerContainerRepo:
+    Type: AWS::ECR::Repository
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      EmptyOnDelete: true
+      ImageTagMutability: IMMUTABLE
+      RepositoryName: !Sub "${AWS::StackName}/api-server"
+
   # TODO: factor out into nested stack
   Postgres:
     Type: AWS::RDS::DBInstance
@@ -227,6 +236,9 @@ Resources:
       Parameters:
         ApiServiceLogGroupName:
           !FindInMap [Constants, LogGroupNames, ApiServiceA]
+        DbEndpointAddress: !GetAtt Postgres.Endpoint.Address
+        DbSecretArn: !GetAtt Postgres.MasterUserSecret.SecretArn
+        DbSecretKmsArn: !GetAtt PostgresKMSKey.Arn
         ContainerImageUrl: !Ref ContainerImageUrlA
         EnvironmentPrefix: !FindInMap [Constants, EnvironmentPrefixes, A]
         PublicSubnet1Id: !GetAtt NetworkStack.Outputs.PublicSubnet1Id
@@ -251,6 +263,9 @@ Resources:
       Parameters:
         ApiServiceLogGroupName:
           !FindInMap [Constants, LogGroupNames, ApiServiceB]
+        DbEndpointAddress: !GetAtt Postgres.Endpoint.Address
+        DbSecretArn: !GetAtt Postgres.MasterUserSecret.SecretArn
+        DbSecretKmsArn: !GetAtt PostgresKMSKey.Arn
         ContainerImageUrl: !Ref ContainerImageUrlB
         EnvironmentPrefix: !FindInMap [Constants, EnvironmentPrefixes, B]
         PublicSubnet1Id: !GetAtt NetworkStack.Outputs.PublicSubnet1Id
@@ -315,3 +330,9 @@ Outputs:
       - AIsProd
       - !GetAtt ApiServerStackA.Outputs.ApiServiceLogGroupArn
       - !GetAtt ApiServerStackB.Outputs.ApiServiceLogGroupArn
+  ApiServerContainerRepoUri:
+    Description: URI of the ECR repo
+    Value: !GetAtt ApiServerContainerRepo.RepositoryUri
+  DbEndpointAddress:
+    Description: Endpoint address of Postgres DB
+    Value: !GetAtt Postgres.Endpoint.Address

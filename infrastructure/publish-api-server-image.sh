@@ -36,4 +36,5 @@ aws ecr get-login-password | docker login \
 
 docker push $TAG
 
-echo "Pushed!"
+echo "Pushed:"
+echo "$TAG"
