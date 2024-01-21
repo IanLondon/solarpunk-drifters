@@ -33,17 +33,16 @@ const config: Record<string, Knex.Config> = {
   },
 
   // NOTE: this is meant to be run via an SSH tunnel,
-  // which is why it's localhost as host.
+  // which is why it's localhost as host -- if not, use PGHOST.
   // Pass env vars PGPORT, PGDATABASE, PGUSER
   // and set either PGPASSWORD or use .pgpass
   production: {
     client: 'postgresql',
     connection: {
       host: 'localhost',
-      ssl: false
-      // ssl: {
-      //   rejectUnauthorized: false
-      // }
+      ssl: {
+        rejectUnauthorized: false
+      }
     },
     pool: {
       min: 2,

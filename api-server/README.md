@@ -16,6 +16,10 @@ PGPASSWORD=localDbPasswordHere
 PGPORT=5432
 PGUSER=postgres
 
+# If 1, DB connection will use SSL. Otherwise, it won't.
+# For production, set to 1.
+DB_USE_SSL=0
+
 # Prohibits knex from connecting to the DB via `connectKnex()` if set to 1.
 # Useful to ensure that unit tests aren't using the DB, see README for more details
 # ENSURE_NO_DB=1

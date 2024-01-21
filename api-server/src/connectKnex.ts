@@ -21,16 +21,22 @@ function warnIfUnset(envVar: string): void {
 
 // TODO: factor out, bc this is used by knexfile.ts too
 export function checkEnvVarsForDb(): void {
-  errorIfUnset('PGPASSWORD')
+  const errorList = ['PGPASSWORD', 'PGUSER']
+  errorList.forEach(errorIfUnset)
 
   const warnList = ['PGDATABASE', 'PGHOST', 'PGPORT', 'PGUSER']
   warnList.forEach(warnIfUnset)
 
+  console.log('Connecting to DB')
   console.log({
-    database: process.env.PGDATABASE,
-    host: process.env.PGHOST,
-    port: process.env.PGPORT,
-    user: process.env.PGUSER, // expect a warning if it's unset, pg defaults it to "postgres"
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions, @typescript-eslint/prefer-nullish-coalescing
+    database: process.env.PGDATABASE || '(defaulting to postgres)',
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions, @typescript-eslint/prefer-nullish-coalescing
+    host: process.env.PGHOST || '(defaulting to postgres)',
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions, @typescript-eslint/prefer-nullish-coalescing
+    port: process.env.PGPORT || '(defaulting to 5432)',
+    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions, @typescript-eslint/prefer-nullish-coalescing
+    user: process.env.PGUSER, // expect an error if it's unset, pg defaults it to the OS user username
     password: '(hidden)' // expect an error if it's unset
   })
 }
@@ -46,10 +52,17 @@ export default function connectKnex(): Knex {
 
   if (knex === null) {
     console.log('Connecting to database')
+
+    const ssl =
+      process.env.DB_USE_SSL === '1'
+        ? {
+            rejectUnauthorized: false
+          }
+        : false
     knex = knexConfig({
       client: 'pg',
       connection: {
-        ssl: false
+        ssl
       },
       pool: { min: 0 }
     })
