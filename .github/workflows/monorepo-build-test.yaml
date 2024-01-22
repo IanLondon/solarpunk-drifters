@@ -1,0 +1,41 @@
+# Validate all TypeScript projects in the monorepo
+
+name: ts monorepo build-check-lint-test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - api-server/**
+      - common/**
+      - website/**
+      - package*.json
+  pull_request_target:
+    branches: [main]
+    paths:
+      - api-server/**
+      - common/**
+      - website/**
+      - package*.json
+  workflow_dispatch:
+
+jobs:
+  install-check-lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: "npm"
+      - run: npm ci
+      # NOTE: building at least common/ is necessary for the tests
+      - run: npm run build
+      - run: npm run check
+      - run: npm run lint
+      - run: npm run test
+      # TODO: run db integration tests
+      # - run: npm run test-db-integration
+      #   working-directory: ./api-server
+      #   changed-files: ./api-server
