@@ -15,6 +15,9 @@ Parameters:
   EnvironmentPrefix:
     Description: String prefixed on various resource names to make them unique
     Type: String
+  GitHubOIDCRoleArn:
+    Description: ARN of IAM Role for GitHub OIDC
+    Type: String
   StaticWebsiteS3BucketRootName:
     Description: Name of static website root bucket
     Type: String
@@ -45,7 +48,8 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Action: s3:GetObject
+          - Sid: CloudFrontGetObject
+            Action: s3:GetObject
             Principal:
               Service: "cloudfront.amazonaws.com"
             Effect: Allow
@@ -54,7 +58,8 @@ Resources:
               StringEquals:
                 "AWS:SourceArn": !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
           # ListBucket needs its own statement because the resource must not have trailing "/*"
-          - Action: s3:ListBucket
+          - Sid: CloudFrontListBucket
+            Action: s3:ListBucket
             Principal:
               Service: "cloudfront.amazonaws.com"
             Effect: Allow
@@ -62,6 +67,25 @@ Resources:
             Condition:
               StringEquals:
                 "AWS:SourceArn": !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+          - Sid: GitHubOIDCSyncBucketObjects
+            Effect: Allow
+            Principal:
+              AWS: !Ref GitHubOIDCRoleArn
+            Action:
+              - "s3:AbortMultipartUpload"
+              - "s3:DeleteObject"
+              - "s3:GetObject"
+              - "s3:PutObject"
+            Resource: !Sub "${StaticWebsiteS3BucketRootArn}/*"
+          - Sid: GitHubOIDCSyncBucketType
+            Effect: Allow
+            Principal:
+              AWS: !Ref GitHubOIDCRoleArn
+            Action:
+              - "s3:GetBucketLocation"
+              - "s3:ListBucket"
+              - "s3:ListBucketMultipartUploads"
+            Resource: !Ref StaticWebsiteS3BucketRootArn
 
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution

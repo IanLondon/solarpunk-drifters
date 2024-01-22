@@ -103,12 +103,9 @@ Resources:
     Properties:
       TemplateURL: ./github-oidc.yaml
       Parameters:
-        S3BucketArns: !Join
-          - ","
-          - - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRootArn
-            - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRootArn
         GitHubRepo: !Ref GitHubRepo
         GitHubOrg: !Ref GitHubOrg
+        MainStackArn: !Ref AWS::StackId
         OIDCProviderArn: !Ref OIDCProviderArn
 
   ApiServerContainerRepo:
@@ -201,6 +198,7 @@ Resources:
         CloudFrontDistroCname: !Ref DomainName
         EnvironmentPrefix: prod # TODO don't call this "Environment" prefix, CDN prefix??
 
+        GitHubOIDCRoleArn: !GetAtt GitHubOidcStack.Outputs.GitHubOIDCRoleArn
         ApiLoadBalancerDnsName: !If
           - AIsProd
           - !GetAtt ApiServerStackA.Outputs.ApiLoadBalancerDnsName
@@ -230,12 +228,13 @@ Resources:
       TemplateURL: ./cdn.yaml
       Parameters:
         CertificateArn: !GetAtt AcmCertificateStack.Outputs.TestingSubdomainCertificateArn
-        EnvironmentPrefix: test # TODO don't call this "Environment" prefix, CDN prefix??
         # Test CDN always uses testing subdomain
         CloudFrontDistroCname: !Sub
           - "${TestingSubdomain}.${DomainName}"
           - TestingSubdomain: !FindInMap [Constants, Subdomains, Test]
+        EnvironmentPrefix: test # TODO don't call this "Environment" prefix, CDN prefix??
 
+        GitHubOIDCRoleArn: !GetAtt GitHubOidcStack.Outputs.GitHubOIDCRoleArn
         ApiLoadBalancerDnsName: !If
           - AIsProd
           - !GetAtt ApiServerStackB.Outputs.ApiLoadBalancerDnsName
@@ -368,3 +367,6 @@ Outputs:
   DbEndpointAddress:
     Description: Endpoint address of Postgres DB
     Value: !GetAtt Postgres.Endpoint.Address
+  GitHubOIDCRoleArn:
+    Description: ARN of the GitHub OIDC IdP role
+    Value: !GetAtt GitHubOidcStack.Outputs.GitHubOIDCRoleArn
