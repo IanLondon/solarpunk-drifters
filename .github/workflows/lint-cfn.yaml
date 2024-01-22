@@ -6,15 +6,17 @@ on:
     paths:
       - infrastructure/templates/*
       - infrastructure/prereqs/*
+      - infrastructure/lint/*
   pull_request:
     branches: [main]
     paths:
       - infrastructure/templates/*
       - infrastructure/prereqs/*
+      - infrastructure/lint/*
   workflow_dispatch:
 
 jobs:
-  install-check-lint-test:
+  lint-cfn:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,6 +24,8 @@ jobs:
         with:
           python-version: "3.12"
           cache: "pip" # caching pip dependencies
+          cache-dependency-path: "infrastructure/lint/requirements.txt"
+      - run: pip install -r infrastructure/lint/requirements.txt
       - run: pip install cfn-lint
       # Ignore W3002 because templates/main.yaml is designed to use "cloudformation package"
       - run: cfn-lint -i W3002 -t infrastructure/templates/*
