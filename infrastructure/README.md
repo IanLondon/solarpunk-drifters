@@ -15,35 +15,6 @@ TODO. Listing manual steps here first, then move this into CI/CD as much as poss
 1. Register a domain name with a Hosted Zone on Route53. Once it's created, make note of the Hosted Zone ID, it is required below.
 2. The main CloudFormation templates use nested stacks, so we need to have an S3 bucket for `aws cloudformation package` command to upload to. Create it with `aws --region us-east-1 s3 mb s3://YOUR_CFN_BUCKET_NAME`
 3. This project uses GitHub Actions for CI/CD. Fork this repo and follow the steps below to configure GitHub Actions.
-4. The templates in `./prereqs` are one-time-setup stacks that other resources. (TODO: once this is finished, document it.)
-
-### `./prereqs` templates
-
-#### `github-oidc.yaml`
-
-Sets up required IAM Role and `OIDCProvider` for GitHub OIDC to allow this project's GitHub Actions to access AWS resources. Create this stack with the following command (substitute your own GitHub org/repo/branch if you're doing this on your own fork)
-
-```bash
-aws cloudformation create-stack \
-   --region YOUR_REGION \
-   --stack-name spd-github-oidc \
-   --template-body file://./prereqs/github-oidc.yaml \
-   --capabilities CAPABILITY_IAM \
-   --parameters \
-      ParameterKey=GitHubOrg,ParameterValue=IanLondon \
-      ParameterKey=GitHubRepo,ParameterValue=solarpunk-drifters \
-      ParameterKey=GitHubBranch,ParameterValue=main
-```
-
-If you already have an existing GitHub OIDC Provider in your AWS account, include the parameter `ParameterKey=OIDCProviderArn,ParameterValue=YOUR_GH_OIDC_PROVIDER_HERE`. If you don't, omit this parameter, and the template will create it for you.
-
-If you're setting up your own repo, you'll need to pass the GitHub OIDC Role's ARN into GitHub Actions for CI/CD to work. In your browser...
-
-- In AWS Console, in CloudFormation, look at the "Outputs" of this stack. Find the value of `GitHubOIDCRoleArn`. Copy the ARN (it will look something like `arn:aws:iam::123456789:role/spd-github-oidc-GitHubOIDCRole-foOSpaMfOo`).
-- Go to your GitHub repo, navigate to `Settings > Secrets & Variables > Variables`. Create a new variable `AWS_GH_OIDC_ROLE`, paste the ARN you copied as the value. Click "Add Variable."
-- Create another variable, `AWS_REGION`. Set it to whatever region you're using for the prereqs.
-
-### Finally
 
 After the prerequisites are complete, walk through the following steps to deploy initially deploy stacks/website/api-server. When you want to update any of these projects, it's the same process as for the initial deployment of each (ie, just follow the same steps).
 
@@ -68,17 +39,46 @@ aws --region us-east-1 cloudformation package \
 --output-template-file packaged/main.template
 ```
 
-Then deploy the template you just created. Assuming you are creating a new stack, let's set "A" as the production environment, and
+Then deploy the template you just created.
+
+Assuming you are creating a new stack:
+
+- Since we don't have any containers built yet, bootstrap this stack by specifying a dummy container.
+- Specify your GitHub org and repo. It will use the `main` branch for CI/CD.
+- Specify your hosted zone from the Route53 "Prerequisites" step.
+- Set either `A` or `B` as the production environment (if we're using dummy containers for this initial setup phase, A vs B doesn't matter yet.)
+
+(TODO: document a suitable dummy container)
 
 ```bash
 aws --region us-east-1 cloudformation deploy \
---stack-name YOUR_STACK_NAME \
---template-file packaged/main.template \
---capabilities CAPABILITY_NAMED_IAM \
---parameter-overrides ContainerImageUrlA=YOUR_PROD_IMAGE_URL ContainerImageUrlB=YOUR_TEST_IMAGE_URL DomainName=solarpunkdrifters.com HostedZoneId=YOUR_HOSTED_ZONE_ID ProdEnvLetter=A
+  --stack-name YOUR_STACK_NAME \
+  --template-file packaged/main.template \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --parameter-overrides \
+    ContainerImageUrlA=DUMMY_CONTAINER_URL \
+    ContainerImageUrlB=DUMMY_CONTAINER_URL \
+    DomainName=solarpunkdrifters.com \
+    GitHubOrg=YOUR_GH_ORG \
+    GitHubRepo=YOUR_GH_REPO \
+    HostedZoneId=YOUR_HOSTED_ZONE_ID \
+    ProdEnvLetter=A
 ```
 
-After the initial deploy, you can omit `--parameter-overrides`, but you still need to run `aws cloudformation package` every time you update the stacks.
+#### GitHub OIDC for GitHub Actions
+
+If you happen to already have an existing GitHub OIDC Provider in your AWS account, include the parameter `OIDCProviderArn=YOUR_GH_OIDC_PROVIDER_HERE` in the command above. If you omit this parameter, the template will create an OIDC Provider for GitHub for you.
+
+If you're setting up your own repo, you'll need to pass the GitHub OIDC Role's ARN into GitHub Actions for CI/CD to work. In your browser...
+
+- In AWS Console, in CloudFormation, look at the "Outputs" of this stack. Find the value of `GitHubOIDCRoleArn`. Copy the ARN (it will look something like `arn:aws:iam::123456789:role/spd-github-oidc-GitHubOIDCRole-foOSpaMfOo`).
+- Go to your GitHub repo, navigate to `Settings > Secrets & Variables > Variables`. Create a new variable `AWS_GH_OIDC_ROLE`, paste the ARN you copied as the value. Click "Add Variable."
+- Create another variable, `AWS_REGION`. Set it to whatever region you're using for the prereqs.
+- Create another variable, `MAIN_STACK_NAME`, and set it to the stack name of the stack you just created.
+
+#### Updating the CloudFormation templates
+
+After the initial deploy, you can omit any `--parameter-overrides` you don't want to change, but you still need to run `aws cloudformation package` every time you update the stacks.
 
 ## Deploy the Website (to testing environment)
 

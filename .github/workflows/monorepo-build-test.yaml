@@ -19,6 +19,10 @@ on:
       - package*.json
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   install-check-lint-test:
     runs-on: ubuntu-latest
@@ -40,9 +44,16 @@ jobs:
       #   working-directory: ./api-server
       #   changed-files: ./api-server
       #
-      # TODO: save ./website/dist artifact and pass to a deploy workflow
-      # that depends on this one completing successfully.
-      # Also need to use OIDC to auth AWS, see https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
+      # TODO: save ./website/dist artifact and pass to a different workflow/job
+      # that depends on this one completing successfully, instead of having it as a step here
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ vars.AWS_GH_OIDC_ROLE }}
+          role-session-name: samplerolesession
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: deploy website to testing bucket
+        run: ./infrastructure/deploy-website-to-testing-bucket.sh ${{ vars.MAIN_STACK_NAME }}
       #
       # TODO: build the api-server Dockerfile (see bash script) and deploy to ECR.
       # See https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/deploying-to-amazon-elastic-container-service

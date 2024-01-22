@@ -2,9 +2,18 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: Solarpunk Drifters - Main CFN Stack
 
 Parameters:
+  # ====== Required ======
   DomainName:
     Description: Domain name (must be registered on Route53 before deploying this stack)
     Type: String
+  GitHubOrg:
+    Description: GitHub organization to give OIDC role to
+    Type: String
+    AllowedPattern: "^[a-zA-Z0-9\\-]*$"
+  GitHubRepo:
+    Description: GitHub repo name to give OIDC role to
+    Type: String
+    AllowedPattern: "^[a-zA-Z0-9\\-]*$"
   HostedZoneId:
     Description: HostedZoneId for the domain e.g. Z23ABC4XYZL05B
     Type: String
@@ -24,6 +33,14 @@ Parameters:
       Which env is the production one? 
       Set to either A or B to designate production, the other will implicitly be test
     AllowedValues: [A, B]
+  # ====== Optional ======
+  OIDCProviderArn:
+    Description: |
+      ARN for the GitHub OIDC Provider (if one exists).
+      If not set, the GitHubOidxStack will create a GitHub OIDC Provider.
+      (You only need one GitHub OIDC provider per AWS account.)
+    Default: ""
+    Type: String
 
 Conditions:
   AIsProd: !Equals
@@ -78,6 +95,21 @@ Resources:
     UpdateReplacePolicy: Delete
     Properties:
       TemplateURL: ./network.yaml
+
+  GitHubOidcStack:
+    Type: AWS::CloudFormation::Stack
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      TemplateURL: ./github-oidc.yaml
+      Parameters:
+        S3BucketArns: !Join
+          - ","
+          - - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRootArn
+            - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRootArn
+        GitHubRepo: !Ref GitHubRepo
+        GitHubOrg: !Ref GitHubOrg
+        OIDCProviderArn: !Ref OIDCProviderArn
 
   ApiServerContainerRepo:
     Type: AWS::ECR::Repository
@@ -294,7 +326,7 @@ Outputs:
       - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRootName
       - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRootName
   TestStaticWebsiteS3BucketRootArn:
-    Description: Website bucket locator (test environment)
+    Description: Website bucket ARN (test environment)
     Value: !If
       - AIsProd
       - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRootArn
@@ -319,7 +351,7 @@ Outputs:
       - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRootName
       - !GetAtt WebsiteStackB.Outputs.StaticWebsiteS3BucketRootName
   ProdStaticWebsiteS3BucketRootArn:
-    Description: Website bucket locator (prod environment)
+    Description: Website bucket ARN (prod environment)
     Value: !If
       - AIsProd
       - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRootArn

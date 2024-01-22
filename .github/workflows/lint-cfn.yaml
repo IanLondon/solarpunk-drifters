@@ -5,13 +5,11 @@ on:
     branches: [main]
     paths:
       - infrastructure/templates/*
-      - infrastructure/prereqs/*
       - infrastructure/lint/*
   pull_request:
     branches: [main]
     paths:
       - infrastructure/templates/*
-      - infrastructure/prereqs/*
       - infrastructure/lint/*
   workflow_dispatch:
 
@@ -29,4 +27,3 @@ jobs:
       - run: pip install cfn-lint
       # Ignore W3002 because templates/main.yaml is designed to use "cloudformation package"
       - run: cfn-lint -i W3002 -t infrastructure/templates/*
-      - run: cfn-lint -t infrastructure/prereqs/*
