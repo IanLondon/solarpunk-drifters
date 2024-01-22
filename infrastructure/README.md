@@ -13,7 +13,27 @@ TODO. Listing manual steps here first, then move this into CI/CD as much as poss
 ## Prerequisites
 
 1. Register a domain name with a Hosted Zone on Route53. Once it's created, make note of the Hosted Zone ID, it is required below.
-2. The CloudFormation template uses nested stacks, so we need to have an S3 bucket for `aws cloudformation package` command to upload to. Create it with `aws --region us-east-1 s3 mb s3://YOUR_CFN_BUCKET_NAME`
+2. The main CloudFormation templates use nested stacks, so we need to have an S3 bucket for `aws cloudformation package` command to upload to. Create it with `aws --region us-east-1 s3 mb s3://YOUR_CFN_BUCKET_NAME`
+3. The templates in `./prereqs` are one-time-setup stacks that other resources. (TODO: once this is finished, document it.)
+
+### `./prereqs` templates
+
+#### `github-oidc.yaml`
+
+Sets up required IAM Role and `OIDCProvider` for GitHub OIDC to allow this project's GitHub Actions to access AWS resources. Create this stack with the following command (substitute your own GitHub org/repo/branch if you're doing this on your own fork)
+
+```bash
+aws cloudformation create-stack \
+   --stack-name spd-github-oidc \
+   --template-body file://./prereqs/github-oidc.yaml \
+   --capabilities CAPABILITY_IAM
+   --parameters \
+      ParameterKey=GitHubOrg,ParameterValue=IanLondon \
+      ParameterKey=GitHubRepo,ParameterValue=solarpunk-drifters \
+      ParameterKey=GitHubBranch,ParameterValue=main
+```
+
+### Finally
 
 After the prerequisites are complete, walk through the following steps to deploy initially deploy stacks/website/api-server. When you want to update any of these projects, it's the same process as for the initial deployment of each (ie, just follow the same steps).
 

@@ -1,0 +1,68 @@
+Parameters:
+  # ====== Required ======
+  GitHubOrg:
+    Description: GitHub organization to give OIDC role to
+    Type: String
+    AllowedPattern: "^[a-zA-Z0-9\\-]*$"
+  GitHubRepo:
+    Description: GitHub repo name to give OIDC role to
+    Type: String
+    AllowedPattern: "^[a-zA-Z0-9\\-]*$"
+  GitHubBranch:
+    Description: GitHub repo branch to give OIDC role to
+    Type: String
+    # NOTE: we could allow wildcard and use StringLike condition in GitHubOIDCRole,
+    # but if we don't need it, let's restrict.
+    AllowedPattern: "^[a-zA-Z0-9]*$"
+    Default: main
+  # ====== Optional ======
+  OIDCProviderArn:
+    Description: |
+      ARN for the GitHub OIDC Provider (if one exists).
+      If not set, this stack will create a GitHub OIDC Provider.
+      (You only need one GitHub OIDC provider per AWS account.)
+    Default: ""
+    Type: String
+
+Conditions:
+  CreateOIDCProvider: !Equals
+    - !Ref OIDCProviderArn
+    - ""
+
+Resources:
+  GitHubOIDCRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Role for GitHub OIDC identity provider for GitHub Actions
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !If
+                - CreateOIDCProvider
+                - !Ref GithubOidc
+                - !Ref OIDCProviderArn
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/${GitHubBranch}
+  GithubOidc:
+    Type: AWS::IAM::OIDCProvider
+    Condition: CreateOIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      ThumbprintList:
+        # Note that the thumbprint has been set to all F's because the thumbprint is
+        # not used when authenticating token.actions.githubusercontent.com. Instead,
+        # IAM uses its library of trusted CAs to authenticate. However, this value is
+        # still required by the API. (https://github.com/aws-actions/configure-aws-credentials?tab=readme-ov-file#sample-iam-oidc-cloudformation-template)
+        - ffffffffffffffffffffffffffffffffffffffff
+
+Outputs:
+  GitHubOIDCRoleArn:
+    Description: ARN of the GitHub OIDC IdP role
+    Value: !GetAtt GitHubOIDCRole.Arn
