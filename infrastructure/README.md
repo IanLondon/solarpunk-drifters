@@ -14,7 +14,8 @@ TODO. Listing manual steps here first, then move this into CI/CD as much as poss
 
 1. Register a domain name with a Hosted Zone on Route53. Once it's created, make note of the Hosted Zone ID, it is required below.
 2. The main CloudFormation templates use nested stacks, so we need to have an S3 bucket for `aws cloudformation package` command to upload to. Create it with `aws --region us-east-1 s3 mb s3://YOUR_CFN_BUCKET_NAME`
-3. The templates in `./prereqs` are one-time-setup stacks that other resources. (TODO: once this is finished, document it.)
+3. This project uses GitHub Actions for CI/CD. Fork this repo and follow the steps below to configure GitHub Actions.
+4. The templates in `./prereqs` are one-time-setup stacks that other resources. (TODO: once this is finished, document it.)
 
 ### `./prereqs` templates
 
@@ -24,14 +25,23 @@ Sets up required IAM Role and `OIDCProvider` for GitHub OIDC to allow this proje
 
 ```bash
 aws cloudformation create-stack \
+   --region YOUR_REGION \
    --stack-name spd-github-oidc \
    --template-body file://./prereqs/github-oidc.yaml \
-   --capabilities CAPABILITY_IAM
+   --capabilities CAPABILITY_IAM \
    --parameters \
       ParameterKey=GitHubOrg,ParameterValue=IanLondon \
       ParameterKey=GitHubRepo,ParameterValue=solarpunk-drifters \
       ParameterKey=GitHubBranch,ParameterValue=main
 ```
+
+If you already have an existing GitHub OIDC Provider in your AWS account, include the parameter `ParameterKey=OIDCProviderArn,ParameterValue=YOUR_GH_OIDC_PROVIDER_HERE`. If you don't, omit this parameter, and the template will create it for you.
+
+If you're setting up your own repo, you'll need to pass the GitHub OIDC Role's ARN into GitHub Actions for CI/CD to work. In your browser...
+
+- In AWS Console, in CloudFormation, look at the "Outputs" of this stack. Find the value of `GitHubOIDCRoleArn`. Copy the ARN (it will look something like `arn:aws:iam::123456789:role/spd-github-oidc-GitHubOIDCRole-foOSpaMfOo`).
+- Go to your GitHub repo, navigate to `Settings > Secrets & Variables > Variables`. Create a new variable `AWS_GH_OIDC_ROLE`, paste the ARN you copied as the value. Click "Add Variable."
+- Create another variable, `AWS_REGION`. Set it to whatever region you're using for the prereqs.
 
 ### Finally
 
