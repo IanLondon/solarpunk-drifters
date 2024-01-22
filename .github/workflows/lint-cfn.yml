@@ -17,13 +17,12 @@ jobs:
   install-check-lint-test:
     runs-on: ubuntu-latest
     steps:
-      steps:
-        - uses: actions/checkout@v4
-        - uses: actions/setup-python@v5
-          with:
-            python-version: "3.12"
-            cache: "pip" # caching pip dependencies
-        - run: pip install cfn-lint
-        # Ignore W3002 because templates/main.yaml is designed to use "cloudformation package"
-        - run: cfn-lint -i W3002 -t infrastructure/templates/*
-        - run: cfn-lint -t infrastructure/prereqs/*
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip" # caching pip dependencies
+      - run: pip install cfn-lint
+      # Ignore W3002 because templates/main.yaml is designed to use "cloudformation package"
+      - run: cfn-lint -i W3002 -t infrastructure/templates/*
+      - run: cfn-lint -t infrastructure/prereqs/*
