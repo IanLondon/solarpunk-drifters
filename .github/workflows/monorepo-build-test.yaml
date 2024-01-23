@@ -1,6 +1,4 @@
-# Validate all TypeScript projects in the monorepo
-
-name: ts monorepo build-check-lint-test
+name: Monorepo test build and deploy
 
 on:
   push:
@@ -24,7 +22,7 @@ permissions:
   contents: read
 
 jobs:
-  install-check-lint-test:
+  install-check-lint-test-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,13 +42,33 @@ jobs:
       #   working-directory: ./api-server
       #   changed-files: ./api-server
       #
+      - name: upload website artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-dist
+          path: ./website/dist
+          if-no-files-found: error
+          # TODO: set repository-level default?
+          retention-days: 1
+
+  deploy-website:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs: install-check-lint-test-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: download website artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: website-dist
+          path: website/dist
       # TODO: save ./website/dist artifact and pass to a different workflow/job
       # that depends on this one completing successfully, instead of having it as a step here
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: ${{ vars.AWS_GH_OIDC_ROLE }}
-          role-session-name: samplerolesession
+          role-session-name: deploy-testing-website
           aws-region: ${{ vars.AWS_REGION }}
       - name: deploy website to testing bucket
         run: ./infrastructure/deploy-website-to-testing-bucket.sh ${{ vars.MAIN_STACK_NAME }}
