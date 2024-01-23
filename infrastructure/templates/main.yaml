@@ -124,13 +124,21 @@ Resources:
             Principal:
               AWS: !GetAtt GitHubOidcStack.Outputs.GitHubOIDCRoleArn
             Action:
-              - ecr:BatchGetImage
               - ecr:BatchCheckLayerAvailability
+              - ecr:BatchGetImage
               - ecr:CompleteLayerUpload
+              - ecr:DescribeImages
               - ecr:GetDownloadUrlForLayer
               - ecr:InitiateLayerUpload
               - ecr:PutImage
               - ecr:UploadLayerPart
+              # - ecr:DescribeImageScanFindings
+              # - ecr:DescribeRepositories
+              # - ecr:GetLifecyclePolicy
+              # - ecr:GetLifecyclePolicyPreview
+              # - ecr:GetRepositoryPolicy
+              # - ecr:ListImages
+              # - ecr:ListTagsForResource
 
   # TODO: factor out into nested stack
   Postgres:
@@ -379,6 +387,9 @@ Outputs:
   ApiServerContainerRepoUri:
     Description: URI of the ECR repo
     Value: !GetAtt ApiServerContainerRepo.RepositoryUri
+  ApiServerContainerRepoName:
+    Description: Name of the ECR repo
+    Value: !Ref ApiServerContainerRepo
   DbEndpointAddress:
     Description: Endpoint address of Postgres DB
     Value: !GetAtt Postgres.Endpoint.Address

@@ -101,7 +101,7 @@ jobs:
       - name: Get ECR repository URL
         run: |
           echo "REPOSITORY=$(\
-            ./infrastructure/get-ecr-uri.sh ${{ vars.MAIN_STACK_NAME }})" \
+            ./infrastructure/get-ecr-repo-name.sh ${{ vars.MAIN_STACK_NAME }})" \
           >> "$GITHUB_ENV"
       - name: Build, tag, and push docker image to Amazon ECR
         env:

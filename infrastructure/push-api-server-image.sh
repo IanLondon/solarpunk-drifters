@@ -15,7 +15,12 @@ STACK_NAME=$1
 
 SHA=$(git rev-parse --short HEAD)
 
-ECR_URI=$(./get-ecr-uri.sh ${STACK_NAME})
+ECR_URI=$(
+    aws cloudformation describe-stacks \
+        --stack-name $STACK_NAME \
+        --query "Stacks[0].Outputs[?OutputKey=='ApiServerContainerRepoUri'].OutputValue" \
+        --output text
+)
 
 TAG="$ECR_URI:$SHA"
 
