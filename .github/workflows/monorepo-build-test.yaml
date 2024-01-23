@@ -50,6 +50,13 @@ jobs:
           if-no-files-found: error
           # TODO: set repository-level default?
           retention-days: 1
+      - name: upload api-server artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-server-dist
+          path: api-server/dist
+          # TODO: set repository-level default?
+          retention-days: 1
 
   deploy-website:
     if: ${{ github.ref == 'refs/heads/main' }}
@@ -62,8 +69,6 @@ jobs:
         with:
           name: website-dist
           path: website/dist
-      # TODO: save ./website/dist artifact and pass to a different workflow/job
-      # that depends on this one completing successfully, instead of having it as a step here
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
@@ -72,6 +77,37 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
       - name: deploy website to testing bucket
         run: ./infrastructure/deploy-website-to-testing-bucket.sh ${{ vars.MAIN_STACK_NAME }}
-      #
-      # TODO: build the api-server Dockerfile (see bash script) and deploy to ECR.
-      # See https://docs.github.com/en/actions/deployment/deploying-to-your-cloud-provider/deploying-to-amazon-elastic-container-service
+
+  push-api-server:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs: install-check-lint-test-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: download api-server artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api-server-dist
+          path: api-server/dist
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ vars.AWS_GH_OIDC_ROLE }}
+          role-session-name: push-api-server-container
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Get ECR repository URL
+        run: |
+          echo "REPOSITORY=$(\
+            ./infrastructure/get-ecr-uri.sh ${{ vars.MAIN_STACK_NAME }})" \
+          >> "$GITHUB_ENV"
+      - name: Build, tag, and push docker image to Amazon ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build . -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -f ./api-server/Dockerfile
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+  # TODO: update latent ECS to use new image via CFN parameter

@@ -58,6 +58,13 @@ Resources:
               - Effect: Allow
                 Action: "cloudformation:DescribeStacks"
                 Resource: !Ref MainStackArn
+        - PolicyName: get-ecr-authorization-token
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "ecr:GetAuthorizationToken"
+                Resource: "*"
   GithubOidc:
     Type: AWS::IAM::OIDCProvider
     Condition: CreateOIDCProvider

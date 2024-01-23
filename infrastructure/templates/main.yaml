@@ -116,6 +116,21 @@ Resources:
       EmptyOnDelete: true
       ImageTagMutability: IMMUTABLE
       RepositoryName: !Sub "${AWS::StackName}/api-server"
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: GitHubOIDCAllowPushPull
+            Effect: Allow
+            Principal:
+              AWS: !GetAtt GitHubOidcStack.Outputs.GitHubOIDCRoleArn
+            Action:
+              - ecr:BatchGetImage
+              - ecr:BatchCheckLayerAvailability
+              - ecr:CompleteLayerUpload
+              - ecr:GetDownloadUrlForLayer
+              - ecr:InitiateLayerUpload
+              - ecr:PutImage
+              - ecr:UploadLayerPart
 
   # TODO: factor out into nested stack
   Postgres:
