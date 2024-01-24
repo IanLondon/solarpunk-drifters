@@ -13,10 +13,29 @@ TODO. Listing manual steps here first, then move this into CI/CD as much as poss
 ## Prerequisites
 
 1. Register a domain name with a Hosted Zone on Route53. Once it's created, make note of the Hosted Zone ID, it is required below.
-2. The main CloudFormation templates use nested stacks, so we need to have an S3 bucket for `aws cloudformation package` command to upload to. Create it with `aws --region us-east-1 s3 mb s3://YOUR_CFN_BUCKET_NAME`
+2. The main CloudFormation templates use nested stacks, so we need to have an S3 bucket for `aws cloudformation package` command to upload to. Create it with `aws --region us-east-1 s3 mb s3://YOUR_CFN_BUCKET_NAME`. AFTER you've created your stack, add a bucket policy for the GitHub OIDC IAM Role (below). TODO: make a mini CFN template for this, with `GitHubOidcRoleArn` as an optional parameter that conditionally creates the bucket policy??
 3. This project uses GitHub Actions for CI/CD. Fork this repo and follow the steps below to configure GitHub Actions.
 
 After the prerequisites are complete, walk through the following steps to deploy initially deploy stacks/website/api-server. When you want to update any of these projects, it's the same process as for the initial deployment of each (ie, just follow the same steps).
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Principal": {
+        "AWS": "arn:aws:iam::123456789:role/your-GitHubOidc-role-arn-here"
+      },
+      "Effect": "Allow",
+      "Action": ["s3:Get*", "s3:List*"],
+      "Resource": [
+        "arn:aws:s3:::your-cfn-bucket-name",
+        "arn:aws:s3:::your-cfn-bucket-name/*"
+      ]
+    }
+  ]
+}
+```
 
 ## Deploy/Update CloudFormation nested stacks
 

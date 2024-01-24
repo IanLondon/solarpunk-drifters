@@ -106,6 +106,14 @@ Resources:
         GitHubRepo: !Ref GitHubRepo
         GitHubOrg: !Ref GitHubOrg
         MainStackArn: !Ref AWS::StackId
+        ApiServiceALogGroupArn: !GetAtt ApiServerStackA.Outputs.ApiServiceLogGroupArn
+        ApiServiceBLogGroupArn: !GetAtt ApiServerStackB.Outputs.ApiServiceLogGroupArn
+        EcsServiceA: !GetAtt ApiServerStackA.Outputs.EcsServiceArn
+        EcsServiceB: !GetAtt ApiServerStackB.Outputs.EcsServiceArn
+        EcsTaskExecutionRoleArnA: !GetAtt ApiServerStackA.Outputs.EcsTaskExecutionRoleArn
+        EcsTaskExecutionRoleArnB: !GetAtt ApiServerStackB.Outputs.EcsTaskExecutionRoleArn
+        PostgresKeyArn: !GetAtt PostgresKMSKey.Arn
+        PostgresArn: !GetAtt Postgres.DBInstanceArn
         OIDCProviderArn: !Ref OIDCProviderArn
 
   ApiServerContainerRepo:
@@ -128,17 +136,15 @@ Resources:
               - ecr:BatchGetImage
               - ecr:CompleteLayerUpload
               - ecr:DescribeImages
+              - ecr:DescribeRepositories
               - ecr:GetDownloadUrlForLayer
+              - ecr:GetLifecyclePolicy
+              - ecr:GetRepositoryPolicy
               - ecr:InitiateLayerUpload
+              - ecr:ListImages
+              - ecr:ListTagsForResource
               - ecr:PutImage
               - ecr:UploadLayerPart
-              # - ecr:DescribeImageScanFindings
-              # - ecr:DescribeRepositories
-              # - ecr:GetLifecyclePolicy
-              # - ecr:GetLifecyclePolicyPreview
-              # - ecr:GetRepositoryPolicy
-              # - ecr:ListImages
-              # - ecr:ListTagsForResource
 
   # TODO: factor out into nested stack
   Postgres:

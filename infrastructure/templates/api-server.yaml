@@ -113,7 +113,8 @@ Resources:
       AssumeRolePolicyDocument:
         Statement:
           # Allow the Fargate agent to download images and upload logs.
-          - Effect: Allow
+          - Sid: FargateAssumeRole
+            Effect: Allow
             Principal:
               Service: [ecs-tasks.amazonaws.com]
             Action: ["sts:AssumeRole"]
@@ -132,7 +133,8 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Effect: Allow
+              - Sid: ReadDbSecret
+                Effect: Allow
                 Action:
                   # - "ssm:GetParameters"
                   - "secretsmanager:GetSecretValue"
@@ -242,6 +244,12 @@ Outputs:
   ApiServiceLogGroupArn:
     Description: Log group of API service task
     Value: !GetAtt ApiServiceLogGroup.Arn
+  EcsServiceArn:
+    Description: ARN of ECS Service for api-server
+    Value: !Ref ApiService
+  EcsTaskExecutionRoleArn:
+    Description: ARN of ECS Task Execution Role
+    Value: !GetAtt ECSTaskExecutionRole.Arn
   ServiceSecurityGroup:
     Description: Security group for ECS containers
     Value: !Ref ServiceSecurityGroup

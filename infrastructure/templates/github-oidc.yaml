@@ -14,8 +14,33 @@ Parameters:
     # but if we don't need it, let's restrict.
     AllowedPattern: "^[a-zA-Z0-9]*$"
     Default: main
+  # ====== References in Policy ======
   MainStackArn:
     Description: ARN of the main Stack
+    Type: String
+  ApiServiceALogGroupArn:
+    Description: ARN of ECS service log group A
+    Type: String
+  ApiServiceBLogGroupArn:
+    Description: ARN of ECS service log group B
+    Type: String
+  EcsServiceA:
+    Description: ARN of ECS api-server Service A
+    Type: String
+  EcsServiceB:
+    Description: ARN of ECS api-server Service B
+    Type: String
+  EcsTaskExecutionRoleArnA:
+    Description: ARN of ECS Task Execution Role A
+    Type: String
+  EcsTaskExecutionRoleArnB:
+    Description: ARN of ECS Task Execution Role B
+    Type: String
+  PostgresKeyArn:
+    Description: ARN of KMS key for Postgres secret
+    Type: String
+  PostgresArn:
+    Description: ARN of Postgres DB instance
     Type: String
   # ====== Optional ======
   OIDCProviderArn:
@@ -51,13 +76,85 @@ Resources:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
                 token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/${GitHubBranch}
       Policies:
-        - PolicyName: describe-main-stack
+        - PolicyName: main-stack-ci
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Effect: Allow
-                Action: "cloudformation:DescribeStacks"
+                Action:
+                  - "cloudformation:CreateChangeSet"
+                  - "cloudformation:DescribeChangeSet"
+                  - "cloudformation:DescribeStacks"
+                  - "cloudformation:ExecuteChangeSet"
+                  - "cloudformation:GetTemplateSummary" # TODO no resource in call, needs "*"??
+                  - "cloudformation:List*"
+                  # TODO: are these needed?
+                  - "cloudformation:UpdateStack"
+                  - "cloudformation:CancelUpdateStack"
                 Resource: !Ref MainStackArn
+              - Effect: Allow
+                Action:
+                  - "ecs:RegisterTaskDefinition"
+                  - "ecs:DeregisterTaskDefinition"
+                # Resource-level permissions are not supported for these actions
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - "ec2:DescribeSubnets"
+                  - "ec2:DescribeVpcs"
+                # Resource-level permissions are not supported for these actions
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - "ecs:DescribeServices"
+                  - "ecs:UpdateService"
+                Resource:
+                  - !Ref EcsServiceA
+                  - !Ref EcsServiceB
+              - Effect: Allow
+                Action:
+                  - "elasticloadbalancing:DescribeLoadBalancers"
+                  - "elasticloadbalancing:DescribeLoadBalancerAttributes"
+                  - "elasticloadbalancing:DescribeTags"
+                # Resource-level permissions are not supported for these actions
+                Resource: "*"
+              - Sid: GithubOidcAccess
+                Effect: Allow
+                Action:
+                  - "iam:GetRole"
+                  - "iam:GetRolePolicy"
+                  - "iam:ListAttachedRolePolicies"
+                  - "iam:ListRolePolicies"
+                  - "iam:PassRole"
+                Resource:
+                  - !Ref EcsTaskExecutionRoleArnA
+                  - !Ref EcsTaskExecutionRoleArnB
+              - Effect: Allow
+                Action:
+                  - "kms:DescribeKey"
+                  - "kms:GetKeyPolicy"
+                  - "kms:GetKeyRotationStatus"
+                  - "kms:ListResourceTags"
+                Resource: !Ref PostgresKeyArn
+              - Effect: Allow
+                Action: "logs:DescribeLogGroups"
+                # I don't think this action supports specifying a resource
+                Resource: "*"
+              - Effect: Allow
+                Action: "logs:ListTagsForResource"
+                Resource:
+                  # EG: "arn:aws:logs:us-east-1:123456789:log-group:solarpunk-drifters/env-a/api-service"
+                  # Annoyingly, the ARN for a LogGroup will end with ":*", which "logs:ListTagsForResource"
+                  # won't allow, so that needs to be removed
+                  - !Select
+                    - 0
+                    - !Split [":*", !Ref ApiServiceALogGroupArn]
+                  - !Select
+                    - 0
+                    - !Split [":*", !Ref ApiServiceBLogGroupArn]
+              - Effect: Allow
+                Action: "rds:DescribeDBInstances"
+                Resource: !Ref PostgresArn
         - PolicyName: get-ecr-authorization-token
           PolicyDocument:
             Version: "2012-10-17"
