@@ -1,4 +1,5 @@
-# NOTE: build from monorepo root: `docker build . -f api-server/Dockerfile`
+# NOTE: build from monorepo root, eg:
+# docker build . -f api-server/Dockerfile` --build-arg="API_SERVER_VERSION=$IMAGE_TAG"
 ARG NODE_VERSION=20
 ARG NODE_ENV=production
 
@@ -24,6 +25,8 @@ RUN npm run build
 # prod
 FROM node:${NODE_VERSION}-alpine as prod
 ENV NODE_ENV production
+ARG API_SERVER_VERSION="?"
+ENV API_SERVER_VERSION $API_SERVER_VERSION
 
 WORKDIR /usr/src
 COPY --from=base usr/src/node_modules ./node_modules

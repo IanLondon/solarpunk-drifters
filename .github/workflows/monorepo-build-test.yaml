@@ -117,7 +117,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: ${{ vars.AWS_GH_OIDC_ROLE }}
-          role-session-name: push-api-server-container
+          role-session-name: gha-push-api-server
           aws-region: ${{ vars.AWS_REGION }}
       - name: login to ECR
         id: login-ecr
@@ -133,7 +133,10 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build . -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -f ./api-server/Dockerfile
+          docker build . \
+            -t $REGISTRY/$REPOSITORY:$IMAGE_TAG \
+            -f ./api-server/Dockerfile \
+            --build-arg="API_SERVER_VERSION=$IMAGE_TAG"
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
           echo "image-tag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
     outputs:
@@ -146,8 +149,15 @@ jobs:
       group: cloudformation-update
       cancel-in-progress: true
     steps:
+      - uses: actions/checkout@v4
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ vars.AWS_GH_OIDC_ROLE }}
+          role-session-name: gha-stage-server-image
+          aws-region: ${{ vars.AWS_REGION }}
       - name: Update latent environment's ECS to use new image
         run: |
           ./infrastructure/stage-api-server-image.sh \
-              ${{ vars.MAIN_STACK_NAME }} \
-              ${{ needs.push-api-server.outputs.image-tag }}
+            ${{ vars.MAIN_STACK_NAME }} \
+            ${{ needs.push-api-server.outputs.image-tag }}

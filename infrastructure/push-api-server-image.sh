@@ -26,8 +26,11 @@ TAG="$ECR_URI:$SHA"
 
 echo "Building api-server with tag: \"$TAG\""
 
-docker build .. -f ../api-server/Dockerfile \
-    -t $TAG
+SCRIPT_DIR=$(dirname "${BASH_SOURCE}")
+
+docker build .. -f ${SCRIPT_DIR}/../api-server/Dockerfile \
+    -t $TAG \
+    --build-arg="API_SERVER_VERSION=$TAG"
 
 # TODO: a less hacky way to do this???
 # 123456.dkr.ecr.us-east-1.amazonaws.com/foo/blah -> 123456.dkr.ecr.us-east-1.amazonaws.com

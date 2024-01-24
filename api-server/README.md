@@ -23,6 +23,9 @@ DB_USE_SSL=0
 # Prohibits knex from connecting to the DB via `connectKnex()` if set to 1.
 # Useful to ensure that unit tests aren't using the DB, see README for more details
 # ENSURE_NO_DB=1
+
+# Just used for logging
+API_SERVER_VERSION=dev-version
 ```
 
 ## Other environmental variables
@@ -67,7 +70,7 @@ With no database. As long as `connectKnex()` is never called, no DB connection w
 
 Due to the barebones npm-workspaces monorepo structure, we need to build the Dockerfile from the monorepo root in order to get the root-level `package-lock.json` and `node_modules/`.
 
-From the monorepo root: `docker build . -f api-server/Dockerfile -t api-server-dev-test` (or whatever tag you want)
+From the monorepo root: `docker build . -f api-server/Dockerfile -t api-server-dev-test --build-arg="API_SERVER_VERSION=api-server-dev-test"` (or whatever tag you want)
 
 ## Docker container local dev testing
 
