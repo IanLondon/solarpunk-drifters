@@ -100,6 +100,7 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
       - name: deploy website to testing bucket
         run: ./infrastructure/deploy-website-to-testing-bucket.sh ${{ vars.MAIN_STACK_NAME }}
+      # TODO: create CloudFront invalidation for all changed files.
 
   push-api-server:
     needs: [install-check-lint-test-build, changed-files]
@@ -127,10 +128,26 @@ jobs:
             ./infrastructure/get-ecr-repo-name.sh ${{ vars.MAIN_STACK_NAME }})" \
           >> "$GITHUB_ENV"
       - name: Build, tag, and push docker image to Amazon ECR
+        id: build-and-push
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
           docker build . -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -f ./api-server/Dockerfile
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
-  # TODO: update latent ECS to use new image via CFN parameter
+          echo "image-tag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+    outputs:
+      image-tag: ${{ steps.build-and-push.outputs.image-tag }}
+
+  stage-server-image:
+    needs: [push-api-server]
+    runs-on: ubuntu-latest
+    concurrency:
+      group: cloudformation-update
+      cancel-in-progress: true
+    steps:
+      - name: Update latent environment's ECS to use new image
+        run: |
+          ./infrastructure/stage-api-server-image.sh \
+              ${{ vars.MAIN_STACK_NAME }} \
+              ${{ needs.push-api-server.outputs.image-tag }}

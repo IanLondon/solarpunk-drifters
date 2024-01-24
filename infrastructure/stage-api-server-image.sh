@@ -16,6 +16,8 @@ fi
 STACK_NAME=$1
 TAG=$2
 
+SCRIPT_DIR=$(dirname "${BASH_SOURCE}")
+
 ECR_URI=$(
     aws cloudformation describe-stacks \
         --stack-name $STACK_NAME \
@@ -25,7 +27,7 @@ ECR_URI=$(
 
 IMAGE_URI="$ECR_URI:$TAG"
 
-PROD_ENV_LETTER=$(./get-prod-env-letter.sh "$STACK_NAME")
+PROD_ENV_LETTER=$(${SCRIPT_DIR}/get-prod-env-letter.sh "$STACK_NAME")
 
 # TODO: duplicated in rotate-blue-green etc. Make reusable
 if [[ "$PROD_ENV_LETTER" == A ]]; then
