@@ -93,7 +93,7 @@ jobs:
           name: website-dist
           path: website/dist
       - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_GH_OIDC_ROLE }}
           role-session-name: deploy-testing-website
@@ -114,7 +114,7 @@ jobs:
           name: api-server-dist
           path: api-server/dist
       - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_GH_OIDC_ROLE }}
           role-session-name: gha-push-api-server
@@ -151,7 +151,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_GH_OIDC_ROLE }}
           role-session-name: gha-stage-server-image
