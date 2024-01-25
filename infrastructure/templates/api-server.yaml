@@ -29,6 +29,9 @@ Parameters:
   #   Type: List<AWS::EC2::Subnet::Id>
   PrivateSubnet1Id:
     Type: AWS::EC2::Subnet::Id
+  SessionSecretArn:
+    Type: String
+    Description: ARN for SM session secret
   VpcId:
     Type: AWS::EC2::VPC::Id
   # ====== Optional ======
@@ -86,13 +89,13 @@ Resources:
               Value: !Ref DbEndpointAddress
             - Name: PGPORT
               Value: "5432"
-            - Name: SESSION_SECRET
-              Value: session-secret-123 # TODO use real secret with SM
           Secrets:
             - ValueFrom: !Sub "${DbSecretArn}:password::"
               Name: PGPASSWORD
             - ValueFrom: !Sub "${DbSecretArn}:username::"
               Name: PGUSER
+            - Name: SESSION_SECRET
+              ValueFrom: !Ref SessionSecretArn
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -133,18 +136,15 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Sid: ReadDbSecret
+              - Sid: SecretAccess
                 Effect: Allow
                 Action:
-                  # - "ssm:GetParameters"
                   - "secretsmanager:GetSecretValue"
                   - "kms:Decrypt"
                 Resource:
-                  # - !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/parameter_name"
-                  # - !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${DbSecretName}"
                   - !Ref DbSecretArn
-                  # - !Sub "arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:key/${DbSecretKmsKey}"
                   - !Ref DbSecretKmsArn
+                  - !Ref SessionSecretArn
 
   ApiServerCluster:
     Type: AWS::ECS::Cluster

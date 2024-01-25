@@ -213,6 +213,16 @@ Resources:
       SourceSecurityGroupId: !GetAtt ApiServerStackB.Outputs.ServiceSecurityGroup
       ToPort: 5432
 
+  SessionSecret:
+    Type: AWS::SecretsManager::Secret
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Description: API Server session secret
+      GenerateSecretString:
+        IncludeSpace: false
+        PasswordLength: 32
+
   # === CDN with CloudFront ===========================================
 
   ProductionCdn:
@@ -304,6 +314,7 @@ Resources:
         PublicSubnet1Id: !GetAtt NetworkStack.Outputs.PublicSubnet1Id
         PublicSubnet2Id: !GetAtt NetworkStack.Outputs.PublicSubnet2Id
         PrivateSubnet1Id: !GetAtt NetworkStack.Outputs.PrivateSubnet1Id
+        SessionSecretArn: !Ref SessionSecret
         VpcId: !GetAtt NetworkStack.Outputs.VpcId
 
   WebsiteStackA:
@@ -331,6 +342,7 @@ Resources:
         PublicSubnet1Id: !GetAtt NetworkStack.Outputs.PublicSubnet1Id
         PublicSubnet2Id: !GetAtt NetworkStack.Outputs.PublicSubnet2Id
         PrivateSubnet1Id: !GetAtt NetworkStack.Outputs.PrivateSubnet1Id
+        SessionSecretArn: !Ref SessionSecret
         VpcId: !GetAtt NetworkStack.Outputs.VpcId
 
   WebsiteStackB:
