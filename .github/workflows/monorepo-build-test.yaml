@@ -80,10 +80,16 @@ jobs:
           path: api-server/dist
           # TODO: set repository-level default?
           retention-days: 1
+      - name: log if MAIN_STACK_NAME is unspecified
+        if: vars.MAIN_STACK_NAME == ''
+        run: echo "No MAIN_STACK_NAME variable specified for GitHub Actions, skipping deployment steps."
 
   deploy-website:
     needs: [install-check-lint-test-build, changed-files]
-    if: ${{ github.ref == 'refs/heads/main' && needs.changed-files.outputs.website == 'true'}}
+    if: |
+      github.ref == 'refs/heads/main' &&
+      needs.changed-files.outputs.website == 'true' &&
+      vars.MAIN_STACK_NAME != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -104,7 +110,10 @@ jobs:
 
   push-api-server:
     needs: [install-check-lint-test-build, changed-files]
-    if: ${{ github.ref == 'refs/heads/main' && needs.changed-files.outputs.api-server == 'true'}}
+    if: |
+      github.ref == 'refs/heads/main' &&
+      needs.changed-files.outputs.api-server == 'true' &&
+      vars.MAIN_STACK_NAME != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

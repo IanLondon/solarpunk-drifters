@@ -93,7 +93,7 @@ If you're setting up your own repo, you'll need to pass the GitHub OIDC Role's A
 - In AWS Console, in CloudFormation, look at the "Outputs" of this stack. Find the value of `GitHubOIDCRoleArn`. Copy the ARN (it will look something like `arn:aws:iam::123456789:role/spd-github-oidc-GitHubOIDCRole-foOSpaMfOo`).
 - Go to your GitHub repo, navigate to `Settings > Secrets & Variables > Variables`. Create a new variable `AWS_GH_OIDC_ROLE`, paste the ARN you copied as the value. Click "Add Variable."
 - Create another variable, `AWS_REGION`. Set it to whatever region you're using for the prereqs.
-- Create another variable, `MAIN_STACK_NAME`, and set it to the stack name of the stack you just created.
+- Create another variable, `MAIN_STACK_NAME`, and set it to the stack name of the stack you just created. (NOTE: if you leave this unset, GitHub Actions will just skip the deploy steps/jobs. This is useful if you want CI to do lint/check/test/etc but don't want to pay for AWS!)
 
 #### Updating the CloudFormation templates
 
