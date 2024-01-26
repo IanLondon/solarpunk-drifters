@@ -16,35 +16,25 @@ Parameters:
   DomainName:
     Description: Domain name (must be registered on Route53 before deploying this stack)
     Type: String
-  TestingSubdomainDomainName:
-    Description: Subdomain for testing, eg testing.example.com
-    Type: String
+  AlternativeNames:
+    Description: List of subject alternative names for TLS cert
+    Type: CommaDelimitedList
   HostedZoneId:
     Description: HostedZoneId for the domain e.g. Z23ABC4XYZL05B
     Type: AWS::Route53::HostedZone::Id
 
 Resources:
-  ApexCertificate:
+  Certificate:
     Type: AWS::CertificateManager::Certificate
     Properties:
       DomainName: !Ref DomainName
       DomainValidationOptions:
         - DomainName: !Ref DomainName
           HostedZoneId: !Ref HostedZoneId
+      SubjectAlternativeNames: !Ref AlternativeNames
       ValidationMethod: DNS
 
-  TestingCertificate:
-    Type: AWS::CertificateManager::Certificate
-    Properties:
-      DomainName: !Ref TestingSubdomainDomainName
-      DomainValidationOptions:
-        - DomainName: !Ref TestingSubdomainDomainName
-          HostedZoneId: !Ref HostedZoneId
-      ValidationMethod: DNS
 Outputs:
-  ApexCertificateArn:
-    Description: ACM certificate for domain name
-    Value: !Ref ApexCertificate
-  TestingSubdomainCertificateArn:
-    Description: ACM certificate for testing subdomain
-    Value: !Ref TestingCertificate
+  CertificateArn:
+    Description: ACM certificate for domain and subject alternative names
+    Value: !Ref Certificate

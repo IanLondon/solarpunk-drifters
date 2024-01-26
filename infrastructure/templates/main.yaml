@@ -72,9 +72,12 @@ Resources:
       TemplateURL: ./acm-certificate.yaml
       Parameters:
         DomainName: !Ref DomainName
-        TestingSubdomainDomainName: !Sub
-          - "${TestingSubdomain}.${DomainName}"
-          - TestingSubdomain: !FindInMap [Constants, Subdomains, Test]
+        AlternativeNames: !Join
+          - ","
+          - - !Sub "*.${DomainName}"
+          # - - !Sub
+          #   - "${TestingSubdomain}.${DomainName}"
+          #   - TestingSubdomain: !FindInMap [Constants, Subdomains, Test]
         HostedZoneId: !Ref HostedZoneId
 
   DnsStack:
@@ -87,7 +90,9 @@ Resources:
         DomainName: !Ref DomainName
         ProdCloudFrontDistroDomainName: !GetAtt ProductionCdn.Outputs.CloudFrontDistributionDomain
         TestCloudFrontDistroDomainName: !GetAtt TestCdn.Outputs.CloudFrontDistributionDomain
-        TestSubdomain: !FindInMap [Constants, Subdomains, Test]
+        TestDomainName: !Sub
+          - "${TestSubdomain}.${DomainName}"
+          - TestSubdomain: !FindInMap [Constants, Subdomains, Test]
 
   NetworkStack:
     Type: AWS::CloudFormation::Stack
@@ -233,10 +238,10 @@ Resources:
       TemplateURL: ./cdn.yaml
       Parameters:
         # Prod CDN always uses apex
-        CertificateArn: !GetAtt AcmCertificateStack.Outputs.ApexCertificateArn
         CloudFrontDistroCname: !Ref DomainName
         EnvironmentPrefix: prod # TODO don't call this "Environment" prefix, CDN prefix??
 
+        CertificateArn: !GetAtt AcmCertificateStack.Outputs.CertificateArn
         GitHubOIDCRoleArn: !GetAtt GitHubOidcStack.Outputs.GitHubOIDCRoleArn
         ApiLoadBalancerDnsName: !If
           - AIsProd
@@ -266,13 +271,13 @@ Resources:
     Properties:
       TemplateURL: ./cdn.yaml
       Parameters:
-        CertificateArn: !GetAtt AcmCertificateStack.Outputs.TestingSubdomainCertificateArn
         # Test CDN always uses testing subdomain
         CloudFrontDistroCname: !Sub
           - "${TestingSubdomain}.${DomainName}"
           - TestingSubdomain: !FindInMap [Constants, Subdomains, Test]
         EnvironmentPrefix: test # TODO don't call this "Environment" prefix, CDN prefix??
 
+        CertificateArn: !GetAtt AcmCertificateStack.Outputs.CertificateArn
         GitHubOIDCRoleArn: !GetAtt GitHubOidcStack.Outputs.GitHubOIDCRoleArn
         ApiLoadBalancerDnsName: !If
           - AIsProd

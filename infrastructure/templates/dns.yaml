@@ -11,8 +11,8 @@ Parameters:
   TestCloudFrontDistroDomainName:
     Description: Domain name of the testing env CloudFront distribution
     Type: String
-  TestSubdomain:
-    Description: Subdomain for testing environment
+  TestDomainName:
+    Description: Domain name for testing environment (a FQDN of a subdomain)
     Type: String
 
 Resources:
@@ -26,12 +26,12 @@ Resources:
           AliasTarget:
             DNSName: !Ref ProdCloudFrontDistroDomainName
             EvaluateTargetHealth: false
-            # The following HosteZoneId is always used for alias records pointing to CloudFront.
+            # The following HostedZoneId is always used for alias records pointing to CloudFront.
             HostedZoneId: "Z2FDTNDATAQYW2"
-        - Name: !Sub "${TestSubdomain}.${DomainName}"
+        - Name: !Ref TestDomainName
           Type: "A"
           AliasTarget:
             DNSName: !Ref TestCloudFrontDistroDomainName
             EvaluateTargetHealth: false
-            # The following HosteZoneId is always used for alias records pointing to CloudFront.
+            # The following HostedZoneId is always used for alias records pointing to CloudFront.
             HostedZoneId: "Z2FDTNDATAQYW2"
