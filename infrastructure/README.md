@@ -139,3 +139,17 @@ TODO: a script will do this instead.
 ## More significant infrastructure changes
 
 Since environments A and B reuse the same template files (`website.yaml` and `api-server.yaml`), if you want to make changes you need to refactor strategically. For example, let's say A is active/green and B is latent/blue. Make a `website2.yaml` and use that for the B website stack instead of `website.yaml`, and deploy the updated `main.yaml`, ensuring that no changes were made to the active website stack. Once you're satisfied that B is working, deploy it as described above. Now that B is active, you can switch A over to `website2.yaml` and remove the now-unused `website.yaml`. (Don't take the file versioning literally, this is just a simple example.)
+
+# Teardown
+
+Deleting the stack will delete most resources (especially since the CFN deletion policies are bent towards allowing you to tear this stack down easily).
+
+Before deleting the main stack:
+
+- Empty the S3 website buckets. CloudFormation can't delete non-empty buckets (without some `CustomResource` lambda trickery which is not implemented for this repo), so if you deployed the website to the static website buckets A or B, you must manually empty them with `aws s3 rm --recursive s3://name-of-bucket` before deleting the main stack.
+
+After deleting the stack:
+
+- The session secret in AWS Secrets Manager is set to be retained in the CFN template, so you must schedule its deletion manually with SM.
+- An RDS snapshot will be created, you can delete it manually if you don't want to retain it.
+- The logs buckets are set to be retained, you can delete them manually.
