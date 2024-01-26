@@ -144,7 +144,7 @@ Resources:
           - DomainName: !Ref ApiLoadBalancerDnsName
             Id: !FindInMap [CloudFront, OriginNames, ApiOriginNameForCF]
             CustomOriginConfig:
-              OriginProtocolPolicy: http-only
+              OriginProtocolPolicy: https-only
         PriceClass: PriceClass_All
         ViewerCertificate:
           AcmCertificateArn: !Ref CertificateArn

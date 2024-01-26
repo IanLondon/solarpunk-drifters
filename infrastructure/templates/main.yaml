@@ -60,6 +60,8 @@ Mappings:
       ApiServiceB: solarpunk-drifters/env-b/api-service
     Subdomains:
       Test: testing
+      LoadBalancerA: lb-a
+      LoadBalancerB: lb-b
 
 Resources:
   # TODO: once stabilized, write more conservative delete/replace policies
@@ -75,24 +77,53 @@ Resources:
         AlternativeNames: !Join
           - ","
           - - !Sub "*.${DomainName}"
-          # - - !Sub
-          #   - "${TestingSubdomain}.${DomainName}"
-          #   - TestingSubdomain: !FindInMap [Constants, Subdomains, Test]
         HostedZoneId: !Ref HostedZoneId
 
-  DnsStack:
-    Type: AWS::CloudFormation::Stack
-    DeletionPolicy: Delete
-    UpdateReplacePolicy: Delete
+  LoadBalancerRecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
     Properties:
-      TemplateURL: ./dns.yaml
-      Parameters:
-        DomainName: !Ref DomainName
-        ProdCloudFrontDistroDomainName: !GetAtt ProductionCdn.Outputs.CloudFrontDistributionDomain
-        TestCloudFrontDistroDomainName: !GetAtt TestCdn.Outputs.CloudFrontDistributionDomain
-        TestDomainName: !Sub
-          - "${TestSubdomain}.${DomainName}"
-          - TestSubdomain: !FindInMap [Constants, Subdomains, Test]
+      HostedZoneName: !Sub "${DomainName}."
+      RecordSets:
+        - Name: !Sub
+            - "${LoadBalancerSubdomain}.${DomainName}"
+            - LoadBalancerSubdomain:
+                !FindInMap [Constants, Subdomains, LoadBalancerA]
+          Type: "A"
+          AliasTarget:
+            DNSName: !GetAtt ApiServerStackA.Outputs.ApiLoadBalancerDnsName
+            EvaluateTargetHealth: false
+            HostedZoneId: !GetAtt ApiServerStackA.Outputs.LoadBalancerCanonicalHostedZoneID
+        - Name: !Sub
+            - "${LoadBalancerSubdomain}.${DomainName}"
+            - LoadBalancerSubdomain:
+                !FindInMap [Constants, Subdomains, LoadBalancerB]
+          Type: "A"
+          AliasTarget:
+            DNSName: !GetAtt ApiServerStackB.Outputs.ApiLoadBalancerDnsName
+            EvaluateTargetHealth: false
+            HostedZoneId: !GetAtt ApiServerStackB.Outputs.LoadBalancerCanonicalHostedZoneID
+
+  CloudFrontRecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneName: !Sub "${DomainName}."
+      RecordSets:
+        - Name: !Ref DomainName
+          Type: "A"
+          AliasTarget:
+            DNSName: !GetAtt ProductionCdn.Outputs.CloudFrontDistributionDomain
+            EvaluateTargetHealth: false
+            # The following HostedZoneId is always used for alias records pointing to CloudFront.
+            HostedZoneId: "Z2FDTNDATAQYW2"
+        - Name: !Sub
+            - "${TestSubdomain}.${DomainName}"
+            - TestSubdomain: !FindInMap [Constants, Subdomains, Test]
+          Type: "A"
+          AliasTarget:
+            DNSName: !GetAtt TestCdn.Outputs.CloudFrontDistributionDomain
+            EvaluateTargetHealth: false
+            # The following HostedZoneId is always used for alias records pointing to CloudFront.
+            HostedZoneId: "Z2FDTNDATAQYW2"
 
   NetworkStack:
     Type: AWS::CloudFormation::Stack
@@ -245,8 +276,14 @@ Resources:
         GitHubOIDCRoleArn: !GetAtt GitHubOidcStack.Outputs.GitHubOIDCRoleArn
         ApiLoadBalancerDnsName: !If
           - AIsProd
-          - !GetAtt ApiServerStackA.Outputs.ApiLoadBalancerDnsName
-          - !GetAtt ApiServerStackB.Outputs.ApiLoadBalancerDnsName
+          - !Sub
+            - "${LoadBalancerSubdomain}.${DomainName}"
+            - LoadBalancerSubdomain:
+                !FindInMap [Constants, Subdomains, LoadBalancerA]
+          - !Sub
+            - "${LoadBalancerSubdomain}.${DomainName}"
+            - LoadBalancerSubdomain:
+                !FindInMap [Constants, Subdomains, LoadBalancerB]
         StaticWebsiteS3BucketRootName: !If
           - AIsProd
           - !GetAtt WebsiteStackA.Outputs.StaticWebsiteS3BucketRootName
@@ -311,6 +348,7 @@ Resources:
       Parameters:
         ApiServiceLogGroupName:
           !FindInMap [Constants, LogGroupNames, ApiServiceA]
+        CertificateArn: !GetAtt AcmCertificateStack.Outputs.CertificateArn
         DbEndpointAddress: !GetAtt Postgres.Endpoint.Address
         DbSecretArn: !GetAtt Postgres.MasterUserSecret.SecretArn
         DbSecretKmsArn: !GetAtt PostgresKMSKey.Arn
@@ -339,6 +377,7 @@ Resources:
       Parameters:
         ApiServiceLogGroupName:
           !FindInMap [Constants, LogGroupNames, ApiServiceB]
+        CertificateArn: !GetAtt AcmCertificateStack.Outputs.CertificateArn
         DbEndpointAddress: !GetAtt Postgres.Endpoint.Address
         DbSecretArn: !GetAtt Postgres.MasterUserSecret.SecretArn
         DbSecretKmsArn: !GetAtt PostgresKMSKey.Arn
