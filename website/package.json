@@ -7,7 +7,6 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 8081",
-    "mirage": "cross-env NEXT_PUBLIC_USE_MIRAGE_SERVER=1 next dev -p 8081",
     "build": "next build",
     "start": "next start -p 8081",
     "check": "tsc --noEmit",
@@ -51,7 +50,6 @@
     "eslint-plugin-tailwindcss": "^3.13.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
-    "miragejs": "^0.1.48",
     "postcss": "^8",
     "prettier": "^3.1.1",
     "prettier-plugin-tailwindcss": "^0.5.9",

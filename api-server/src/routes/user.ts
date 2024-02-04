@@ -17,25 +17,24 @@ type AsyncRequestHandler = (
 
 const router = express.Router()
 
-// TODO IMMEDIATELY remove. This is an example of an authenticated route
-router.get('/private-example', (async (req, res, next): Promise<void> => {
+// Get user data for logged-in user
+export const getUserDataHander: AsyncRequestHandler = async (
+  req,
+  res,
+  next
+) => {
   const { uid } = req.session
   if (uid !== undefined) {
     const user = await getUserByUid(uid)
     if (user !== null) {
-      res.send(`Hi ${user.username}. Your uid is ${uid}`)
+      return res.json({ username: user.username })
     }
-  } else {
-    res.sendStatus(401)
   }
-}) as RequestHandler)
 
-// TODO IMMEDIATELY REMOVE
-export const footestHandler: RequestHandler = (req, res, next) => {
-  const echo: string | undefined = req.body.echo
-  res.status(201).json({ result: 'yeah boi', echo })
+  res.sendStatus(401)
 }
-router.post('/footest', footestHandler)
+
+router.get('/', getUserDataHander as RequestHandler)
 
 // Create new user
 export const createUserHandler: AsyncRequestHandler = async (
@@ -63,7 +62,7 @@ export const createUserHandler: AsyncRequestHandler = async (
   }
 }
 
-router.post('/user', createUserHandler as RequestHandler)
+router.post('/', createUserHandler as RequestHandler)
 
 // Login existing user
 export const loginUserHandler: AsyncRequestHandler = async (req, res, next) => {

@@ -22,6 +22,18 @@ There is also `local-dev-reverse-proxy` — an Dockerized NGINX reverse proxy se
 
 ### TL;DR
 
+#### Postgres Prerequisites
+
+As a prerequisite, you need to:
+
+- Run a local `postgres` server, eg `docker run --name some-postgres -e POSTGRES_PASSWORD=some_password -p 5432:5432 postgres`
+- Create a `api-server/.env` with connection info, including that password
+- Run migrations on the server with `knex`.
+
+For these steps, see `api-server/README.md` for specific instructions.
+
+#### Running the application locally
+
 To run everything locally, run these on separate terminal tabs:
 
 1. `cd api-server; npm run dev`
