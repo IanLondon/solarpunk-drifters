@@ -59,4 +59,6 @@ export type SkillCheckRoll = components['schemas']['SkillCheckRoll']
 
 export type StatNumber = components['schemas']['StatNumber']
 
+export type UserData = components['schemas']['UserData']
+
 export type UserLogin = components['schemas']['UserLogin']

@@ -6,7 +6,7 @@ import encounterCardRouter from './routes/encounter-cards'
 import expeditionsRouter from './routes/expeditions'
 import gameStateRouter from './routes/game-state'
 import healthRouter from './routes/health'
-import loginRouter from './routes/login'
+import userRouter from './routes/user'
 import rootRouter from './routes/root'
 if (process.env.NODE_ENV !== 'production') {
   console.log('Loading .env file into "process.env"')
@@ -38,7 +38,7 @@ app.use('/api/drifter-cards', drifterCardRouter)
 app.use('/api/encounter-cards', encounterCardRouter)
 app.use('/api/expeditions', expeditionsRouter)
 app.use('/api/game-state', gameStateRouter)
-app.use('/api/login', loginRouter)
+app.use('/api/user', userRouter)
 app.use('*', (req, res) => {
   res
     .status(404)

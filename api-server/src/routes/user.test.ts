@@ -1,39 +1,22 @@
 import { describe, expect, it, jest } from '@jest/globals'
-import type { NextFunction } from 'express'
 import httpMocks from 'node-mocks-http'
 import { i18n } from '../constants'
-import { createUserHandler, footestHandler, loginUserHandler } from './login'
+import { createUserHandler, getUserDataHander, loginUserHandler } from './user'
 
 import { createUser, getUserWithCredentials } from '../controllers/users'
-import { type UsersTableRow } from '../queries/users'
+import { getUserByUid, type UsersTableRow } from '../queries/users'
 
 jest.mock('../controllers/users')
+jest.mock('../queries/users')
+
 const createUserMock = createUser as jest.Mock<typeof createUser>
 const getUserWithCredentialsMock = getUserWithCredentials as jest.Mock<
   typeof getUserWithCredentials
 >
 
-describe('/login', () => {
-  // TODO IMMEDIATELY REMOVE
-  describe('POST /footest', () => {
-    it('should 201, echo and say "yeah boi"', () => {
-      const req = httpMocks.createRequest({
-        method: 'POST',
-        body: { echo: 'echoThis123' }
-      })
-      const res = httpMocks.createResponse()
-      const next: NextFunction = jest.fn()
+const getUserByUidMock = getUserByUid as jest.Mock<typeof getUserByUid>
 
-      footestHandler(req, res, next)
-
-      expect(res.statusCode).toEqual(201)
-      expect(res._getJSONData()).toEqual({
-        echo: 'echoThis123',
-        result: 'yeah boi'
-      })
-    })
-  })
-
+describe('/user', () => {
   describe('POST /user', () => {
     it('should create a new user with valid input', async () => {
       const req = httpMocks.createRequest({
@@ -104,9 +87,54 @@ describe('/login', () => {
       })
       expect(res.statusCode).toEqual(401)
     })
+
+    describe('GET /user', () => {
+      it('should give 401 error when the given user does not exist', async () => {
+        const uid = '1234'
+        getUserByUidMock.mockReturnValue(Promise.resolve(null))
+
+        const req = httpMocks.createRequest({
+          method: 'GET',
+          session: { uid }
+        })
+        const res = httpMocks.createResponse()
+        const next = jest.fn()
+
+        await getUserDataHander(req, res, next)
+
+        expect(next).not.toHaveBeenCalled()
+
+        expect(res._isEndCalled()).toBe(true)
+        expect(res.statusCode).toEqual(401)
+      })
+      it('should give user data if the session is valid', async () => {
+        const uid = '1234'
+        const username = 'alice'
+        const passhash = 'blah'
+        getUserByUidMock.mockReturnValue(
+          Promise.resolve({ uid, username, passhash })
+        )
+
+        const req = httpMocks.createRequest({
+          method: 'GET',
+          session: { uid }
+        })
+        const res = httpMocks.createResponse()
+        const next = jest.fn()
+
+        await getUserDataHander(req, res, next)
+
+        expect(next).not.toHaveBeenCalled()
+
+        expect(res._isEndCalled()).toBe(true)
+        expect(res._isJSON()).toBe(true)
+        expect(res._getJSONData()).toEqual({ username })
+        expect(res.statusCode).toEqual(200)
+      })
+    })
   })
 
-  describe('POST /login', () => {
+  describe('POST /user/login', () => {
     it('should give error with missing params', async () => {
       const req = httpMocks.createRequest({
         method: 'POST',

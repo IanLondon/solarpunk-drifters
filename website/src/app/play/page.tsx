@@ -19,19 +19,10 @@ import {
   useDispatch,
   useSelector
 } from '@/lib/redux'
-import { makeMirageServer } from '@/mirage'
 import { useBeginExpedition } from '@/lib/playerMoveHooks'
 import GameActiveEncounter from './GameActiveEncounter'
 import GameBetweenEncounters from './GameBetweenEncounters'
 import GameLoadout from './GameLoadout'
-
-console.log(`NODE_ENV: ${process.env.NODE_ENV}`)
-
-if (process.env.NEXT_PUBLIC_USE_MIRAGE_SERVER === '1') {
-  makeMirageServer({ environment: 'development' })
-} else {
-  console.log('NO MIRAGE')
-}
 
 export default function PlayPage(): React.ReactNode {
   const dispatch = useDispatch()

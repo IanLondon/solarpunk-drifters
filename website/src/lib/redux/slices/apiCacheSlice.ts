@@ -1,6 +1,14 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import { API_ROOT, drifterCardUrl, encounterCardUrl } from '@/app/serverRoutes'
 import {
+  API_ROOT,
+  drifterCardUrl,
+  encounterCardUrl,
+  loginUrl,
+  userUrl
+} from '@/app/serverRoutes'
+import {
+  type UserData,
+  type UserLogin,
   type DrifterCard,
   type EncounterCard
 } from '@solarpunk-drifters/common'
@@ -8,6 +16,7 @@ import {
 export const apiCacheSlice = createApi({
   reducerPath: 'apiCache',
   baseQuery: fetchBaseQuery({ baseUrl: API_ROOT }),
+  tagTypes: ['UserData'],
   endpoints: (builder) => ({
     getDrifterCard: builder.query<DrifterCard, string>({
       query: drifterCardUrl
@@ -36,9 +45,39 @@ export const apiCacheSlice = createApi({
     // }),
     getEncounterCard: builder.query<EncounterCard, string>({
       query: encounterCardUrl
+    }),
+
+    // USERS
+    // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+    getUserData: builder.query<UserData | null, void>({
+      query: () => userUrl,
+      providesTags: ['UserData']
+    }),
+    // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+    createUser: builder.mutation<void, UserLogin>({
+      query: (params: UserLogin) => ({
+        url: userUrl,
+        method: 'POST',
+        body: params
+      }),
+      invalidatesTags: ['UserData']
+    }),
+    // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+    login: builder.mutation<void, UserLogin>({
+      query: (params: UserLogin) => ({
+        url: loginUrl,
+        method: 'POST',
+        body: params
+      }),
+      invalidatesTags: ['UserData']
     })
   })
 })
 
-export const { useGetDrifterCardQuery, useGetEncounterCardQuery } =
-  apiCacheSlice
+export const {
+  useCreateUserMutation,
+  useGetDrifterCardQuery,
+  useGetEncounterCardQuery,
+  useGetUserDataQuery,
+  useLoginMutation
+} = apiCacheSlice

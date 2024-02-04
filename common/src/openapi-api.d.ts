@@ -144,6 +144,19 @@ export interface paths {
     };
   };
   "/login/user": {
+    /** @description Get data about logged-in user */
+    get: {
+      responses: {
+        /** @description data about the user */
+        200: {
+          content: never;
+        };
+        /** @description Error. Not logged in. */
+        401: {
+          content: never;
+        };
+      };
+    };
     /** @description Create a new user */
     post: {
       /** @description A username and password */
@@ -310,6 +323,9 @@ export interface components {
     UserLogin: {
       username: string;
       password: string;
+    };
+    UserData: {
+      username: string;
     };
     PatchRequest: (components["schemas"]["JSONPatchRequestAddReplaceTest"] | components["schemas"]["JSONPatchRequestRemove"] | components["schemas"]["JSONPatchRequestMoveCopy"])[];
     JSONPatchRequestAddReplaceTest: {

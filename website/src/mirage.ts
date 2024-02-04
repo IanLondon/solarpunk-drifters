@@ -1,3 +1,4 @@
+// TODO: delete this file. Mirage is no longer used.
 import { type Server, createServer, Response } from 'miragejs'
 import {
   ACTIVE_ENCOUNTER,
@@ -149,6 +150,16 @@ export function makeMirageServer({ environment = 'test' }): Server {
           clientEvents
         }
         return new Response(200, undefined, res)
+      })
+
+      this.get('/user', (schema, request) => {
+        return new Response(200, undefined, { username: 'mirageTestUser' })
+      })
+      this.post('/user', (schema, request) => {
+        const body = request.requestBody
+        console.log('/user POST', body)
+        // TODO
+        return new Response(500, undefined, 'TODO NOT IMPLEMENTED')
       })
 
       // TODO: this doesn't fix the problem with Webpack HMR via Next

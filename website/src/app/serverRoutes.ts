@@ -11,3 +11,5 @@ export const drifterCardUrl = (drifterCardId: string): string =>
   `drifter-cards/${drifterCardId}`
 export const encounterCardUrl = (encounterCardId: string): string =>
   `encounter-cards/${encounterCardId}`
+export const userUrl = 'user'
+export const loginUrl = 'user/login'

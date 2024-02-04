@@ -1,3 +1,6 @@
+import { ConnectedLoginOrCreate } from '../components/LoginForm'
+import { ConnectedPlayButton } from '../components/PlayButton'
+
 export default function Home(): React.ReactNode {
   return (
     <main className='flex min-h-screen flex-col items-center justify-between p-24'>
@@ -5,7 +8,8 @@ export default function Home(): React.ReactNode {
 
       <article>A post-postapocalyptic cooperative game</article>
 
-      <a href='/play'>PLAY</a>
+      <ConnectedLoginOrCreate />
+      <ConnectedPlayButton />
       <a href='/about'>About</a>
     </main>
   )
