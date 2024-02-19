@@ -1,2 +1,2 @@
 # Requirements for lint-cfn.yaml workflow
-cfn-lint===0.84.0
+cfn-lint===0.85.2
